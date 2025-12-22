@@ -29,6 +29,23 @@ enum LLMRequestType: String, Sendable {
     case custom = "custom"  // Uses LLMSettings.customPrompt
 }
 
+/// Low-level text generation client protocol for DI and mocking.
+/// Implementations handle the actual LLM communication (Ollama HTTP, MLX inference).
+protocol TextGenerationClient: Sendable {
+    /// Display name of the client (e.g., "Ollama", "MLX")
+    var name: String { get }
+    
+    /// Whether the client is currently available
+    func isAvailable() async -> Bool
+    
+    /// Generate text from a prompt
+    /// - Parameters:
+    ///   - prompt: The prompt to send to the LLM
+    ///   - systemPrompt: Optional system prompt to set context
+    /// - Returns: Generated text response
+    func generate(prompt: String, systemPrompt: String?) async throws -> String
+}
+
 /// Protocol defining the interface for LLM providers
 protocol LLMProvider: Sendable {
     /// Display name of the provider
@@ -55,11 +72,19 @@ protocol LLMProvider: Sendable {
 /// Main LLM service that manages providers and handles requests
 @MainActor
 class LLMService: ObservableObject {
-    /// Available LLM providers
-    @Published private(set) var providers: [any LLMProvider] = []
+    /// Available LLM providers keyed by type
+    @Published private(set) var providersByType: [LLMProviderType: any LLMProvider] = [:]
+    
+    /// Available LLM providers (for backwards compatibility)
+    var providers: [any LLMProvider] {
+        Array(providersByType.values)
+    }
     
     /// Currently active provider
     @Published var activeProvider: (any LLMProvider)?
+    
+    /// Currently active provider type
+    @Published private(set) var activeProviderType: LLMProviderType?
     
     /// Whether the service is currently processing
     @Published private(set) var isProcessing: Bool = false
@@ -75,17 +100,50 @@ class LLMService: ObservableObject {
         // Providers will be registered during app startup
     }
     
-    /// Register an LLM provider
-    func registerProvider(_ provider: any LLMProvider) {
-        providers.append(provider)
-        if activeProvider == nil {
+    /// Register an LLM provider with its type
+    func registerProvider(_ provider: any LLMProvider, type: LLMProviderType) {
+        providersByType[type] = provider
+        
+        // Set active provider based on settings
+        if activeProvider == nil || LLMSettings.shared.selectedProvider == type {
             activeProvider = provider
+            activeProviderType = type
+        }
+    }
+    
+    /// Register an LLM provider (legacy method for backwards compatibility)
+    func registerProvider(_ provider: any LLMProvider) {
+        // Determine type from provider name
+        let type: LLMProviderType = provider.name == "MLX" ? .mlx : .ollama
+        registerProvider(provider, type: type)
+    }
+    
+    /// Set the active provider by type
+    func setActiveProvider(type: LLMProviderType) {
+        if let provider = providersByType[type] {
+            activeProvider = provider
+            activeProviderType = type
+            LLMSettings.shared.selectedProvider = type
+            clearCache() // Clear cache when switching providers
         }
     }
     
     /// Set the active provider by name
     func setActiveProvider(name: String) {
-        activeProvider = providers.first { $0.name == name }
+        if let type = LLMProviderType(rawValue: name) {
+            setActiveProvider(type: type)
+        } else {
+            activeProvider = providers.first { $0.name == name }
+        }
+    }
+    
+    /// Sync with current settings (call when settings change)
+    func syncWithSettings() {
+        let preferredType = LLMSettings.shared.selectedProvider
+        if let provider = providersByType[preferredType] {
+            activeProvider = provider
+            activeProviderType = preferredType
+        }
     }
     
     /// Check if any provider is available
