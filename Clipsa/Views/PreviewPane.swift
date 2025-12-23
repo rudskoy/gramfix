@@ -26,53 +26,63 @@ struct PreviewPane: View {
     private func previewContent(item: ClipboardItem) -> some View {
         switch item.type {
         case .text:
-            // Split view: LLM response on top, Original content on bottom
-            VSplitView {
-                // LLM processed content section
-                VStack(alignment: .leading, spacing: 0) {
-                    sectionHeader(title: "AI Response", icon: "sparkles", isProcessing: item.llmProcessing)
-                    
-                    if item.llmProcessing {
-                        processingPlaceholder
-                    } else if let response = item.llmResponse, !response.isEmpty {
-                        VStack(spacing: 0) {
-                            ScrollView {
-                                Text(response)
-                                    .font(.clipBody)
-                                    .foregroundStyle(.primary)
-                                    .textSelection(.enabled)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(14)
+            // Two sections: AI response on top, Original on bottom (equal split)
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    // LLM processed content section
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionHeader(title: "AI Response", icon: "sparkles", isProcessing: item.llmProcessing, isActive: true)
+                        
+                        if item.llmProcessing {
+                            processingPlaceholder
+                        } else if let response = item.llmResponse, !response.isEmpty {
+                            VStack(spacing: 0) {
+                                ScrollView {
+                                    Text(response)
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                        .textSelection(.enabled)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(14)
+                                }
+                                
+                                // Tags at the bottom
+                                if !item.llmTags.isEmpty {
+                                    tagsFooter(tags: item.llmTags)
+                                }
                             }
-                            
-                            // Tags at the bottom
-                            if !item.llmTags.isEmpty {
-                                tagsFooter(tags: item.llmTags)
+                        } else if !item.llmProcessed {
+                            notProcessedPlaceholder
+                        } else {
+                            VStack(spacing: 8) {
+                                Text("¯\\_(ツ)_/¯")
+                                    .font(.system(size: 28, weight: .light))
+                                    .foregroundStyle(.tertiary)
+                                
+                                Text("Nothing to generate.")
+                                    .font(.system(size: 12, weight: .medium, design: .default))
+                                    .foregroundStyle(.secondary)
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding()
                         }
-                    } else if !item.llmProcessed {
-                        notProcessedPlaceholder
-                    } else {
-                        placeholderContent(icon: "exclamationmark.triangle", text: "No response generated")
                     }
-                }
-                .frame(minHeight: 100)
-                .glassEffect(in: .rect(cornerRadius: 8))
-                
-                // Original content section
-                VStack(alignment: .leading, spacing: 0) {
-                    sectionHeader(title: "Original", icon: "doc.text")
-                    ScrollView {
-                        Text(item.content)
-                            .font(.clipMono)
-                            .foregroundStyle(.primary)
-                            .textSelection(.enabled)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(14)
+                    .frame(height: geometry.size.height / 2)
+                    
+                    // Original content section
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionHeader(title: "Original", icon: "doc.text", isActive: true)
+                        ScrollView {
+                            Text(item.content)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(14)
+                        }
                     }
+                    .frame(height: geometry.size.height / 2)
                 }
-                .frame(minHeight: 100)
-                .glassEffect(in: .rect(cornerRadius: 8))
             }
         case .image:
             if let data = item.rawData, let nsImage = NSImage(data: data) {
@@ -97,7 +107,7 @@ struct PreviewPane: View {
                     .shadow(color: .clipAccent.opacity(0.3), radius: 12)
                 
                 Text(item.content)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(size: 13, weight: .medium, design: .default))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
@@ -110,15 +120,15 @@ struct PreviewPane: View {
     
     // MARK: - Section Header
     
-    private func sectionHeader(title: String, icon: String, isProcessing: Bool = false) -> some View {
+    private func sectionHeader(title: String, icon: String, isProcessing: Bool = false, isActive: Bool = true) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(icon == "sparkles" ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.secondary))
             
             Text(title)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .semibold, design: .default))
+                .foregroundStyle(isActive ? .primary : .secondary)
             
             if isProcessing {
                 ProgressView()
@@ -130,7 +140,6 @@ struct PreviewPane: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .glassEffect()
     }
     
     // MARK: - Placeholders
@@ -143,11 +152,11 @@ struct PreviewPane: View {
             
             VStack(spacing: 4) {
                 Text("Processing with AI...")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold, design: .default))
                     .foregroundStyle(.primary)
                 
                 Text("Analyzing your clipboard content")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .font(.system(size: 11, weight: .medium, design: .default))
                     .foregroundStyle(.tertiary)
             }
         }
@@ -165,11 +174,11 @@ struct PreviewPane: View {
             
             VStack(spacing: 4) {
                 Text("Not processed yet")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(size: 13, weight: .medium, design: .default))
                     .foregroundStyle(.secondary)
                 
                 Text("Enable AI toggle to process")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .font(.system(size: 11, weight: .medium, design: .default))
                     .foregroundStyle(.tertiary)
             }
             
@@ -181,20 +190,21 @@ struct PreviewPane: View {
     // MARK: - Tags Footer
     
     private func tagsFooter(tags: [String]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                Image(systemName: "tag")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.tertiary)
-                
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "tag")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.tertiary)
+                .padding(.top, 3) // Align with first tag line
+            
+            FlowLayout(horizontalSpacing: 6, verticalSpacing: 6) {
                 ForEach(tags, id: \.self) { tag in
                     LLMTagView(tag: tag)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
         }
-        .glassEffect()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
     
     private func placeholderContent(icon: String, text: String) -> some View {
@@ -204,7 +214,7 @@ struct PreviewPane: View {
                 .foregroundStyle(.tertiary)
             
             Text(text)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(size: 12, weight: .medium, design: .default))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -223,11 +233,11 @@ struct PreviewPane: View {
             
             VStack(spacing: 4) {
                 Text("Select a clip")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .default))
                     .foregroundStyle(.secondary)
                 
                 Text("Choose an item from the list to preview")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .font(.system(size: 11, weight: .medium, design: .default))
                     .foregroundStyle(.tertiary)
             }
         }

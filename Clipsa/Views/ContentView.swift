@@ -1,10 +1,14 @@
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var clipboardManager: ClipboardManager
     @State private var selectedItemId: UUID?
     @State private var showSettings = false
+    @State private var keyboardMonitor: Any?
     @FocusState private var isSearchFieldFocused: Bool
+    @State private var itemCountOnUnfocus: Int = 0
+    @State private var searchAttention: Bool = false
     
     private var selectedItem: ClipboardItem? {
         guard let id = selectedItemId else { return nil }
@@ -20,57 +24,86 @@ struct ContentView: View {
             // Detail pane - positioned next to sidebar, not under it
             PreviewPane(item: selectedItem)
                 .frame(minWidth: 280)
+                .overlay(alignment: .topLeading) {
+                    FixedTooltipView(alignment: .leading)
+                        .padding(.top, 4)
+                        .padding(.leading, 8)
+                }
+                .overlay(alignment: .topTrailing) {
+                    FixedTooltipView(alignment: .trailing)
+                        .padding(.top, 4)
+                        .padding(.trailing, 8)
+                }
         }
+        .navigationTitle("")
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button {
+            ToolbarItemGroup(placement: .navigation) {
+                ToolbarActionButton(
+                    icon: "doc.on.doc",
+                    title: "Paste",
+                    description: "Paste content and return to previous app",
+                    shortcut: "⏎ Return",
+                    isDisabled: selectedItem == nil
+                ) {
                     if let item = selectedItem {
-                        PasteService.shared.pasteAndReturn(content: item.pasteContent)
+                        pasteItem(item)
                     }
-                } label: {
-                    Label("Paste", systemImage: "doc.on.doc")
                 }
                 .keyboardShortcut(.return, modifiers: [])
-                .disabled(selectedItem == nil)
-                .help("Paste and return to previous app (⏎)")
                 
-                Button {
+                ToolbarActionButton(
+                    icon: "arrow.right.doc.on.clipboard",
+                    title: "Quick Paste",
+                    description: "Paste without modifying clipboard, preserves original",
+                    shortcut: "⇧ Shift + ⏎ Return",
+                    isDisabled: selectedItem == nil
+                ) {
                     if let item = selectedItem {
-                        PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+                        immediatePasteItem(item)
                     }
-                } label: {
-                    Label("Immediate Paste", systemImage: "arrow.right.doc.on.clipboard")
                 }
                 .keyboardShortcut(.return, modifiers: .shift)
-                .disabled(selectedItem == nil)
-                .help("Paste and restore original clipboard (⇧⏎)")
                 
-                Button {
+                ToolbarActionButton(
+                    icon: "trash",
+                    title: "Delete",
+                    description: "Remove this item from clipboard history",
+                    isDisabled: selectedItem == nil
+                ) {
                     if let item = selectedItem {
                         deleteItem(item)
                     }
-                } label: {
-                    Label("Delete", systemImage: "trash")
                 }
-                .keyboardShortcut(.delete, modifiers: [])
-                .disabled(selectedItem == nil)
-                .help("Delete item (⌫)")
-                
-                Button {
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                ThemeToggleButton()
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                ToolbarActionButton(
+                    icon: "sparkles",
+                    title: "Process with AI",
+                    description: "Analyze content using Ollama LLM",
+                    isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true,
+                    tooltipAlignment: .trailing
+                ) {
                     if let item = selectedItem {
                         Task {
                             await clipboardManager.processItemWithLLM(item)
                         }
                     }
-                } label: {
-                    Label("Process with AI", systemImage: "sparkles")
                 }
-                .disabled(selectedItem == nil || selectedItem?.llmProcessing == true)
-                .help("Process with AI")
             }
         }
         .onAppear {
             autoSelectFirstItem()
+            setupKeyboardMonitor()
+            isSearchFieldFocused = true
+        }
+        .onDisappear {
+            removeKeyboardMonitor()
         }
         .onChange(of: clipboardManager.filteredItems) { _, newItems in
             // Auto-select first item if nothing is selected and list becomes non-empty
@@ -78,57 +111,19 @@ struct ContentView: View {
                 selectedItemId = firstItem.id
             }
         }
-        .onKeyPress(keys: [.upArrow]) { keyPress in
-            // Only handle plain arrow keys (no modifiers) when search field is not focused
-            guard !isSearchFieldFocused && keyPress.modifiers.isEmpty else {
-                return .ignored
+        .onChange(of: clipboardManager.searchQuery) { _, newQuery in
+            if !newQuery.isEmpty {
+                selectedItemId = clipboardManager.filteredItems.first?.id
             }
-            selectPreviousItem()
-            return .handled
         }
-        .onKeyPress(keys: [.downArrow]) { keyPress in
-            // Only handle plain arrow keys (no modifiers) when search field is not focused
-            guard !isSearchFieldFocused && keyPress.modifiers.isEmpty else {
-                return .ignored
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if clipboardManager.items.count != itemCountOnUnfocus {
+                selectFirstItem()
             }
-            selectNextItem()
-            return .handled
+            isSearchFieldFocused = true
         }
-        .onKeyPress(keys: [.return]) { keyPress in
-            // Don't intercept return when search field is focused
-            guard !isSearchFieldFocused else {
-                return .ignored
-            }
-            if let item = selectedItem {
-                if keyPress.modifiers.contains(.shift) {
-                    // Shift+Enter: Immediate paste (preserves clipboard)
-                    PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
-                } else {
-                    // Enter: Regular paste (modifies clipboard)
-                    PasteService.shared.pasteAndReturn(content: item.pasteContent)
-                }
-            }
-            return .handled
-        }
-        .onKeyPress(keys: [.delete]) { keyPress in
-            // Only handle delete when search field is not focused
-            guard !isSearchFieldFocused else {
-                return .ignored
-            }
-            if let item = selectedItem {
-                deleteItem(item)
-            }
-            return .handled
-        }
-        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.whitespaces)) { keyPress in
-            // Type-to-search: forward character input to search field
-            // Only when search field is not focused and no modifiers are pressed
-            if !isSearchFieldFocused && keyPress.modifiers.isEmpty {
-                clipboardManager.searchQuery.append(keyPress.characters)
-                isSearchFieldFocused = true
-                return .handled
-            }
-            return .ignored
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            itemCountOnUnfocus = clipboardManager.items.count
         }
     }
     
@@ -140,17 +135,16 @@ struct ContentView: View {
         }
     }
     
+    private func selectFirstItem() {
+        selectedItemId = clipboardManager.filteredItems.first?.id
+    }
+    
     // MARK: - List Pane
     
     private var listPane: some View {
         VStack(spacing: 0) {
             // Header
             header
-            
-            // Subtle separator
-            Rectangle()
-                .fill(Color.clipBorder)
-                .frame(height: 1)
             
             // List
             if clipboardManager.filteredItems.isEmpty {
@@ -176,27 +170,36 @@ struct ContentView: View {
                 SettingsButton {
                     showSettings = true
                 }
-                
-                // LLM toggle button
-                LLMToggleButton(
-                    isEnabled: $clipboardManager.llmAutoProcess,
-                    isProcessing: clipboardManager.llmService.isProcessing
-                )
-                
-                // Item count badge
-                Text("\(clipboardManager.items.count)")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.white.opacity(0.1), in: Capsule())
             }
             
-            SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused)
+            SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused, triggerAttention: $searchAttention)
+                .padding(.bottom, 4) // Extra space for shadow
         }
-        .padding(12)
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .background {
+            // Hidden button to capture Cmd+, keyboard shortcut for settings
+            Button("") {
+                showSettings = true
+            }
+            .keyboardShortcut(",", modifiers: .command)
+            .hidden()
+            
+            // Hidden button to capture Cmd+F keyboard shortcut for search focus
+            Button("") {
+                if isSearchFieldFocused {
+                    // Already focused - trigger attention animation
+                    searchAttention.toggle()
+                } else {
+                    isSearchFieldFocused = true
+                }
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            .hidden()
         }
     }
     
@@ -253,6 +256,41 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Keyboard Monitor (NSEvent)
+    
+    private func setupKeyboardMonitor() {
+        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [self] event in
+            // Only check for user-controlled modifiers, not intrinsic flags like .function/.numericPad
+            let userModifiers: NSEvent.ModifierFlags = [.command, .shift, .control, .option]
+            let hasUserModifiers = !event.modifierFlags.intersection(userModifiers).isEmpty
+            
+            // Handle arrow keys for list navigation (works even when search field is focused,
+            // since up/down arrows have no useful function in a single-line text field)
+            switch event.keyCode {
+            case 126: // Up arrow
+                if !hasUserModifiers {
+                    selectPreviousItem()
+                    return nil // Consume the event
+                }
+            case 125: // Down arrow
+                if !hasUserModifiers {
+                    selectNextItem()
+                    return nil // Consume the event
+                }
+            default:
+                break
+            }
+            return event // Pass through unhandled events
+        }
+    }
+    
+    private func removeKeyboardMonitor() {
+        if let monitor = keyboardMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyboardMonitor = nil
+        }
+    }
+    
     // MARK: - Empty State (with Otter Mascot)
     
     private var emptyState: some View {
@@ -260,15 +298,15 @@ struct ContentView: View {
             Spacer()
             
             // Otter mascot as the centerpiece
-            OtterMascot(size: 100, animated: true)
+            OtterMascot(size: 200, animated: false)
             
             VStack(spacing: 6) {
                 Text(clipboardManager.searchQuery.isEmpty ? "Ready to catch your clips!" : "No matching clips found")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 15, weight: .semibold, design: .default))
                     .foregroundStyle(.primary)
                 
                 Text(clipboardManager.searchQuery.isEmpty ? "Copy something to get started" : "Try a different search term")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(size: 12, weight: .medium, design: .default))
                     .foregroundStyle(.tertiary)
             }
             
@@ -279,6 +317,32 @@ struct ContentView: View {
     }
     
     // MARK: - Actions
+    
+    private func pasteItem(_ item: ClipboardItem) {
+        switch item.type {
+        case .text:
+            PasteService.shared.pasteAndReturn(content: item.pasteContent)
+        case .image:
+            if let data = item.rawData {
+                PasteService.shared.pasteAndReturn(data: data, type: .png)
+            }
+        case .file, .other:
+            PasteService.shared.pasteAndReturn(content: item.content)
+        }
+    }
+    
+    private func immediatePasteItem(_ item: ClipboardItem) {
+        switch item.type {
+        case .text:
+            PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+        case .image:
+            if let data = item.rawData {
+                PasteService.shared.immediatePasteAndReturn(data: data, type: .png)
+            }
+        case .file, .other:
+            PasteService.shared.immediatePasteAndReturn(content: item.content)
+        }
+    }
     
     private func copyItem(_ item: ClipboardItem) {
         clipboardManager.copyToClipboard(item)

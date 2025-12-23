@@ -7,14 +7,14 @@ struct ClipboardRow: View {
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 6) {
             // Type icon
             ClipboardTypeIcon(type: item.type)
             
             // Content - single line, compact (use smart preview if available)
             Text(item.smartPreview)
-                .font(.clipMono)
-                .foregroundStyle(isSelected ? .primary : .secondary)
+                .font(.clipBody)
+                .foregroundStyle(.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)
             
@@ -35,34 +35,27 @@ struct ClipboardRow: View {
                         .font(.system(size: 9, weight: .semibold, design: .rounded))
                         .foregroundColor(.clipContentType)
                 }
-                
-                // Time - right aligned
-                Text(item.formattedTime)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.tertiary)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(isSelected ? Color.clipSurfaceHover : (isHovered ? Color.clipSurface : Color.clear))
+            if isSelected {
+                Color.clear
+                    .glassEffect(in: .rect(cornerRadius: 8, style: .continuous))
+                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+            } else if isHovered {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.primary.opacity(0.05))
+            }
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(
-                    isSelected ? Color.clipAccent.opacity(0.4) : Color.white.opacity(isHovered ? 0.08 : 0),
-                    lineWidth: 1
-                )
-        }
-        .shadow(color: isSelected ? Color.clipAccent.opacity(0.15) : .clear, radius: 8)
-        .contentShape(Rectangle())
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onHover { isHovered = $0 }
     }
 }
 
 #Preview {
-    VStack(spacing: 4) {
+    VStack(spacing: 2) {
         ClipboardRow(
             item: ClipboardItem(content: "Hello, this is a sample clipboard item with some text content."),
             isSelected: false
