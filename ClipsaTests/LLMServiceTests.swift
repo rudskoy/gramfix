@@ -7,17 +7,20 @@ import XCTest
 final class LLMServiceTests: XCTestCase {
     
     private var service: LLMService!
-    private var provider: OllamaProvider!
+    private var client: OllamaClient!
+    private var provider: LLMProviderImpl!
     
     override func setUp() async throws {
         try await super.setUp()
         service = LLMService()
-        provider = OllamaProvider()
+        client = OllamaClient()
+        provider = LLMProviderImpl(client: client)
     }
     
     override func tearDown() async throws {
         service = nil
         provider = nil
+        client = nil
         try await super.tearDown()
     }
     

@@ -1,19 +1,22 @@
 import XCTest
 @testable import Clipsa
 
-/// Integration tests for OllamaProvider
+/// Integration tests for OllamaClient + LLMProviderImpl
 /// Requires Ollama to be running locally at http://localhost:11434
 final class OllamaProviderTests: XCTestCase {
     
-    private var provider: OllamaProvider!
+    private var client: OllamaClient!
+    private var provider: LLMProviderImpl!
     
     override func setUp() async throws {
         try await super.setUp()
-        provider = OllamaProvider()
+        client = OllamaClient()
+        provider = LLMProviderImpl(client: client)
     }
     
     override func tearDown() async throws {
         provider = nil
+        client = nil
         try await super.tearDown()
     }
     
@@ -134,24 +137,29 @@ final class OllamaProviderTests: XCTestCase {
         XCTAssertFalse(response.isEmpty, "Response should not be empty")
     }
     
-    // MARK: - Custom URL Tests
+    // MARK: - OllamaClient Specific Tests
     
-    func testProviderWithCustomURL() async throws {
-        // Test that provider can be initialized with custom URL
-        let customProvider = OllamaProvider(baseURL: "http://localhost:11434")
+    func testClientWithCustomURL() async throws {
+        // Test that client can be initialized with custom URL
+        let customClient = OllamaClient(baseURL: "http://localhost:11434")
+        let customProvider = LLMProviderImpl(client: customClient)
         
         let isAvailable = await customProvider.isAvailable()
         try XCTSkipUnless(isAvailable, "Ollama is not running or model is not available")
         
-        XCTAssertEqual(customProvider.name, "Ollama")
+        XCTAssertEqual(customClient.name, "Ollama")
     }
     
-    func testProviderWithInvalidURL() async throws {
+    func testClientWithInvalidURL() async throws {
         // Test behavior with unreachable URL
-        let invalidProvider = OllamaProvider(baseURL: "http://localhost:99999")
+        let invalidClient = OllamaClient(baseURL: "http://localhost:99999")
         
-        let isAvailable = await invalidProvider.isAvailable()
+        let isAvailable = await invalidClient.isAvailable()
         
-        XCTAssertFalse(isAvailable, "Provider should not be available with invalid URL")
+        XCTAssertFalse(isAvailable, "Client should not be available with invalid URL")
+    }
+    
+    func testProviderNameFromClient() async throws {
+        XCTAssertEqual(provider.name, "Ollama")
     }
 }
