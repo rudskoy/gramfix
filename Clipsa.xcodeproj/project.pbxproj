@@ -17,14 +17,55 @@
 		A08 /* Styling.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08 /* Styling.swift */; };
 		A09 /* PreviewPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11 /* PreviewPane.swift */; };
 		A10 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12 /* LLMService.swift */; };
-		A11 /* OllamaProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13 /* OllamaProvider.swift */; };
 		A14 /* LLMSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14 /* LLMSettings.swift */; };
 		A15 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15 /* SettingsView.swift */; };
 		D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F955F2EF8E2C70019A164 /* PasteService.swift */; };
-		D51F95612EF8E2C70019A164 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F955F2EF8E2C70019A164 /* PasteService.swift */; };
 		D51F95642EF8EBA90019A164 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = D51F95632EF8EBA90019A164 /* HotKey */; };
-		D51F95662EF8F1230019A164 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F95652EF8F1230019A164 /* AccessibilityService.swift */; };
 		D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F95652EF8F1230019A164 /* AccessibilityService.swift */; };
+		D573EAF92EF9F56600D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAF82EF9F56600D03FAE /* Hub */; };
+		D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFA2EF9F56600D03FAE /* Tokenizers */; };
+		D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFC2EF9F56600D03FAE /* Transformers */; };
+		D573EB002EF9F58300D03FAE /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFF2EF9F58300D03FAE /* MLX */; };
+		D573EB022EF9F58300D03FAE /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB012EF9F58300D03FAE /* MLXFFT */; };
+		D573EB042EF9F58300D03FAE /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB032EF9F58300D03FAE /* MLXFast */; };
+		D573EB062EF9F58300D03FAE /* MLXLinalg in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB052EF9F58300D03FAE /* MLXLinalg */; };
+		D573EB082EF9F58300D03FAE /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB072EF9F58300D03FAE /* MLXNN */; };
+		D573EB0B2EF9F5C300D03FAE /* MLXService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB0A2EF9F5C300D03FAE /* MLXService.swift */; };
+		D573EB112EF9F78C00D03FAE /* MLXOptimizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB102EF9F78C00D03FAE /* MLXOptimizers */; };
+		D573EB132EF9F78C00D03FAE /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB122EF9F78C00D03FAE /* MLXRandom */; };
+		D573EB162EF9F87900D03FAE /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB152EF9F87900D03FAE /* MLXEmbedders */; };
+		D573EB182EF9F87900D03FAE /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB172EF9F87900D03FAE /* MLXLLM */; };
+		D573EB1A2EF9F87900D03FAE /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB192EF9F87900D03FAE /* MLXLMCommon */; };
+		D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */; };
+		D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */; };
+		D573EB302EFA035F00D03FAE /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB2F2EFA035F00D03FAE /* HotKey */; };
+		D573EB322EFA035F00D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB312EFA035F00D03FAE /* Hub */; };
+		D573EB342EFA035F00D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB332EFA035F00D03FAE /* Tokenizers */; };
+		D573EB362EFA035F00D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB352EFA035F00D03FAE /* Transformers */; };
+		D573EB382EFA035F00D03FAE /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB372EFA035F00D03FAE /* MLX */; };
+		D573EB3A2EFA035F00D03FAE /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB392EFA035F00D03FAE /* MLXFast */; };
+		D573EB3C2EFA035F00D03FAE /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3B2EFA035F00D03FAE /* MLXFFT */; };
+		D573EB3E2EFA035F00D03FAE /* MLXLinalg in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3D2EFA035F00D03FAE /* MLXLinalg */; };
+		D573EB402EFA035F00D03FAE /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3F2EFA035F00D03FAE /* MLXNN */; };
+		D573EB422EFA035F00D03FAE /* MLXOptimizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB412EFA035F00D03FAE /* MLXOptimizers */; };
+		D573EB442EFA035F00D03FAE /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB432EFA035F00D03FAE /* MLXRandom */; };
+		D573EB462EFA035F00D03FAE /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB452EFA035F00D03FAE /* MLXEmbedders */; };
+		D573EB482EFA035F00D03FAE /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB472EFA035F00D03FAE /* MLXLLM */; };
+		D573EB4A2EFA035F00D03FAE /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB492EFA035F00D03FAE /* MLXLMCommon */; };
+		D5C9EB7D2EFA10DF0066FE10 /* ComplexModule in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB7C2EFA10DF0066FE10 /* ComplexModule */; };
+		D5C9EB7F2EFA10DF0066FE10 /* Numerics in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB7E2EFA10DF0066FE10 /* Numerics */; };
+		D5C9EB812EFA10DF0066FE10 /* RealModule in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB802EFA10DF0066FE10 /* RealModule */; };
+		D5C9EB842EFAC67D0066FE10 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB832EFAC67D0066FE10 /* KeyboardShortcuts */; };
+		D5C9EB862EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB852EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift */; };
+		D5C9EB872EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB852EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift */; };
+		D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB882EFAD08A0066FE10 /* MLXProviderTests.swift */; };
+		D5C9EB8D2EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8A2EFAEEA30066FE10 /* LLMProviderImpl.swift */; };
+		D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */; };
+		D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */; };
+		D5C9EB902EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8A2EFAEEA30066FE10 /* LLMProviderImpl.swift */; };
+		D5C9EB912EFAEEA30066FE10 /* MLXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */; };
+		D5C9EB922EFAEEA30066FE10 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */; };
+		D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
@@ -55,12 +96,20 @@
 		B10 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B11 /* PreviewPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPane.swift; sourceTree = "<group>"; };
 		B12 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
-		B13 /* OllamaProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProvider.swift; sourceTree = "<group>"; };
 		B14 /* LLMSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettings.swift; sourceTree = "<group>"; };
 		B15 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C01 /* Clipsa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipsa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D51F955F2EF8E2C70019A164 /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
 		D51F95652EF8F1230019A164 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
+		D573EB0A2EF9F5C300D03FAE /* MLXService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXService.swift; sourceTree = "<group>"; };
+		D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMModel.swift; sourceTree = "<group>"; };
+		D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HubApi+default.swift"; sourceTree = "<group>"; };
+		D5C9EB852EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Names.swift"; sourceTree = "<group>"; };
+		D5C9EB882EFAD08A0066FE10 /* MLXProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXProviderTests.swift; sourceTree = "<group>"; };
+		D5C9EB8A2EFAEEA30066FE10 /* LLMProviderImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderImpl.swift; sourceTree = "<group>"; };
+		D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXClient.swift; sourceTree = "<group>"; };
+		D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaClient.swift; sourceTree = "<group>"; };
+		D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderImplTests.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
@@ -71,24 +120,72 @@
 		D01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				D573EB182EF9F87900D03FAE /* MLXLLM in Frameworks */,
+				D573EB002EF9F58300D03FAE /* MLX in Frameworks */,
+				D573EB162EF9F87900D03FAE /* MLXEmbedders in Frameworks */,
+				D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */,
+				D5C9EB7F2EFA10DF0066FE10 /* Numerics in Frameworks */,
+				D573EAF92EF9F56600D03FAE /* Hub in Frameworks */,
+				D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */,
+				D573EB022EF9F58300D03FAE /* MLXFFT in Frameworks */,
+				D5C9EB812EFA10DF0066FE10 /* RealModule in Frameworks */,
 				D51F95642EF8EBA90019A164 /* HotKey in Frameworks */,
+				D573EB112EF9F78C00D03FAE /* MLXOptimizers in Frameworks */,
+				D5C9EB842EFAC67D0066FE10 /* KeyboardShortcuts in Frameworks */,
+				D573EB132EF9F78C00D03FAE /* MLXRandom in Frameworks */,
+				D573EB1A2EF9F87900D03FAE /* MLXLMCommon in Frameworks */,
+				D5C9EB7D2EFA10DF0066FE10 /* ComplexModule in Frameworks */,
+				D573EB042EF9F58300D03FAE /* MLXFast in Frameworks */,
+				D573EB062EF9F58300D03FAE /* MLXLinalg in Frameworks */,
+				D573EB082EF9F58300D03FAE /* MLXNN in Frameworks */,
 				D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */,
 			);
 		};
 		TD01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				D573EB482EFA035F00D03FAE /* MLXLLM in Frameworks */,
+				D573EB382EFA035F00D03FAE /* MLX in Frameworks */,
+				D573EB462EFA035F00D03FAE /* MLXEmbedders in Frameworks */,
+				D573EB342EFA035F00D03FAE /* Tokenizers in Frameworks */,
+				D573EB322EFA035F00D03FAE /* Hub in Frameworks */,
+				D573EB362EFA035F00D03FAE /* Transformers in Frameworks */,
+				D573EB3A2EFA035F00D03FAE /* MLXFast in Frameworks */,
+				D573EB302EFA035F00D03FAE /* HotKey in Frameworks */,
+				D573EB422EFA035F00D03FAE /* MLXOptimizers in Frameworks */,
+				D573EB442EFA035F00D03FAE /* MLXRandom in Frameworks */,
+				D573EB4A2EFA035F00D03FAE /* MLXLMCommon in Frameworks */,
 				T04 /* Ollama in Frameworks */,
+				D573EB3E2EFA035F00D03FAE /* MLXLinalg in Frameworks */,
+				D573EB402EFA035F00D03FAE /* MLXNN in Frameworks */,
+				D573EB3C2EFA035F00D03FAE /* MLXFFT in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D573EB0F2EF9F78C00D03FAE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D573EB2C2EFA008D00D03FAE /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */,
+				D5C9EB852EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
 		E01 = {
 			isa = PBXGroup;
 			children = (
 				E02 /* Clipsa */,
 				TE01 /* ClipsaTests */,
+				D573EB0F2EF9F78C00D03FAE /* Frameworks */,
 				E03 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -96,6 +193,7 @@
 		E02 /* Clipsa */ = {
 			isa = PBXGroup;
 			children = (
+				D573EB2C2EFA008D00D03FAE /* Support */,
 				B01 /* ClipsaApp.swift */,
 				E04 /* Models */,
 				E05 /* Services */,
@@ -120,6 +218,7 @@
 		E04 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */,
 				B04 /* ClipboardItem.swift */,
 				B14 /* LLMSettings.swift */,
 			);
@@ -129,11 +228,14 @@
 		E05 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D5C9EB8A2EFAEEA30066FE10 /* LLMProviderImpl.swift */,
+				D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */,
+				D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */,
+				D573EB0A2EF9F5C300D03FAE /* MLXService.swift */,
 				D51F95652EF8F1230019A164 /* AccessibilityService.swift */,
 				D51F955F2EF8E2C70019A164 /* PasteService.swift */,
 				B05 /* ClipboardManager.swift */,
 				B12 /* LLMService.swift */,
-				B13 /* OllamaProvider.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -161,6 +263,8 @@
 		TE01 /* ClipsaTests */ = {
 			isa = PBXGroup;
 			children = (
+				D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */,
+				D5C9EB882EFAD08A0066FE10 /* MLXProviderTests.swift */,
 				TB01 /* OllamaProviderTests.swift */,
 				TB02 /* LLMServiceTests.swift */,
 				TB03 /* LLMSettingsTests.swift */,
@@ -185,6 +289,23 @@
 			packageProductDependencies = (
 				D5FB7EBF2EF63E3C00F1871A /* Ollama */,
 				D51F95632EF8EBA90019A164 /* HotKey */,
+				D573EAF82EF9F56600D03FAE /* Hub */,
+				D573EAFA2EF9F56600D03FAE /* Tokenizers */,
+				D573EAFC2EF9F56600D03FAE /* Transformers */,
+				D573EAFF2EF9F58300D03FAE /* MLX */,
+				D573EB012EF9F58300D03FAE /* MLXFFT */,
+				D573EB032EF9F58300D03FAE /* MLXFast */,
+				D573EB052EF9F58300D03FAE /* MLXLinalg */,
+				D573EB072EF9F58300D03FAE /* MLXNN */,
+				D573EB102EF9F78C00D03FAE /* MLXOptimizers */,
+				D573EB122EF9F78C00D03FAE /* MLXRandom */,
+				D573EB152EF9F87900D03FAE /* MLXEmbedders */,
+				D573EB172EF9F87900D03FAE /* MLXLLM */,
+				D573EB192EF9F87900D03FAE /* MLXLMCommon */,
+				D5C9EB7C2EFA10DF0066FE10 /* ComplexModule */,
+				D5C9EB7E2EFA10DF0066FE10 /* Numerics */,
+				D5C9EB802EFA10DF0066FE10 /* RealModule */,
+				D5C9EB832EFAC67D0066FE10 /* KeyboardShortcuts */,
 			);
 			productName = Clipsa;
 			productReference = C01 /* Clipsa.app */;
@@ -205,6 +326,20 @@
 			name = ClipsaTests;
 			packageProductDependencies = (
 				TP01 /* Ollama */,
+				D573EB2F2EFA035F00D03FAE /* HotKey */,
+				D573EB312EFA035F00D03FAE /* Hub */,
+				D573EB332EFA035F00D03FAE /* Tokenizers */,
+				D573EB352EFA035F00D03FAE /* Transformers */,
+				D573EB372EFA035F00D03FAE /* MLX */,
+				D573EB392EFA035F00D03FAE /* MLXFast */,
+				D573EB3B2EFA035F00D03FAE /* MLXFFT */,
+				D573EB3D2EFA035F00D03FAE /* MLXLinalg */,
+				D573EB3F2EFA035F00D03FAE /* MLXNN */,
+				D573EB412EFA035F00D03FAE /* MLXOptimizers */,
+				D573EB432EFA035F00D03FAE /* MLXRandom */,
+				D573EB452EFA035F00D03FAE /* MLXEmbedders */,
+				D573EB472EFA035F00D03FAE /* MLXLLM */,
+				D573EB492EFA035F00D03FAE /* MLXLMCommon */,
 			);
 			productName = ClipsaTests;
 			productReference = TC01 /* ClipsaTests.xctest */;
@@ -240,6 +375,11 @@
 			packageReferences = (
 				D5FB7EBE2EF63E3C00F1871A /* XCRemoteSwiftPackageReference "ollama-swift" */,
 				D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */,
+				D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */,
+				D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+				D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */,
+				D5C9EB822EFAC63A0066FE10 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = E03 /* Products */;
@@ -267,15 +407,21 @@
 			files = (
 				A02 /* ContentView.swift in Sources */,
 				A01 /* ClipsaApp.swift in Sources */,
+				D5C9EB8D2EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */,
+				D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */,
+				D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */,
 				A04 /* ClipboardItem.swift in Sources */,
 				A05 /* ClipboardManager.swift in Sources */,
+				D5C9EB872EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */,
+				D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */,
 				A06 /* ClipboardRow.swift in Sources */,
+				D573EB0B2EF9F5C300D03FAE /* MLXService.swift in Sources */,
 				A07 /* SearchBar.swift in Sources */,
 				A08 /* Styling.swift in Sources */,
 				A09 /* PreviewPane.swift in Sources */,
 				D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */,
 				A10 /* LLMService.swift in Sources */,
-				A11 /* OllamaProvider.swift in Sources */,
+				D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */,
 				D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */,
 				A14 /* LLMSettings.swift in Sources */,
 				A15 /* SettingsView.swift in Sources */,
@@ -285,10 +431,10 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				T01 /* OllamaProviderTests.swift in Sources */,
+				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
 				T02 /* LLMServiceTests.swift in Sources */,
 				T03 /* LLMSettingsTests.swift in Sources */,
-				D51F95662EF8F1230019A164 /* AccessibilityService.swift in Sources */,
-				D51F95612EF8E2C70019A164 /* PasteService.swift in Sources */,
+				D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -442,7 +588,7 @@
 				INFOPLIST_FILE = Clipsa/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clipsa;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Clipsa. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Clipsa. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -474,7 +620,7 @@
 				INFOPLIST_FILE = Clipsa/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clipsa;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 Clipsa. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Clipsa. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -562,6 +708,46 @@
 				kind = branch;
 			};
 		};
+		D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-transformers";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.6;
+			};
+		};
+		D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.29.1;
+			};
+		};
+		D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.29.2;
+			};
+		};
+		D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-numerics.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
+		D5C9EB822EFAC63A0066FE10 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
 		D5FB7EBE2EF63E3C00F1871A /* XCRemoteSwiftPackageReference "ollama-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mattt/ollama-swift.git";
@@ -577,6 +763,161 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */;
 			productName = HotKey;
+		};
+		D573EAF82EF9F56600D03FAE /* Hub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Hub;
+		};
+		D573EAFA2EF9F56600D03FAE /* Tokenizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Tokenizers;
+		};
+		D573EAFC2EF9F56600D03FAE /* Transformers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Transformers;
+		};
+		D573EAFF2EF9F58300D03FAE /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		D573EB012EF9F58300D03FAE /* MLXFFT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFFT;
+		};
+		D573EB032EF9F58300D03FAE /* MLXFast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFast;
+		};
+		D573EB052EF9F58300D03FAE /* MLXLinalg */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXLinalg;
+		};
+		D573EB072EF9F58300D03FAE /* MLXNN */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXNN;
+		};
+		D573EB102EF9F78C00D03FAE /* MLXOptimizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXOptimizers;
+		};
+		D573EB122EF9F78C00D03FAE /* MLXRandom */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXRandom;
+		};
+		D573EB152EF9F87900D03FAE /* MLXEmbedders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXEmbedders;
+		};
+		D573EB172EF9F87900D03FAE /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLLM;
+		};
+		D573EB192EF9F87900D03FAE /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		D573EB2F2EFA035F00D03FAE /* HotKey */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */;
+			productName = HotKey;
+		};
+		D573EB312EFA035F00D03FAE /* Hub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Hub;
+		};
+		D573EB332EFA035F00D03FAE /* Tokenizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Tokenizers;
+		};
+		D573EB352EFA035F00D03FAE /* Transformers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Transformers;
+		};
+		D573EB372EFA035F00D03FAE /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		D573EB392EFA035F00D03FAE /* MLXFast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFast;
+		};
+		D573EB3B2EFA035F00D03FAE /* MLXFFT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFFT;
+		};
+		D573EB3D2EFA035F00D03FAE /* MLXLinalg */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXLinalg;
+		};
+		D573EB3F2EFA035F00D03FAE /* MLXNN */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXNN;
+		};
+		D573EB412EFA035F00D03FAE /* MLXOptimizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXOptimizers;
+		};
+		D573EB432EFA035F00D03FAE /* MLXRandom */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXRandom;
+		};
+		D573EB452EFA035F00D03FAE /* MLXEmbedders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXEmbedders;
+		};
+		D573EB472EFA035F00D03FAE /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLLM;
+		};
+		D573EB492EFA035F00D03FAE /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		D5C9EB7C2EFA10DF0066FE10 /* ComplexModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */;
+			productName = ComplexModule;
+		};
+		D5C9EB7E2EFA10DF0066FE10 /* Numerics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */;
+			productName = Numerics;
+		};
+		D5C9EB802EFA10DF0066FE10 /* RealModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */;
+			productName = RealModule;
+		};
+		D5C9EB832EFAC67D0066FE10 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D5C9EB822EFAC63A0066FE10 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
 		};
 		D5FB7EBF2EF63E3C00F1871A /* Ollama */ = {
 			isa = XCSwiftPackageProductDependency;
