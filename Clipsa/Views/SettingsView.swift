@@ -1,13 +1,15 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @ObservedObject var settings = LLMSettings.shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var promptText: String = ""
     @State private var hasChanges: Bool = false
     
-    // Model selection state
+    // Ollama model selection state
     @State private var availableModels: [OllamaModel] = []
     @State private var isLoadingModels: Bool = false
     @State private var modelError: String?
@@ -15,6 +17,10 @@ struct SettingsView: View {
     @State private var isDownloading: Bool = false
     @State private var downloadProgress: Double = 0
     @State private var isServerReachable: Bool = true
+    
+    // MLX state - use shared singleton
+    private var mlxService: MLXService { MLXService.shared }
+    @State private var isMLXModelLoading: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +35,24 @@ struct SettingsView: View {
             // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    shortcutSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
+                    aiToggleSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
+                    providerSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
                     modelSection
                     
                     Rectangle()
@@ -47,7 +71,7 @@ struct SettingsView: View {
             }
         }
         .frame(width: 520, height: 560)
-        .glassEffect()
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             promptText = settings.customPrompt
             fetchModels()
@@ -65,7 +89,7 @@ struct SettingsView: View {
         
         Task {
             do {
-                let models = try await OllamaProvider.listAvailableModels()
+                let models = try await OllamaClient.listAvailableModels()
                 await MainActor.run {
                     availableModels = models
                     isLoadingModels = false
@@ -87,7 +111,7 @@ struct SettingsView: View {
         
         Task {
             do {
-                try await OllamaProvider.pullModel(modelName) { progress in
+                try await OllamaClient.pullModel(modelName) { progress in
                     Task { @MainActor in
                         downloadProgress = progress
                     }
@@ -138,12 +162,181 @@ struct SettingsView: View {
                     .foregroundStyle(Color.clipAccent)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
-                    .glassEffect(in: .capsule)
+                    .background(Color.primary.opacity(0.1), in: Capsule())
             }
             .buttonStyle(.plain)
         }
         .padding(16)
-        .glassEffect()
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+    }
+    
+    // MARK: - Shortcut Section
+    
+    private var shortcutSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
+                
+                Text("Global Shortcut")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Press the shortcut keys to change")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            // Shortcut recorder
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Toggle Clipsa")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Show/hide clipboard manager from anywhere")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                KeyboardShortcuts.Recorder(for: .toggleClipsa)
+            }
+            .padding(12)
+        }
+    }
+    
+    // MARK: - AI Toggle Section
+    
+    private var aiToggleSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
+                
+                Text("AI Processing")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            // Auto-process toggle
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Auto-process clipboard")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Automatically analyze copied text with AI")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $settings.autoProcess)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+            .padding(12)
+            
+            // Detect tags toggle
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Detect tags")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Extract keywords using a separate AI query")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $settings.detectTags)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+            .padding(12)
+        }
+    }
+    
+    // MARK: - Provider Section
+    
+    private var providerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
+                
+                Text("LLM Provider")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Choose between local Ollama server or on-device MLX inference")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            // Provider picker
+            HStack(spacing: 8) {
+                ForEach(LLMProviderType.allCases) { provider in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            settings.selectedProvider = provider
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: provider.icon)
+                                .font(.system(size: 14, weight: .medium))
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(provider.displayName)
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                
+                                Text(provider.description)
+                                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            
+                            Spacer()
+                            
+                            if settings.selectedProvider == provider {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color.clipAccent)
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            settings.selectedProvider == provider
+                                ? Color.clipAccent.opacity(0.15)
+                                : Color.primary.opacity(0.05),
+                            in: RoundedRectangle(cornerRadius: 10)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(
+                                    settings.selectedProvider == provider
+                                        ? Color.clipAccent.opacity(0.5)
+                                        : Color.primary.opacity(0.1),
+                                    lineWidth: 1
+                                )
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.primary)
+                }
+            }
+        }
     }
     
     // MARK: - Model Section
@@ -156,28 +349,49 @@ struct SettingsView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(LinearGradient.accentGradient)
                 
-                Text("AI Model")
+                Text(settings.selectedProvider == .ollama ? "Ollama Model" : "MLX Model")
                     .font(.clipTitle)
                     .foregroundStyle(.primary)
                 
                 Spacer()
                 
-                // Server status indicator
-                if isLoadingModels {
-                    ProgressView()
-                        .scaleEffect(0.6)
+                // Status indicator
+                if settings.selectedProvider == .ollama {
+                    if isLoadingModels {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                    } else {
+                        Circle()
+                            .fill(isServerReachable ? Color.green : Color.red)
+                            .frame(width: 8, height: 8)
+                        
+                        Text(isServerReachable ? "Ollama running" : "Ollama offline")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
                 } else {
-                    Circle()
-                        .fill(isServerReachable ? Color.green : Color.red)
-                        .frame(width: 8, height: 8)
-                    
-                    Text(isServerReachable ? "Ollama running" : "Ollama offline")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                    // MLX status
+                    if isMLXModelLoading {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                        Text("Loading...")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                        
+                        Text("Apple Silicon ready")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
             
-            if !isServerReachable {
+            if settings.selectedProvider == .mlx {
+                mlxModelSection
+            } else if !isServerReachable {
                 // Offline message
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -200,7 +414,7 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(10)
-                .glassEffect(in: .rect(cornerRadius: 8))
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
             } else {
                 // Model picker
                 VStack(alignment: .leading, spacing: 8) {
@@ -231,10 +445,10 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .glassEffect(in: .rect(cornerRadius: 8))
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
                     .overlay {
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
                     }
                 }
                 
@@ -276,7 +490,7 @@ struct SettingsView: View {
                         }
                     }
                     .padding(10)
-                    .glassEffect(in: .rect(cornerRadius: 8))
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
                 }
                 
                 // Download new model
@@ -290,10 +504,10 @@ struct SettingsView: View {
                             .textFieldStyle(.plain)
                             .font(.system(size: 12, design: .monospaced))
                             .padding(10)
-                            .glassEffect(in: .rect(cornerRadius: 8))
+                            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
                             .overlay {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
                             }
                         
                         if isDownloading && !customModelName.isEmpty {
@@ -336,6 +550,81 @@ struct SettingsView: View {
         }
     }
     
+    // MARK: - MLX Model Section
+    
+    private var mlxModelSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Select from available MLX models")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            // MLX model picker
+            Picker("", selection: $settings.mlxSelectedModel) {
+                ForEach(MLXService.availableModels) { model in
+                    HStack {
+                        Text(model.displayName)
+                        if model.isVisionModel {
+                            Image(systemName: "eye")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tag(model.name)
+                }
+            }
+            .pickerStyle(.menu)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+            }
+            
+            // MLX download progress
+            if mlxService.isDownloading {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.clipAccent)
+                    
+                    if mlxService.totalFileCount > 0 {
+                        // Show progress based on file count
+                        ProgressView(value: Double(mlxService.downloadedFileCount), total: Double(mlxService.totalFileCount))
+                            .frame(maxWidth: .infinity)
+                        
+                        Text("Downloading \(mlxService.downloadedFileCount)/\(mlxService.totalFileCount) files")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        // Show indeterminate progress while discovering files
+                        ProgressView()
+                            .scaleEffect(0.7)
+                        
+                        Text("Starting download...")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding(10)
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            }
+            
+            // MLX info
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                
+                Text("MLX models run entirely on-device using Apple Silicon. First use downloads the model (~1-4 GB).")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(10)
+            .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 8))
+        }
+    }
+    
     // MARK: - Prompt Section
     
     private var promptSection: some View {
@@ -361,10 +650,10 @@ struct SettingsView: View {
                 .scrollContentBackground(.hidden)
                 .padding(12)
                 .frame(minHeight: 180)
-                .glassEffect(in: .rect(cornerRadius: 12))
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
                 .overlay {
                     RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
                 }
             
             // Action buttons
@@ -384,7 +673,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .glassEffect(in: .capsule)
+                    .background(Color.primary.opacity(0.1), in: Capsule())
                 }
                 .buttonStyle(.plain)
                 
@@ -414,7 +703,7 @@ struct SettingsView: View {
                     }
                     .background {
                         if !hasChanges {
-                            Capsule().glassEffect()
+                            Capsule().fill(Color.primary.opacity(0.1))
                         }
                     }
                     .shadow(color: hasChanges ? Color.clipAccent.opacity(0.4) : .clear, radius: 8)
@@ -461,7 +750,7 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .glassEffect(in: .rect(cornerRadius: 6))
+                        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 6))
                     }
                 }
             }
@@ -469,7 +758,7 @@ struct SettingsView: View {
     }
     
     private var infoText: some View {
-        Text("When you copy text, Clipsa sends it to Ollama with your custom prompt. The AI response appears in the preview pane.")
+        Text("When you copy text, Clipsa sends it to your selected LLM provider (Ollama or MLX) with your custom prompt. The AI response appears in the preview pane.")
             .font(.system(size: 12, weight: .regular, design: .rounded))
             .foregroundStyle(.secondary)
             .lineSpacing(4)

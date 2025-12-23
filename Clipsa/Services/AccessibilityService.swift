@@ -13,17 +13,18 @@ final class AccessibilityService {
     func isAccessibilityEnabled(prompt: Bool = false) -> Bool {
         let checkOptionPromptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let opts = [checkOptionPromptKey: prompt] as CFDictionary
-        return AXIsProcessTrustedWithOptions(opts)
+        let result = AXIsProcessTrustedWithOptions(opts)
+        print("[AccessibilityService] isAccessibilityEnabled(prompt: \(prompt)) = \(result)")
+        return result
     }
     
-    /// Show an alert explaining why Accessibility permission is needed
-    /// and offer to open System Settings
-    func showAccessibilityAlert() {
+    /// Show a custom alert explaining why Accessibility permission is needed
+    /// and offer to open System Settings (single button, Clipy-style)
+    func showAccessibilityAuthenticationAlert() {
         let alert = NSAlert()
-        alert.messageText = "Accessibility Permission Required"
-        alert.informativeText = "Clipsa needs Accessibility permission to paste content into other applications. Please enable it in System Settings > Privacy & Security > Accessibility."
+        alert.messageText = "Please allow Accessibility."
+        alert.informativeText = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Settings."
         alert.addButton(withTitle: "Open System Settings")
-        alert.addButton(withTitle: "Cancel")
         alert.alertStyle = .warning
         
         NSApp.activate(ignoringOtherApps: true)
