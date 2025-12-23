@@ -13,8 +13,11 @@ class ClipboardManager: ObservableObject {
     /// LLM service for processing clipboard content
     let llmService = LLMService()
     
-    /// Whether automatic LLM processing is enabled
-    @Published var llmAutoProcess: Bool = true
+    /// Whether automatic LLM processing is enabled (backed by LLMSettings)
+    var llmAutoProcess: Bool {
+        get { LLMSettings.shared.autoProcess }
+        set { LLMSettings.shared.autoProcess = newValue }
+    }
     
     private var lastChangeCount: Int = 0
     private var timer: Timer?
@@ -42,25 +45,86 @@ class ClipboardManager: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             if let changeCount = notification.userInfo?["changeCount"] as? Int {
-                self?.lastChangeCount = changeCount
-                logger.debug("🔇 Ignoring internal paste operation (changeCount: \(changeCount))")
+                Task { @MainActor in
+                    self?.lastChangeCount = changeCount
+                    logger.debug("🔇 Ignoring internal paste operation (changeCount: \(changeCount))")
+                }
             }
         }
+        
+        #if DEBUG
+        loadTestData()
+        #endif
+}
+    
+    #if DEBUG
+    /// Load sample test data for development - only available in Debug builds
+    private func loadTestData() {
+        let sampleItems: [(String, ClipboardType, String?)] = [
+            ("Hello, World! This is a simple text snippet.", .text, "Notes"),
+            ("SELECT * FROM users WHER active = true ORDER BY created_at DESC;", .text, "DataGrip"),
+            ("The quic brown fox jump over the lazi dog.", .text, "TextEdit"),
+            ("🦦 Clipsa - Your friendi clipboard manager!", .text, "Slack"),
+        ]
+        
+        for (content, type, appName) in sampleItems.reversed() {
+            let item = ClipboardItem(
+                content: content,
+                type: type,
+                appName: appName
+            )
+            items.insert(item, at: 0)
+        }
+        
+        logger.info("🧪 Loaded \(sampleItems.count) test items for development")
     }
+    #endif
     
     /// Setup default LLM providers
+    /// MLX service instance for on-device inference (uses shared singleton)
+    private var mlxService: MLXService { MLXService.shared }
+    
     private func setupLLMProviders() {
-        // Register Ollama as the provider (requires Ollama to be running)
-        let ollamaProvider = OllamaProvider()
-        llmService.registerProvider(ollamaProvider)
+        // Register Ollama provider (requires Ollama to be running)
+        let ollamaClient = OllamaClient()
+        let ollamaProvider = LLMProviderImpl(client: ollamaClient)
+        llmService.registerProvider(ollamaProvider, type: .ollama)
+        
+        // Register MLX provider (on-device Apple Silicon inference)
+        let mlxClient = MLXClient(mlxService: mlxService)
+        let mlxProvider = LLMProviderImpl(client: mlxClient)
+        llmService.registerProvider(mlxProvider, type: .mlx)
+        
+        // Sync with current settings
+        llmService.syncWithSettings()
     }
     
-    /// Observe model changes and clear cache when model changes
+    /// Observe model and provider changes and update LLM service accordingly
     private func observeModelChanges() {
+        // Observe Ollama model changes
         LLMSettings.shared.$selectedModel
             .dropFirst() // Skip initial value
             .sink { [weak self] newModel in
-                logger.info("🔄 Model changed to: \(newModel), clearing LLM cache")
+                logger.info("🔄 Ollama model changed to: \(newModel), clearing LLM cache")
+                self?.llmService.clearCache()
+            }
+            .store(in: &cancellables)
+        
+        // Observe MLX model changes
+        LLMSettings.shared.$mlxSelectedModel
+            .dropFirst()
+            .sink { [weak self] newModel in
+                logger.info("🔄 MLX model changed to: \(newModel), clearing LLM cache")
+                self?.llmService.clearCache()
+            }
+            .store(in: &cancellables)
+        
+        // Observe provider changes
+        LLMSettings.shared.$selectedProvider
+            .dropFirst()
+            .sink { [weak self] newProvider in
+                logger.info("🔄 Provider changed to: \(newProvider.rawValue), syncing LLM service")
+                self?.llmService.syncWithSettings()
                 self?.llmService.clearCache()
             }
             .store(in: &cancellables)
@@ -150,6 +214,7 @@ class ClipboardManager: ObservableObject {
     }
     
     /// Process a clipboard item with the LLM service
+    /// Fires main prompt and tag extraction as independent async queries
     func processItemWithLLM(_ item: ClipboardItem) async {
         guard item.type == .text, !item.llmProcessed else {
             logger.debug("⏭️ Skipping LLM processing: type=\(item.type.rawValue), alreadyProcessed=\(item.llmProcessed)")
@@ -162,22 +227,51 @@ class ClipboardManager: ObservableObject {
             return
         }
         
-        logger.info("🔄 Starting LLM processing for item \(item.id)")
+        let itemId = item.id
+        let content = item.content
         
-        // Mark as processing
+        logger.info("🔄 Starting LLM processing for item \(itemId)")
+        
+        // Mark as processing (main prompt)
         items[index] = items[index].withProcessingState(true)
         
-        // Process with LLM
-        let result = await llmService.processContent(item.content)
+        // Also mark tags as processing if detectTags is enabled
+        if LLMSettings.shared.detectTags {
+            if let idx = items.firstIndex(where: { $0.id == itemId }) {
+                items[idx] = items[idx].withTagsProcessingState(true)
+            }
+        }
         
-        // Update the item with results
-        if let currentIndex = items.firstIndex(where: { $0.id == item.id }) {
-            items[currentIndex] = items[currentIndex].withLLMResult(result)
-//            logger.info("THE RESULT: \(items[currentIndex].llmResponse)")
-            if let error = result.error {
-                logger.error("❌ LLM processing failed: \(error)")
-            } else {
-                logger.info("✅ LLM processing complete for item \(item.id)")
+        // Fire main custom prompt query (independent task)
+        Task { @MainActor in
+            let result = await llmService.processContent(content)
+            
+            // Update the item with main prompt results
+            if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                items[currentIndex] = items[currentIndex].withLLMResult(result)
+                if let error = result.error {
+                    logger.error("❌ LLM processing failed: \(error)")
+                } else {
+                    logger.info("✅ LLM main prompt complete for item \(itemId)")
+                }
+            }
+        }
+        
+        // Fire tag extraction query (independent async task)
+        if LLMSettings.shared.detectTags {
+            Task { @MainActor in
+                logger.info("🏷️ Starting async tag extraction for item \(itemId)")
+                let tagResult = await llmService.processContent(content, requestType: .extractTags)
+                
+                // Update the item with tags only
+                if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                    items[currentIndex] = items[currentIndex].withTagsResult(tagResult.tags)
+                    if let error = tagResult.error {
+                        logger.error("❌ Tag extraction failed: \(error)")
+                    } else {
+                        logger.info("✅ Tag extraction complete for item \(itemId): \(tagResult.tags)")
+                    }
+                }
             }
         }
     }
@@ -191,6 +285,7 @@ class ClipboardManager: ObservableObject {
         
         var resetItem = items[index]
         resetItem.llmProcessed = false
+        resetItem.llmTags = []
         items[index] = resetItem
         
         // Clear cache for this content

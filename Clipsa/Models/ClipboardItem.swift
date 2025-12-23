@@ -39,6 +39,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
     /// Whether LLM processing is currently in progress
     var llmProcessing: Bool
     
+    /// Whether tag extraction is currently in progress (separate async query)
+    var llmTagsProcessing: Bool
+    
     init(
         id: UUID = UUID(),
         content: String,
@@ -51,7 +54,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
         llmTags: [String] = [],
         llmContentType: String? = nil,
         llmProcessed: Bool = false,
-        llmProcessing: Bool = false
+        llmProcessing: Bool = false,
+        llmTagsProcessing: Bool = false
     ) {
         self.id = id
         self.content = content
@@ -66,17 +70,26 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
         self.llmContentType = llmContentType
         self.llmProcessed = llmProcessed
         self.llmProcessing = llmProcessing
+        self.llmTagsProcessing = llmTagsProcessing
     }
     
-    /// Create a copy with updated LLM result
+    /// Create a copy with updated LLM result (main prompt only, tags come from separate query)
     func withLLMResult(_ result: LLMResult) -> ClipboardItem {
         var updated = self
         updated.llmResponse = result.response
         updated.llmSummary = result.summary
-        updated.llmTags = result.tags
+        // Note: Tags are NOT updated here - they come from a separate async query
         updated.llmContentType = result.contentType
         updated.llmProcessed = true
         updated.llmProcessing = false
+        return updated
+    }
+    
+    /// Create a copy with updated tags from the async tag extraction query
+    func withTagsResult(_ tags: [String]) -> ClipboardItem {
+        var updated = self
+        updated.llmTags = tags
+        updated.llmTagsProcessing = false
         return updated
     }
     
@@ -87,10 +100,26 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
         return updated
     }
     
-    /// Display text combining original preview with LLM summary
+    /// Create a copy with tag processing state
+    func withTagsProcessingState(_ processing: Bool) -> ClipboardItem {
+        var updated = self
+        updated.llmTagsProcessing = processing
+        return updated
+    }
+    
+    /// Display text showing AI response preview if processed, otherwise original content
     var smartPreview: String {
-        if let summary = llmSummary, !summary.isEmpty {
-            return summary
+        if let response = llmResponse, !response.isEmpty {
+            // Clean and truncate AI response same as compactPreview
+            let cleaned = response
+                .replacingOccurrences(of: "\n", with: " ")
+                .replacingOccurrences(of: "\r", with: "")
+                .replacingOccurrences(of: "\t", with: " ")
+                .trimmingCharacters(in: .whitespaces)
+            if cleaned.count > 60 {
+                return String(cleaned.prefix(60)) + "…"
+            }
+            return cleaned
         }
         return compactPreview
     }
@@ -165,11 +194,12 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
     }
     
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
-        lhs.id == rhs.id && lhs.llmProcessing == rhs.llmProcessing
+        lhs.id == rhs.id && lhs.llmProcessing == rhs.llmProcessing && lhs.llmTagsProcessing == rhs.llmTagsProcessing
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(llmProcessing)
+        hasher.combine(llmTagsProcessing)
     }
 }
