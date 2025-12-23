@@ -54,24 +54,26 @@ extension LinearGradient {
 // MARK: - Typography (Rounded Design)
 
 extension Font {
-    static let clipTitle = Font.system(size: 14, weight: .semibold, design: .rounded)
+    static let clipTitle = Font.system(size: 14, weight: .semibold, design: .default)
     static let clipBody = Font.system(size: 12, weight: .regular, design: .default)
-    static let clipCaption = Font.system(size: 10, weight: .medium, design: .rounded)
+    static let clipCaption = Font.system(size: 10, weight: .medium, design: .default)
     static let clipMono = Font.system(size: 11, weight: .regular, design: .monospaced)
-    static let clipHeader = Font.system(size: 16, weight: .semibold, design: .rounded)
+    static let clipHeader = Font.system(size: 16, weight: .semibold, design: .default)
 }
 
 // MARK: - Icon Helpers
 
 struct ClipboardTypeIcon: View {
     let type: ClipboardType
+    @Environment(\.colorScheme) private var colorScheme  // Forces re-render on theme change
     
     var body: some View {
         Image(systemName: iconName)
             .font(.system(size: 12, weight: .medium))
             .foregroundStyle(.secondary)
             .frame(width: 20, height: 20)
-            .glassEffect(in: .rect(cornerRadius: 5))
+            .glassEffect(in: .rect(cornerRadius: 5, style: .continuous))
+            .id(colorScheme)  // Force complete re-render when theme changes
     }
     
     private var iconName: String {
@@ -96,6 +98,63 @@ struct LLMTagView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .glassEffect(in: .capsule)
+    }
+}
+
+// MARK: - Flow Layout (for wrapping tags)
+
+struct FlowLayout: Layout {
+    var horizontalSpacing: CGFloat = 6
+    var verticalSpacing: CGFloat = 6
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = layout(in: proposal.replacingUnspecifiedDimensions(), subviews: subviews)
+        return CGSize(width: proposal.width ?? result.width, height: result.height)
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX = bounds.minX
+        var currentY = bounds.minY
+        var lineHeight: CGFloat = 0
+        
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            
+            // Check if we need to wrap to next line
+            if currentX + size.width > bounds.maxX && currentX > bounds.minX {
+                currentX = bounds.minX
+                currentY += lineHeight + verticalSpacing
+                lineHeight = 0
+            }
+            
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
+            
+            currentX += size.width + horizontalSpacing
+            lineHeight = max(lineHeight, size.height)
+        }
+    }
+    
+    private func layout(in size: CGSize, subviews: Subviews) -> CGSize {
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+        var maxWidth: CGFloat = 0
+        
+        for subview in subviews {
+            let subviewSize = subview.sizeThatFits(.unspecified)
+            
+            if currentX + subviewSize.width > size.width && currentX > 0 {
+                currentX = 0
+                currentY += lineHeight + verticalSpacing
+                lineHeight = 0
+            }
+            
+            maxWidth = max(maxWidth, currentX + subviewSize.width)
+            lineHeight = max(lineHeight, subviewSize.height)
+            currentX += subviewSize.width + horizontalSpacing
+        }
+        
+        return CGSize(width: maxWidth, height: currentY + lineHeight)
     }
 }
 
@@ -145,9 +204,7 @@ struct OtterMascot: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.15))
-            .shadow(color: .purple.opacity(0.4), radius: size * 0.25)
-            .shadow(color: .blue.opacity(0.2), radius: size * 0.15)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.15, style: .continuous))
             .rotationEffect(.degrees(animated && isAnimating ? -3 : 3))
             .animation(
                 animated ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : .default,
@@ -267,6 +324,39 @@ struct SettingsButton: View {
     }
 }
 
+// MARK: - Theme Toggle Button
+
+struct ThemeToggleButton: View {
+    @ObservedObject private var settings = LLMSettings.shared
+    
+    var body: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                settings.appTheme = settings.appTheme.next
+            }
+        } label: {
+            // Use explicit rendering mode to prevent toolbar from applying template colors
+            Group {
+                switch settings.appTheme {
+                case .light:
+                    Image(systemName: "sun.max.fill")
+                        .symbolRenderingMode(.multicolor)
+                case .dark:
+                    Image(systemName: "moon.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.indigo)
+                case .system:
+                    Image(systemName: "circle.lefthalf.filled")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.primary, .primary.opacity(0.3))
+                }
+            }
+            .contentTransition(.symbolEffect(.replace))
+        }
+        .help("Theme: \(settings.appTheme.displayName)")
+    }
+}
+
 // MARK: - Glow Effect Modifier
 
 struct GlowEffect: ViewModifier {
@@ -304,5 +394,122 @@ struct HoverScaleModifier: ViewModifier {
 extension View {
     func hoverScale(_ scale: CGFloat = 1.02) -> some View {
         modifier(HoverScaleModifier(scale: scale))
+    }
+}
+
+// MARK: - Toolbar Tooltip System
+
+enum TooltipAlignment: Equatable {
+    case leading
+    case trailing
+}
+
+struct TooltipInfo: Equatable {
+    let title: String
+    let description: String
+    let shortcut: String?
+    let alignment: TooltipAlignment
+}
+
+class TooltipState: ObservableObject {
+    @Published var activeTooltip: TooltipInfo?
+    static let shared = TooltipState()
+}
+
+struct ToolbarActionButton: View {
+    let icon: String
+    let title: String
+    let description: String
+    let shortcut: String?
+    let isDisabled: Bool
+    let tooltipAlignment: TooltipAlignment
+    let action: () -> Void
+    
+    @ObservedObject private var tooltipState = TooltipState.shared
+    @State private var hoverTask: Task<Void, Never>?
+    
+    init(
+        icon: String,
+        title: String,
+        description: String,
+        shortcut: String? = nil,
+        isDisabled: Bool = false,
+        tooltipAlignment: TooltipAlignment = .leading,
+        action: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.title = title
+        self.description = description
+        self.shortcut = shortcut
+        self.isDisabled = isDisabled
+        self.tooltipAlignment = tooltipAlignment
+        self.action = action
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+        }
+        .disabled(isDisabled)
+        .onHover { hovering in
+            hoverTask?.cancel()
+            if hovering {
+                hoverTask = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(200))
+                    if !Task.isCancelled {
+                        tooltipState.activeTooltip = TooltipInfo(
+                            title: title,
+                            description: description,
+                            shortcut: shortcut,
+                            alignment: tooltipAlignment
+                        )
+                    }
+                }
+            } else {
+                tooltipState.activeTooltip = nil
+            }
+        }
+    }
+}
+
+struct FixedTooltipView: View {
+    let alignment: TooltipAlignment
+    @ObservedObject private var tooltipState = TooltipState.shared
+    
+    init(alignment: TooltipAlignment = .leading) {
+        self.alignment = alignment
+    }
+    
+    var body: some View {
+        Group {
+            if let tooltip = tooltipState.activeTooltip, tooltip.alignment == alignment {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(tooltip.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(tooltip.description)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    if let shortcut = tooltip.shortcut {
+                        Text(shortcut)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    }
+                }
+                .padding(10)
+                .frame(width: 200, alignment: .leading)
+                .glassEffect(in: .rect(cornerRadius: 8, style: .continuous))
+                .compositingGroup()
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: tooltipState.activeTooltip)
     }
 }
