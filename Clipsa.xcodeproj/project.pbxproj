@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -124,7 +124,6 @@
 /* Begin PBXFrameworksBuildPhase section */
 		D01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				D573EB182EF9F87900D03FAE /* MLXLLM in Frameworks */,
 				D573EB002EF9F58300D03FAE /* MLX in Frameworks */,
@@ -147,11 +146,9 @@
 				D573EB082EF9F58300D03FAE /* MLXNN in Frameworks */,
 				D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		TD01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				D573EB482EFA035F00D03FAE /* MLXLLM in Frameworks */,
 				D573EB382EFA035F00D03FAE /* MLX in Frameworks */,
@@ -169,7 +166,6 @@
 				D573EB402EFA035F00D03FAE /* MLXNN in Frameworks */,
 				D573EB3C2EFA035F00D03FAE /* MLXFFT in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -298,8 +294,6 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			name = Clipsa;
 			packageProductDependencies = (
 				D5FB7EBF2EF63E3C00F1871A /* Ollama */,
@@ -398,7 +392,7 @@
 				D5C9EB822EFAC63A0066FE10 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				D5C9EB992EFB69FE0066FE10 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = E03 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -412,19 +406,16 @@
 /* Begin PBXResourcesBuildPhase section */
 		F03 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				A03 /* Assets.xcassets in Resources */,
 				D5C9EB982EFB5AA50066FE10 /* AppIcon.icon in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F02 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				A02 /* ContentView.swift in Sources */,
 				A01 /* ClipsaApp.swift in Sources */,
@@ -449,11 +440,9 @@
 				D5C9EBA12EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */,
 				A15 /* SettingsView.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		TF02 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				D5C9EB9D2EFB6A100066FE10 /* UpdateService.swift in Sources */,
 				T01 /* OllamaProviderTests.swift in Sources */,
@@ -463,7 +452,6 @@
 				D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */,
 				D5C9EBA02EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -476,7 +464,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		H01 /* Debug */ = {
+		H01 /* Debug configuration for PBXProject "Clipsa" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -541,7 +529,7 @@
 			};
 			name = Debug;
 		};
-		H02 /* Release */ = {
+		H02 /* Release configuration for PBXProject "Clipsa" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -599,7 +587,7 @@
 			};
 			name = Release;
 		};
-		H03 /* Debug */ = {
+		H03 /* Debug configuration for PBXNativeTarget "Clipsa" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -629,7 +617,7 @@
 			};
 			name = Debug;
 		};
-		H04 /* Release */ = {
+		H04 /* Release configuration for PBXNativeTarget "Clipsa" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -662,7 +650,7 @@
 			};
 			name = Release;
 		};
-		TH01 /* Debug */ = {
+		TH01 /* Debug configuration for PBXNativeTarget "ClipsaTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -680,7 +668,7 @@
 			};
 			name = Debug;
 		};
-		TH02 /* Release */ = {
+		TH02 /* Release configuration for PBXNativeTarget "ClipsaTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -704,28 +692,25 @@
 		G01 /* Build configuration list for PBXNativeTarget "Clipsa" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				H03 /* Debug */,
-				H04 /* Release */,
+				H03 /* Debug configuration for PBXNativeTarget "Clipsa" */,
+				H04 /* Release configuration for PBXNativeTarget "Clipsa" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 		G02 /* Build configuration list for PBXProject "Clipsa" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				H01 /* Debug */,
-				H02 /* Release */,
+				H01 /* Debug configuration for PBXProject "Clipsa" */,
+				H02 /* Release configuration for PBXProject "Clipsa" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 		TG01 /* Build configuration list for PBXNativeTarget "ClipsaTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				TH01 /* Debug */,
-				TH02 /* Release */,
+				TH01 /* Debug configuration for PBXNativeTarget "ClipsaTests" */,
+				TH02 /* Release configuration for PBXNativeTarget "ClipsaTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
