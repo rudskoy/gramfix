@@ -3,6 +3,7 @@ import KeyboardShortcuts
 
 struct SettingsView: View {
     @ObservedObject var settings = LLMSettings.shared
+    @ObservedObject var updateService = UpdateService.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     
@@ -66,11 +67,17 @@ struct SettingsView: View {
                         .frame(height: 1)
                     
                     infoSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
+                    updateChannelSection
                 }
                 .padding(20)
             }
         }
-        .frame(width: 520, height: 560)
+        .frame(width: 520, height: 600)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             promptText = settings.customPrompt
@@ -767,6 +774,50 @@ struct SettingsView: View {
         "Summarize in 3 bullet points: {text}",
         "Find bugs in this code: {text}"
     ]
+    
+    // MARK: - Update Channel Section
+    
+    private var updateChannelSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.clipAccent)
+                
+                Text("Update Channel")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Choose where to receive app updates from:")
+                    .font(.system(size: 12, weight: .regular, design: .rounded))
+                    .foregroundStyle(.secondary)
+                
+                Picker("Channel", selection: $updateService.currentChannel) {
+                    ForEach(UpdateChannel.allCases) { channel in
+                        Text(channel.displayName).tag(channel)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                .labelsHidden()
+                
+                // Show current feed URL
+                HStack(spacing: 4) {
+                    Image(systemName: "link")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                    Text(updateService.currentChannel.feedURL.absoluteString)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
 }
 
 #Preview {
