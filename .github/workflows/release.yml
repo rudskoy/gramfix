@@ -1,0 +1,148 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on tags like v1.0, v1.1, v2.0
+
+env:
+  SCHEME: Clipsa
+  PROJECT: Clipsa.xcodeproj
+
+jobs:
+  build-and-release:
+    name: Build, Sign, and Release
+    runs-on: macos-14  # macOS Sonoma with Xcode 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      
+      - name: Show Xcode version
+        run: xcodebuild -version
+      
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project $PROJECT \
+            -scheme $SCHEME
+      
+      - name: Build Release
+        run: |
+          xcodebuild -project $PROJECT \
+            -scheme $SCHEME \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      
+      - name: Verify app bundle
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release/Clipsa.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Error: App bundle not found at $APP_PATH"
+            exit 1
+          fi
+          echo "App bundle found at $APP_PATH"
+          ls -la "$APP_PATH"
+      
+      - name: Create DMG
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release/Clipsa.app"
+          VERSION="${GITHUB_REF_NAME#v}"  # Remove 'v' prefix: v1.0 -> 1.0
+          DMG_NAME="Clipsa-${VERSION}.dmg"
+          
+          # Create staging directory
+          mkdir -p dmg_staging
+          cp -R "$APP_PATH" dmg_staging/
+          
+          # Add Applications symlink for drag-install
+          ln -s /Applications dmg_staging/Applications
+          
+          # Create DMG
+          hdiutil create \
+            -volname "Clipsa $VERSION" \
+            -srcfolder dmg_staging \
+            -ov \
+            -format UDZO \
+            "$DMG_NAME"
+          
+          echo "DMG_NAME=$DMG_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Download Sparkle tools
+        run: |
+          SPARKLE_VERSION="2.6.4"
+          curl -L -o sparkle.tar.xz \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          mkdir -p sparkle
+          tar -xf sparkle.tar.xz -C sparkle
+      
+      - name: Sign DMG with Sparkle
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          # Write private key to temp file (will be deleted after)
+          echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_key
+          
+          # Sign the DMG and extract signature
+          SIGN_OUTPUT=$(./sparkle/bin/sign_update "$DMG_NAME" --ed-key-file /tmp/sparkle_key)
+          SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | sed 's/sparkle:edSignature="\([^"]*\)"/\1/')
+          
+          # Clean up private key immediately
+          rm -f /tmp/sparkle_key
+          
+          # Get file size
+          SIZE=$(stat -f%z "$DMG_NAME")
+          
+          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
+          echo "SIZE=$SIZE" >> $GITHUB_ENV
+          
+          echo "✅ DMG signed successfully"
+          echo "   Size: $SIZE bytes"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Clipsa v${{ env.VERSION }}"
+          files: |
+            ${{ env.DMG_NAME }}
+          body: |
+            ## Clipsa v${{ env.VERSION }}
+            
+            ### Download
+            - **[Clipsa-${{ env.VERSION }}.dmg](https://github.com/clipsa-ai/clipsa/releases/download/v${{ env.VERSION }}/Clipsa-${{ env.VERSION }}.dmg)**
+            
+            ### Installation
+            1. Download the DMG
+            2. Open it and drag Clipsa to Applications
+            3. Right-click Clipsa → Open (first time only, to bypass Gatekeeper)
+            
+            ---
+            
+            ### For appcast.xml (copy this):
+            ```xml
+            <item>
+              <title>Version ${{ env.VERSION }}</title>
+              <sparkle:version>${{ env.VERSION }}</sparkle:version>
+              <sparkle:shortVersionString>${{ env.VERSION }}</sparkle:shortVersionString>
+              <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+              <enclosure 
+                url="https://github.com/clipsa-ai/clipsa/releases/download/v${{ env.VERSION }}/Clipsa-${{ env.VERSION }}.dmg"
+                sparkle:edSignature="${{ env.SIGNATURE }}"
+                length="${{ env.SIZE }}"
+                type="application/octet-stream"/>
+            </item>
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
