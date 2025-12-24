@@ -88,7 +88,7 @@ struct PreviewPane: View {
                 }
             }
         case .link:
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Image(systemName: "link")
                     .font(.system(size: 48, weight: .light))
                     .foregroundStyle(LinearGradient.accentGradient)
@@ -100,6 +100,27 @@ struct PreviewPane: View {
                     .multilineTextAlignment(.center)
                     .textSelection(.enabled)
                     .padding(.horizontal)
+                
+                // Action buttons
+                HStack(spacing: 16) {
+                    LinkActionButton(
+                        icon: "doc.on.doc",
+                        label: "Copy",
+                        showsCheckmark: true
+                    ) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(item.content, forType: .string)
+                    }
+                    
+                    LinkActionButton(
+                        icon: "safari",
+                        label: "Open"
+                    ) {
+                        if let url = URL(string: item.content) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .image:
@@ -350,6 +371,68 @@ struct ActionButton: View {
                 isHovered = hovering
             }
         }
+    }
+}
+
+// MARK: - Link Action Button (Glassy Circle with Label)
+
+struct LinkActionButton: View {
+    let icon: String
+    let label: String
+    var showsCheckmark: Bool = false
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    @State private var isPressed = false
+    @State private var showingCheckmark = false
+    
+    var body: some View {
+        Button {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                isPressed = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+            }
+            action()
+            
+            if showsCheckmark {
+                showingCheckmark = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    showingCheckmark = false
+                }
+            }
+        } label: {
+            VStack(spacing: 8) {
+                // Glassy circle with icon
+                ZStack {
+                    Circle()
+                        .glassEffect()
+                        .shadow(color: isHovered ? .clipAccent.opacity(0.3) : .black.opacity(0.1), radius: isHovered ? 8 : 4)
+                    
+                    Image(systemName: showingCheckmark ? "checkmark" : icon)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(showingCheckmark ? .green : (isHovered ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.primary)))
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                .frame(width: 44, height: 44)
+                .scaleEffect(isPressed ? 0.9 : (isHovered ? 1.05 : 1.0))
+                
+                // Label
+                Text(label)
+                    .font(.system(size: 11, weight: .medium, design: .default))
+                    .foregroundStyle(isHovered ? .primary : .secondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(label)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
     }
 }
 
