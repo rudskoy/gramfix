@@ -30,6 +30,8 @@ final class AccessibilityService {
         NSApp.activate(ignoringOtherApps: true)
         
         if alert.runModal() == .alertFirstButtonReturn {
+            // Preserve previousApp when user returns from Settings
+            PasteService.shared.shouldPreservePreviousApp = true
             openAccessibilitySettings()
         }
     }

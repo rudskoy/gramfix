@@ -66,6 +66,19 @@ struct ContentView: View {
                 .keyboardShortcut(.return, modifiers: .shift)
                 
                 ToolbarActionButton(
+                    icon: "doc.plaintext",
+                    title: "Paste Original",
+                    description: "Paste original content, ignoring AI response",
+                    shortcut: "⌘ Cmd + ⏎ Return",
+                    isDisabled: selectedItem == nil
+                ) {
+                    if let item = selectedItem {
+                        pasteOriginalItem(item)
+                    }
+                }
+                .keyboardShortcut(.return, modifiers: .command)
+                
+                ToolbarActionButton(
                     icon: "trash",
                     title: "Delete",
                     description: "Remove this item from clipboard history",
@@ -336,6 +349,19 @@ struct ContentView: View {
             }
         case .file, .other:
             PasteService.shared.immediatePasteAndReturn(content: item.content)
+        }
+    }
+    
+    private func pasteOriginalItem(_ item: ClipboardItem) {
+        switch item.type {
+        case .text:
+            PasteService.shared.pasteAndReturn(content: item.content)
+        case .image:
+            if let data = item.rawData {
+                PasteService.shared.pasteAndReturn(data: data, type: .png)
+            }
+        case .file, .other:
+            PasteService.shared.pasteAndReturn(content: item.content)
         }
     }
     

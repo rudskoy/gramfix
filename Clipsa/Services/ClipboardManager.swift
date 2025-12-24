@@ -24,6 +24,9 @@ class ClipboardManager: ObservableObject {
     private let maxItems = 100
     private var cancellables = Set<AnyCancellable>()
     
+    /// Whether initial history load has completed
+    private var historyLoaded = false
+    
     var filteredItems: [ClipboardItem] {
         if searchQuery.isEmpty {
             return items
@@ -36,6 +39,7 @@ class ClipboardManager: ObservableObject {
         lastChangeCount = NSPasteboard.general.changeCount
         setupLLMProviders()
         observeModelChanges()
+        setupPersistence()
         startMonitoring()
         
         // Listen for internal paste operations to avoid re-processing
@@ -52,10 +56,18 @@ class ClipboardManager: ObservableObject {
             }
         }
         
-        #if DEBUG
-        loadTestData()
-        #endif
-}
+        // Load persisted history
+        Task { @MainActor in
+            await loadPersistedHistory()
+            
+            #if DEBUG
+            // Only load test data if no persisted history exists
+            if items.isEmpty {
+                loadTestData()
+            }
+            #endif
+        }
+    }
     
     #if DEBUG
     /// Load sample test data for development - only available in Debug builds
@@ -128,6 +140,45 @@ class ClipboardManager: ObservableObject {
                 self?.llmService.clearCache()
             }
             .store(in: &cancellables)
+    }
+    
+    // MARK: - Persistence
+    
+    /// Setup debounced persistence - saves 2 seconds after changes stop
+    private func setupPersistence() {
+        $items
+            .dropFirst() // Skip initial empty value
+            .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
+            .sink { [weak self] items in
+                guard let self = self, self.historyLoaded else { return }
+                Task {
+                    await self.saveHistory(items)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Load persisted clipboard history from disk
+    private func loadPersistedHistory() async {
+        do {
+            let loadedItems = try await ClipboardPersistence.shared.load()
+            if !loadedItems.isEmpty {
+                items = loadedItems
+                logger.info("📂 Restored \(loadedItems.count) items from persistent storage")
+            }
+        } catch {
+            logger.error("❌ Failed to load clipboard history: \(error.localizedDescription)")
+        }
+        historyLoaded = true
+    }
+    
+    /// Save clipboard history to disk
+    private func saveHistory(_ itemsToSave: [ClipboardItem]) async {
+        do {
+            try await ClipboardPersistence.shared.save(itemsToSave)
+        } catch {
+            logger.error("❌ Failed to save clipboard history: \(error.localizedDescription)")
+        }
     }
     
     deinit {
@@ -319,6 +370,15 @@ class ClipboardManager: ObservableObject {
     
     func clearHistory() {
         items.removeAll()
+        
+        // Also clear persisted history
+        Task {
+            do {
+                try await ClipboardPersistence.shared.clearHistory()
+            } catch {
+                logger.error("❌ Failed to clear persisted history: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

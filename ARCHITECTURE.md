@@ -13,6 +13,7 @@ Clipsa/
 │   └── LMModel.swift            # MLX model configuration (name, type, HuggingFace config)
 ├── Services/
 │   ├── ClipboardManager.swift   # State manager, clipboard polling, LLM trigger
+│   ├── ClipboardPersistence.swift # Persist clipboard history to Application Support
 │   ├── PasteService.swift       # Paste actions: regular (modifies clipboard) & immediate (preserves clipboard)
 │   ├── AccessibilityService.swift # Accessibility permission handling (required for CGEvent)
 │   ├── LLMService.swift         # LLM orchestration, caching, provider management, protocols
@@ -69,6 +70,35 @@ NSPasteboard ──(0.5s poll)──▶ ClipboardManager ──▶ items[]
 ```
 
 Both queries run as independent async tasks - either can complete first.
+
+## Clipboard History Persistence
+
+Clipboard history is persisted to disk and survives app restarts and updates:
+
+```
+ClipboardManager.items[] ──(debounced 2s)──▶ ClipboardPersistence
+                                                     │
+                                                     ▼
+                              ~/Library/Application Support/Clipsa/
+                                     clipboard_history.json
+```
+
+| Component | Role |
+|-----------|------|
+| `ClipboardPersistence` | Actor for atomic JSON read/write to Application Support |
+| `PersistedClipboardHistory` | Versioned wrapper for migration support |
+
+### Persistence Behavior
+- **Save trigger**: Debounced - saves 2 seconds after changes stop (reduces disk I/O)
+- **Load**: On app launch, before test data in debug builds
+- **Clear**: `clearHistory()` removes both in-memory and persisted data
+- **Persisted fields**: All `ClipboardItem` fields except transient processing states (`llmProcessing`, `llmTagsProcessing`)
+- **LLM results**: AI responses and tags are persisted (no re-processing needed on reload)
+
+### Storage Location
+- Path: `~/Library/Application Support/Clipsa/clipboard_history.json`
+- Survives app updates (Sparkle only replaces app bundle)
+- Backed up by Time Machine and iCloud (if user has backup enabled)
 
 ## LLM Provider Architecture
 
@@ -132,8 +162,9 @@ Models are downloaded from HuggingFace on first use and cached locally.
 
 | Component | Role |
 |-----------|------|
-| `ClipboardManager` | `@StateObject` - owns items[], search, initializes LLM providers |
-| `ClipboardItem` | Struct with content + LLM fields (summary, tags, type) |
+| `ClipboardManager` | `@StateObject` - owns items[], search, initializes LLM providers, triggers persistence |
+| `ClipboardItem` | Codable struct with content + LLM fields (summary, tags, type) |
+| `ClipboardPersistence` | Actor for persisting clipboard history to Application Support (debounced saves) |
 | `PasteService` | Singleton for paste workflows (regular & immediate), supports text/image/file types |
 | `AccessibilityService` | Singleton for Accessibility permission (required since macOS 10.14) |
 | `LLMService` | Manages providers, caches results by content hash, syncs with settings |
@@ -177,16 +208,17 @@ Uses [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) libr
 
 ### Paste Actions
 
-Two paste modes are available, both supporting text, images, and files:
+Three paste modes are available, all supporting text, images, and files:
 
 | Action | Shortcut | Behavior |
 |--------|----------|----------|
-| **Paste** | Enter | Copies to clipboard, pastes to previous app. Item stays on clipboard. |
-| **Immediate Paste** | Shift+Enter | Copies to clipboard, pastes, then restores original clipboard. |
+| **Paste** | Enter | Pastes AI response (or original if none), keeps on clipboard. |
+| **Immediate Paste** | Shift+Enter | Pastes AI response (or original if none), restores original clipboard. |
+| **Paste Original** | Cmd+Enter | Pastes original content (ignoring AI response), keeps on clipboard. |
 | **Settings** | Cmd+, | Opens settings dialog (provider, model selection, prompt editor) |
 
 #### Supported Content Types
-- **Text**: Uses `pasteAndReturn(content:)` with text string (or AI response if available)
+- **Text**: Uses `pasteAndReturn(content:)` with `item.pasteContent` (AI response if available, otherwise original) or `item.content` (always original for Paste Original)
 - **Image**: Uses `pasteAndReturn(data:type:)` with PNG data from `ClipboardItem.rawData`
 - **File/Other**: Uses `pasteAndReturn(content:)` with file names as text
 
@@ -215,6 +247,19 @@ User presses Shift+Enter ──▶ ContentView.immediatePasteItem()
                                     ├──▶ Activate previous app
                                     ├──▶ Simulate Cmd+V (CGEvent)
                                     └──▶ Restore original clipboard (after 200ms)
+```
+
+#### Paste Original (Cmd+Enter)
+```
+User presses Cmd+Enter ──▶ ContentView.pasteOriginalItem()
+                                  │
+                                  ├──▶ Switch on item.type
+                                  ├──▶ Call PasteService method with item.content
+                                  │       (always original, ignores AI response)
+                                  ├──▶ Copy to NSPasteboard
+                                  ├──▶ Hide Clipsa
+                                  ├──▶ Activate previous app
+                                  └──▶ Simulate Cmd+V (CGEvent)
 ```
 
 ### Accessibility Permission
@@ -300,7 +345,7 @@ This allows the main prompt result to be displayed immediately while tags are st
 ## Development
 
 ### Debug Test Data
-In Debug builds (when building from Xcode), sample clipboard items are automatically loaded on launch. This includes various content types: plain text, URLs, code snippets, JSON, SQL, and emoji. The test data is controlled by `#if DEBUG` in `ClipboardManager.loadTestData()` and is stripped from Release builds.
+In Debug builds (when building from Xcode), sample clipboard items are loaded on launch **only if no persisted history exists**. This includes various content types: plain text, URLs, code snippets, JSON, SQL, and emoji. The test data is controlled by `#if DEBUG` in `ClipboardManager.loadTestData()` and is stripped from Release builds.
 
 ## Automatic Updates (Sparkle)
 

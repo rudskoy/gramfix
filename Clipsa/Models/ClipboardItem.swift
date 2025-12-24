@@ -8,7 +8,7 @@ enum ClipboardType: String, Codable {
     case other
 }
 
-struct ClipboardItem: Identifiable, Equatable, Hashable {
+struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     let id: UUID
     let content: String
     let rawData: Data?
@@ -16,7 +16,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
     let timestamp: Date
     let appName: String?
     
-    // Cached formatted time string for performance
+    // Cached formatted time string for performance (not persisted, recomputed on load)
     let formattedTime: String
     
     // MARK: - LLM-generated fields
@@ -36,11 +36,41 @@ struct ClipboardItem: Identifiable, Equatable, Hashable {
     /// Whether LLM processing has been attempted
     var llmProcessed: Bool
     
-    /// Whether LLM processing is currently in progress
+    /// Whether LLM processing is currently in progress (transient, not persisted)
     var llmProcessing: Bool
     
-    /// Whether tag extraction is currently in progress (separate async query)
+    /// Whether tag extraction is currently in progress (transient, not persisted)
     var llmTagsProcessing: Bool
+    
+    // MARK: - Codable
+    
+    /// Coding keys - excludes transient processing states and computed formattedTime
+    enum CodingKeys: String, CodingKey {
+        case id, content, rawData, type, timestamp, appName
+        case llmResponse, llmSummary, llmTags, llmContentType, llmProcessed
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        content = try container.decode(String.self, forKey: .content)
+        rawData = try container.decodeIfPresent(Data.self, forKey: .rawData)
+        type = try container.decode(ClipboardType.self, forKey: .type)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        appName = try container.decodeIfPresent(String.self, forKey: .appName)
+        llmResponse = try container.decodeIfPresent(String.self, forKey: .llmResponse)
+        llmSummary = try container.decodeIfPresent(String.self, forKey: .llmSummary)
+        llmTags = try container.decodeIfPresent([String].self, forKey: .llmTags) ?? []
+        llmContentType = try container.decodeIfPresent(String.self, forKey: .llmContentType)
+        llmProcessed = try container.decodeIfPresent(Bool.self, forKey: .llmProcessed) ?? false
+        
+        // Transient states - always start as false when loading
+        llmProcessing = false
+        llmTagsProcessing = false
+        
+        // Recompute formatted time from timestamp
+        formattedTime = Self.timeFormatter.localizedString(for: timestamp, relativeTo: Date())
+    }
     
     init(
         id: UUID = UUID(),

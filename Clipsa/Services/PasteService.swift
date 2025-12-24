@@ -6,7 +6,17 @@ class PasteService {
     
     private var previousApp: NSRunningApplication?
     
+    /// When true, the next savePreviousApp() call will be skipped.
+    /// Used to preserve previousApp when returning from accessibility permission flow.
+    var shouldPreservePreviousApp = false
+    
     func savePreviousApp() {
+        // Skip updating if we're returning from the accessibility permission flow
+        if shouldPreservePreviousApp {
+            shouldPreservePreviousApp = false
+            return
+        }
+        
         let currentApp = NSWorkspace.shared.frontmostApplication
         if currentApp != NSRunningApplication.current {
             previousApp = currentApp

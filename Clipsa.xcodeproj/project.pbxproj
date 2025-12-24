@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -381,7 +381,6 @@
 				};
 			};
 			buildConfigurationList = G02 /* Build configuration list for PBXProject "Clipsa" */;
-			compatibilityVersion = "Xcode 15.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -399,6 +398,7 @@
 				D5C9EB822EFAC63A0066FE10 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				D5C9EB992EFB69FE0066FE10 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
+			preferredProjectObjectVersion = 77;
 			productRefGroup = E03 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
