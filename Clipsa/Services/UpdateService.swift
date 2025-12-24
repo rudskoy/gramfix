@@ -6,8 +6,8 @@ import Sparkle
 final class UpdateService: ObservableObject {
     static let shared = UpdateService()
     
-    /// The official update feed URL
-    static let feedURL = URL(string: "https://raw.githubusercontent.com/clipsa-ai/clipsa/main/appcast.xml")!
+    /// The official update feed URL (hosted on public releases repo)
+    static let feedURL = URL(string: "https://raw.githubusercontent.com/clipsa-ai/releases/main/appcast.xml")!
     
     /// The Sparkle updater controller
     private let updaterController: SPUStandardUpdaterController

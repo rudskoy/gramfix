@@ -31,8 +31,9 @@ class ClipboardManager: ObservableObject {
         if searchQuery.isEmpty {
             return items
         }
-        // Use smart search that includes LLM fields
-        return items.filter { $0.matchesSearch(searchQuery) }
+        // Parse search query for type filters and search text
+        let filter = SearchFilter.parse(searchQuery)
+        return items.filter { filter.matches($0) }
     }
     
     init() {
@@ -215,9 +216,13 @@ class ClipboardManager: ObservableObject {
                 return
             }
             
+            // Detect if content is a link
+            let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            let isLink = Self.isValidURL(trimmed)
+            
             let item = ClipboardItem(
                 content: string,
-                type: .text,
+                type: isLink ? .link : .text,
                 appName: appName
             )
             addItem(item)
@@ -350,7 +355,7 @@ class ClipboardManager: ObservableObject {
         pasteboard.clearContents()
         
         switch item.type {
-        case .text:
+        case .text, .link:
             pasteboard.setString(item.content, forType: .string)
         case .image:
             if let data = item.rawData {
@@ -379,6 +384,18 @@ class ClipboardManager: ObservableObject {
                 logger.error("❌ Failed to clear persisted history: \(error.localizedDescription)")
             }
         }
+    }
+    
+    // MARK: - URL Detection
+    
+    /// Check if a string is a valid URL (http, https, ftp, or mailto)
+    private static func isValidURL(_ string: String) -> Bool {
+        guard let url = URL(string: string),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https" || scheme == "ftp" || scheme == "mailto" else {
+            return false
+        }
+        return url.host != nil || scheme == "mailto"
     }
 }
 

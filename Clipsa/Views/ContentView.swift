@@ -9,6 +9,7 @@ struct ContentView: View {
     @FocusState private var isSearchFieldFocused: Bool
     @State private var itemCountOnUnfocus: Int = 0
     @State private var searchAttention: Bool = false
+    @State private var searchShowingSuggestions: Bool = false
     
     private var selectedItem: ClipboardItem? {
         guard let id = selectedItemId else { return nil }
@@ -39,45 +40,49 @@ struct ContentView: View {
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
-                ToolbarActionButton(
-                    icon: "doc.on.doc",
-                    title: "Paste",
-                    description: "Paste content and return to previous app",
-                    shortcut: "⏎ Return",
-                    isDisabled: selectedItem == nil
-                ) {
-                    if let item = selectedItem {
-                        pasteItem(item)
+                GlassToolbarGroup {
+                    ToolbarActionButton(
+                        icon: "doc.on.doc",
+                        title: "Paste",
+                        description: "Paste content and return to previous app",
+                        shortcut: "⏎ Return",
+                        isDisabled: selectedItem == nil
+                    ) {
+                        if let item = selectedItem {
+                            pasteItem(item)
+                        }
                     }
-                }
-                .keyboardShortcut(.return, modifiers: [])
-                
-                ToolbarActionButton(
-                    icon: "arrow.right.doc.on.clipboard",
-                    title: "Quick Paste",
-                    description: "Paste without modifying clipboard, preserves original",
-                    shortcut: "⇧ Shift + ⏎ Return",
-                    isDisabled: selectedItem == nil
-                ) {
-                    if let item = selectedItem {
-                        immediatePasteItem(item)
+                    .keyboardShortcut(.return, modifiers: [])
+                    
+                    ToolbarActionButton(
+                        icon: "arrow.right.doc.on.clipboard",
+                        title: "Quick Paste",
+                        description: "Paste without modifying clipboard, preserves original",
+                        shortcut: "⇧ Shift + ⏎ Return",
+                        isDisabled: selectedItem == nil
+                    ) {
+                        if let item = selectedItem {
+                            immediatePasteItem(item)
+                        }
                     }
-                }
-                .keyboardShortcut(.return, modifiers: .shift)
-                
-                ToolbarActionButton(
-                    icon: "doc.plaintext",
-                    title: "Paste Original",
-                    description: "Paste original content, ignoring AI response",
-                    shortcut: "⌘ Cmd + ⏎ Return",
-                    isDisabled: selectedItem == nil
-                ) {
-                    if let item = selectedItem {
-                        pasteOriginalItem(item)
+                    .keyboardShortcut(.return, modifiers: .shift)
+                    
+                    ToolbarActionButton(
+                        icon: "doc.plaintext",
+                        title: "Paste Original",
+                        description: "Paste original content, ignoring AI response",
+                        shortcut: "⌘ Cmd + ⏎ Return",
+                        isDisabled: selectedItem == nil
+                    ) {
+                        if let item = selectedItem {
+                            pasteOriginalItem(item)
+                        }
                     }
+                    .keyboardShortcut(.return, modifiers: .command)
                 }
-                .keyboardShortcut(.return, modifiers: .command)
-                
+            }
+            
+            ToolbarItem(placement: .navigation) {
                 ToolbarActionButton(
                     icon: "trash",
                     title: "Delete",
@@ -89,22 +94,23 @@ struct ContentView: View {
                     }
                 }
             }
+            .sharedBackgroundVisibility(.hidden)
             
             ToolbarItem(placement: .primaryAction) {
-                ThemeToggleButton()
-            }
-            
-            ToolbarItem(placement: .primaryAction) {
-                ToolbarActionButton(
-                    icon: "sparkles",
-                    title: "Process with AI",
-                    description: "Analyze content using Ollama LLM",
-                    isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true,
-                    tooltipAlignment: .trailing
-                ) {
-                    if let item = selectedItem {
-                        Task {
-                            await clipboardManager.processItemWithLLM(item)
+                GlassToolbarGroup {
+                    ThemeToggleButton()
+                    
+                    ToolbarActionButton(
+                        icon: "sparkles",
+                        title: "Process with AI",
+                        description: "Analyze content using Ollama LLM",
+                        isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true,
+                        tooltipAlignment: .trailing
+                    ) {
+                        if let item = selectedItem {
+                            Task {
+                                await clipboardManager.processItemWithLLM(item)
+                            }
                         }
                     }
                 }
@@ -156,8 +162,9 @@ struct ContentView: View {
     
     private var listPane: some View {
         VStack(spacing: 0) {
-            // Header
+            // Header (zIndex ensures suggestions overlay appears above list)
             header
+                .zIndex(1)
             
             // List
             if clipboardManager.filteredItems.isEmpty {
@@ -185,7 +192,7 @@ struct ContentView: View {
                 }
             }
             
-            SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused, triggerAttention: $searchAttention)
+            SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused, triggerAttention: $searchAttention, showingSuggestions: $searchShowingSuggestions)
                 .padding(.bottom, 4) // Extra space for shadow
         }
         .padding(.horizontal, 12)
@@ -277,6 +284,11 @@ struct ContentView: View {
             let userModifiers: NSEvent.ModifierFlags = [.command, .shift, .control, .option]
             let hasUserModifiers = !event.modifierFlags.intersection(userModifiers).isEmpty
             
+            // Skip arrow handling when search suggestions are visible (let SearchBar handle them)
+            if searchShowingSuggestions {
+                return event
+            }
+            
             // Handle arrow keys for list navigation (works even when search field is focused,
             // since up/down arrows have no useful function in a single-line text field)
             switch event.keyCode {
@@ -330,6 +342,8 @@ struct ContentView: View {
         switch item.type {
         case .text:
             PasteService.shared.pasteAndReturn(content: item.pasteContent)
+        case .link:
+            PasteService.shared.pasteAndReturn(content: item.content)
         case .image:
             if let data = item.rawData {
                 PasteService.shared.pasteAndReturn(data: data, type: .png)
@@ -343,6 +357,8 @@ struct ContentView: View {
         switch item.type {
         case .text:
             PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+        case .link:
+            PasteService.shared.immediatePasteAndReturn(content: item.content)
         case .image:
             if let data = item.rawData {
                 PasteService.shared.immediatePasteAndReturn(data: data, type: .png)
@@ -355,6 +371,8 @@ struct ContentView: View {
     private func pasteOriginalItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
+            PasteService.shared.pasteAndReturn(content: item.content)
+        case .link:
             PasteService.shared.pasteAndReturn(content: item.content)
         case .image:
             if let data = item.rawData {

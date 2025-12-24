@@ -66,18 +66,10 @@ struct ClipsaApp: App {
         }
         
         MenuBarExtra("Clipsa", image: "MenuBarIcon") {
-            Button("Show Window") {
-                AppDelegate.showMainWindow()
-            }
-            .keyboardShortcut("o", modifiers: .command)
-            
-            Divider()
-            
-            Button("Quit Clipsa") {
-                NSApplication.shared.terminate(nil)
-            }
-            .keyboardShortcut("q", modifiers: .command)
+            MenuBarView()
+                .environmentObject(clipboardManager)
         }
+        .menuBarExtraStyle(.window)
     }
 }
 

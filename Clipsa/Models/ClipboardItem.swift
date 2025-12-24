@@ -3,6 +3,7 @@ import AppKit
 
 enum ClipboardType: String, Codable {
     case text
+    case link
     case image
     case file
     case other

@@ -17,6 +17,7 @@ VERSION="1.0"
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${PROJECT_DIR}/build"
 DIST_DIR="${PROJECT_DIR}/dist"
+SCRIPTS_DIR="${PROJECT_DIR}/scripts"
 APP_PATH="${BUILD_DIR}/Release/${APP_NAME}.app"
 
 DMG_TEMP="${BUILD_DIR}/${APP_NAME}-temp.dmg"
@@ -36,6 +37,16 @@ success() { echo -e "${GREEN}[✓]${NC} $1"; }
 if [ ! -d "${APP_PATH}" ]; then
     echo "Error: ${APP_PATH} not found. Run build-dmg.sh first."
     exit 1
+fi
+
+# Ensure the app has the icns icon (for compatibility with non-Tahoe systems)
+ICNS_PATH="${SCRIPTS_DIR}/Clipsa.icns"
+if [ -f "${ICNS_PATH}" ]; then
+    log "Copying app icon to bundle..."
+    cp "${ICNS_PATH}" "${APP_PATH}/Contents/Resources/AppIcon.icns"
+    /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string 'AppIcon'" "${APP_PATH}/Contents/Info.plist" 2>/dev/null || \
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile 'AppIcon'" "${APP_PATH}/Contents/Info.plist"
+    touch "${APP_PATH}"
 fi
 
 # Clean up
@@ -101,4 +112,3 @@ rm -f "${DMG_TEMP}"
 
 success "Styled DMG created: ${DMG_FINAL}"
 echo "  Size: $(du -h "${DMG_FINAL}" | cut -f1)"
-

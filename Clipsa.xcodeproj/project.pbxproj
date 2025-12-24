@@ -62,6 +62,7 @@
 		D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */; };
 		D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */; };
 		D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */; };
+		D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */; };
 		D5C9EB9B2EFB69FE0066FE10 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB9A2EFB69FE0066FE10 /* Sparkle */; };
 		D5C9EB9D2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
 		D5C9EB9E2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
@@ -69,6 +70,11 @@
 		D5C9EBA12EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */; };
 		D5C9EBA32EFB84BF0066FE10 /* ClipboardPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */; };
 		D5C9EBA42EFB84BF0066FE10 /* ClipboardPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */; };
+		D5C9EBA62EFC38F20066FE10 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */; };
+		D5C9EBA72EFC38F20066FE10 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */; };
+		D5C9EBA92EFC45040066FE10 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D5C9EBA82EFC45040066FE10 /* AppIcon.icon */; };
+		D5C9EBAB2EFC63870066FE10 /* SearchFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */; };
+		D5C9EBAC2EFC63870066FE10 /* SearchFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
@@ -113,9 +119,13 @@
 		D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXClient.swift; sourceTree = "<group>"; };
 		D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaClient.swift; sourceTree = "<group>"; };
 		D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderImplTests.swift; sourceTree = "<group>"; };
+		D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterTests.swift; sourceTree = "<group>"; };
 		D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckForUpdatesView.swift; sourceTree = "<group>"; };
 		D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPersistence.swift; sourceTree = "<group>"; };
+		D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		D5C9EBA82EFC45040066FE10 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilter.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
@@ -190,6 +200,7 @@
 		E01 = {
 			isa = PBXGroup;
 			children = (
+				D5C9EBA82EFC45040066FE10 /* AppIcon.icon */,
 				E02 /* Clipsa */,
 				TE01 /* ClipsaTests */,
 				D573EB0F2EF9F78C00D03FAE /* Frameworks */,
@@ -225,6 +236,7 @@
 		E04 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */,
 				D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */,
 				B04 /* ClipboardItem.swift */,
 				B14 /* LLMSettings.swift */,
@@ -252,6 +264,7 @@
 		E06 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */,
 				D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */,
 				B02 /* ContentView.swift */,
 				B06 /* ClipboardRow.swift */,
@@ -275,6 +288,7 @@
 			children = (
 				D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */,
 				D5C9EB882EFAD08A0066FE10 /* MLXProviderTests.swift */,
+				D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */,
 				TB01 /* OllamaProviderTests.swift */,
 				TB02 /* LLMServiceTests.swift */,
 				TB03 /* LLMSettingsTests.swift */,
@@ -409,6 +423,7 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				A03 /* Assets.xcassets in Resources */,
+				D5C9EBA92EFC45040066FE10 /* AppIcon.icon in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -422,10 +437,12 @@
 				A01 /* ClipsaApp.swift in Sources */,
 				D5C9EB8D2EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */,
 				D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */,
+				D5C9EBAB2EFC63870066FE10 /* SearchFilter.swift in Sources */,
 				D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */,
 				A04 /* ClipboardItem.swift in Sources */,
 				D5C9EB9E2EFB6A100066FE10 /* UpdateService.swift in Sources */,
 				A05 /* ClipboardManager.swift in Sources */,
+				D5C9EBA72EFC38F20066FE10 /* MenuBarView.swift in Sources */,
 				D5C9EB872EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */,
 				D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */,
 				A06 /* ClipboardRow.swift in Sources */,
@@ -445,14 +462,12 @@
 		TF02 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
-				D5C9EB9D2EFB6A100066FE10 /* UpdateService.swift in Sources */,
 				T01 /* OllamaProviderTests.swift in Sources */,
-				D5C9EBA32EFB84BF0066FE10 /* ClipboardPersistence.swift in Sources */,
 				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
+				D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */,
 				T02 /* LLMServiceTests.swift in Sources */,
 				T03 /* LLMSettingsTests.swift in Sources */,
 				D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */,
-				D5C9EBA02EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -611,7 +626,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clipsa.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -643,7 +658,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clipsa.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -661,7 +676,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clipsa.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -679,7 +694,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.clipsa.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

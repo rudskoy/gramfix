@@ -79,6 +79,7 @@ struct ClipboardTypeIcon: View {
     private var iconName: String {
         switch type {
         case .text: return "doc.text"
+        case .link: return "link"
         case .image: return "photo"
         case .file: return "folder"
         case .other: return "doc"
@@ -388,6 +389,21 @@ struct TooltipInfo: Equatable {
 class TooltipState: ObservableObject {
     @Published var activeTooltip: TooltipInfo?
     static let shared = TooltipState()
+}
+
+// MARK: - Glass Toolbar Group
+
+struct GlassToolbarGroup<Content: View>: View {
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        GlassEffectContainer {
+            HStack(spacing: 4) {
+                content
+            }
+        }
+        .glassEffect()
+    }
 }
 
 struct ToolbarActionButton: View {

@@ -87,6 +87,21 @@ struct PreviewPane: View {
                     .frame(height: geometry.size.height / 2)
                 }
             }
+        case .link:
+            VStack(spacing: 12) {
+                Image(systemName: "link")
+                    .font(.system(size: 48, weight: .light))
+                    .foregroundStyle(LinearGradient.accentGradient)
+                    .shadow(color: .clipAccent.opacity(0.3), radius: 12)
+                
+                Text(item.content)
+                    .font(.system(size: 13, weight: .medium, design: .default))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                    .textSelection(.enabled)
+                    .padding(.horizontal)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .image:
             if let data = item.rawData, let nsImage = NSImage(data: data) {
                 ScrollView([.horizontal, .vertical]) {
@@ -344,6 +359,7 @@ extension ClipboardType {
     var displayName: String {
         switch self {
         case .text: return "Text"
+        case .link: return "Link"
         case .image: return "Image"
         case .file: return "File"
         case .other: return "Other"
