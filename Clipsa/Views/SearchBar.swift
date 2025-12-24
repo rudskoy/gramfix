@@ -144,7 +144,15 @@ struct SearchBar: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.08))
+        )
         .glassEffect(in: .rect(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.25), lineWidth: 1.5)
+        )
         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
     }
     
