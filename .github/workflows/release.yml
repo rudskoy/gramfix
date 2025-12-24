@@ -9,6 +9,9 @@ env:
   SCHEME: Clipsa
   PROJECT: Clipsa.xcodeproj
 
+permissions:
+  contents: write  # Required for creating releases and uploading assets
+
 jobs:
   build-and-release:
     name: Build, Sign, and Release
