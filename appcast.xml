@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>Clipsa Updates</title>
-    <link>https://github.com/rudskoy/clipsa</link>
+    <link>https://github.com/clipsa-ai/clipsa</link>
     <description>Most recent updates to Clipsa</description>
     <language>en</language>
     
@@ -33,7 +33,7 @@
         ]]>
       </description>
       <enclosure 
-        url="https://github.com/rudskoy/clipsa/releases/download/v1.0/Clipsa-1.0.dmg"
+        url="https://github.com/clipsa-ai/clipsa/releases/download/v1.0/Clipsa-1.0.dmg"
         sparkle:edSignature="PLACEHOLDER_SIGNATURE_RUN_sign_update_TO_GENERATE"
         length="0"
         type="application/octet-stream"/>

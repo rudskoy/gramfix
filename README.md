@@ -25,7 +25,7 @@ A modern macOS clipboard manager with AI-powered content analysis. Built with Sw
 
 ### Download
 
-Download the latest release from [GitHub Releases](https://github.com/rudskoy/clipsa/releases).
+Download the latest release from [GitHub Releases](https://github.com/clipsa-ai/clipsa/releases).
 
 1. Open the DMG file
 2. Drag Clipsa to your Applications folder
@@ -36,7 +36,7 @@ Download the latest release from [GitHub Releases](https://github.com/rudskoy/cl
 
 ```bash
 # Clone the repository
-git clone https://github.com/rudskoy/clipsa.git
+git clone https://github.com/clipsa-ai/clipsa.git
 cd clipsa
 
 # Open in Xcode

@@ -767,10 +767,8 @@ struct SettingsView: View {
         "Summarize in 3 bullet points: {text}",
         "Find bugs in this code: {text}"
     ]
-    
 }
 
 #Preview {
     SettingsView()
 }
-
