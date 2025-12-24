@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import KeyboardShortcuts
+import Sparkle
 
 @main
 struct ClipsaApp: App {
@@ -8,6 +9,9 @@ struct ClipsaApp: App {
     @AppStorage("app_theme") private var appThemeRaw: String = AppTheme.system.rawValue
     @State private var systemIsDark: Bool = false  // Safe default, updated in onAppear
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    /// Sparkle update service for automatic updates
+    private let updateService = UpdateService.shared
     
     /// Always returns explicit ColorScheme (never nil) for immediate updates
     private var colorScheme: ColorScheme {
@@ -49,6 +53,11 @@ struct ClipsaApp: App {
             
             // Hide Services menu
             CommandGroup(replacing: .systemServices) { }
+            
+            // Add "Check for Updates..." menu item after app info
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updateService.updater)
+            }
         }
         
         // Settings scene automatically adds "Settings..." menu item with ⌘,

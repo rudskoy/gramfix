@@ -1,0 +1,38 @@
+import Foundation
+import Sparkle
+
+/// Centralized service for managing app updates via Sparkle
+/// Provides a shared SPUUpdater instance for the entire app
+final class UpdateService: ObservableObject {
+    static let shared = UpdateService()
+    
+    /// The Sparkle updater controller
+    private let updaterController: SPUStandardUpdaterController
+    
+    /// The underlying SPUUpdater for direct access
+    var updater: SPUUpdater {
+        updaterController.updater
+    }
+    
+    private init() {
+        // Initialize Sparkle with default settings
+        // startingUpdater: true means it will automatically check for updates on launch
+        // based on user preferences
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
+    
+    /// Manually trigger an update check
+    func checkForUpdates() {
+        updater.checkForUpdates()
+    }
+    
+    /// Check if the updater can currently check for updates
+    var canCheckForUpdates: Bool {
+        updater.canCheckForUpdates
+    }
+}
+

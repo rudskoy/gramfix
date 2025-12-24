@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Clipsa Updates</title>
+    <link>https://github.com/rudskoy/clipsa</link>
+    <description>Most recent updates to Clipsa</description>
+    <language>en</language>
+    
+    <!-- 
+    To add a new release:
+    1. Build and sign your DMG: ./build/DerivedData/SourcePackages/checkouts/Sparkle/bin/sign_update YourApp.dmg
+    2. Copy the signature output
+    3. Add a new <item> below with the version, signature, and download URL
+    4. Commit and push appcast.xml
+    -->
+    
+    <item>
+      <title>Version 1.0</title>
+      <pubDate>Tue, 24 Dec 2024 12:00:00 +0000</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description>
+        <![CDATA[
+          <h2>Initial Release</h2>
+          <ul>
+            <li>Clipboard history with text, image, and file support</li>
+            <li>AI-powered content analysis with Ollama and MLX</li>
+            <li>Smart tag extraction</li>
+            <li>Global keyboard shortcut</li>
+            <li>Liquid Glass UI design</li>
+          </ul>
+        ]]>
+      </description>
+      <enclosure 
+        url="https://github.com/rudskoy/clipsa/releases/download/v1.0/Clipsa-1.0.dmg"
+        sparkle:edSignature="PLACEHOLDER_SIGNATURE_RUN_sign_update_TO_GENERATE"
+        length="0"
+        type="application/octet-stream"/>
+    </item>
+    
+  </channel>
+</rss>
+

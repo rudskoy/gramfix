@@ -77,12 +77,26 @@ Both queries run concurrently and can complete in any order.
 
 ### Global Shortcut & Paste Flow
 
-- **Global shortcut**: Cmd+Shift+\ (via HotKey library using Carbon APIs)
+- **Global shortcut**: Configurable via KeyboardShortcuts library (default: Cmd+Shift+\)
 - **Toggle behavior**: Shows Clipsa if inactive, returns to previous app if active
 - **Paste actions**:
   - `Enter`: Regular paste (copies to clipboard, pastes, keeps on clipboard)
   - `Shift+Enter`: Immediate paste (pastes then restores original clipboard after 200ms)
 - **Accessibility permission**: Required for CGEvent keyboard simulation, checked lazily before paste actions (not on launch)
+
+### Automatic Updates (Sparkle)
+
+The app uses Sparkle framework for automatic updates:
+- **UpdateService**: Singleton managing SPUStandardUpdaterController
+- **CheckForUpdatesView**: SwiftUI button for manual update checks
+- **appcast.xml**: Update feed hosted on GitHub (raw.githubusercontent.com)
+- Updates are signed with EdDSA (Ed25519) for security
+
+To release a new version:
+1. Build release DMG
+2. Sign with `./build/DerivedData/SourcePackages/checkouts/Sparkle/bin/sign_update`
+3. Update appcast.xml with new version and signature
+4. Upload DMG to GitHub Releases
 
 ### Keyboard Navigation
 
@@ -152,13 +166,15 @@ Clipsa/
 │   ├── MLXService.swift         # MLX model loading (@Observable)
 │   ├── MLXProvider.swift        # MLX LLMProvider implementation
 │   ├── PasteService.swift       # Paste workflows (regular & immediate)
-│   └── AccessibilityService.swift # Permission handling
+│   ├── AccessibilityService.swift # Permission handling
+│   └── UpdateService.swift      # Sparkle update controller
 ├── Views/                       # UI components
 │   ├── ContentView.swift        # Main NavigationSplitView with keyboard handling
 │   ├── ClipboardRow.swift       # List item with hover effects
 │   ├── PreviewPane.swift        # Detail panel with AI response
 │   ├── SearchBar.swift          # Search input
-│   └── SettingsView.swift       # Provider/model/prompt configuration
+│   ├── SettingsView.swift       # Provider/model/prompt configuration
+│   └── CheckForUpdatesView.swift # Sparkle update check button
 ├── Utilities/
 │   └── Styling.swift            # Shared colors, fonts, modifiers
 └── Support/
@@ -175,7 +191,8 @@ ClipsaTests/
 - **[ollama-swift](https://github.com/mattt/ollama-swift)**: Ollama API client
 - **[mlx-swift](https://github.com/ml-explore/mlx-swift)** (v0.29.1+): MLX for Apple Silicon
 - **[swift-transformers](https://github.com/huggingface/swift-transformers)** (v1.1.0+): HuggingFace Hub API
-- **[HotKey](https://github.com/soffes/HotKey)**: Global keyboard shortcuts via Carbon APIs
+- **[KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts)**: Configurable global keyboard shortcuts
+- **[Sparkle](https://github.com/sparkle-project/Sparkle)** (v2.x): Automatic app updates
 
 ## Important Constraints
 

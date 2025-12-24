@@ -19,7 +19,8 @@ Clipsa/
 │   ├── LLMProviderImpl.swift    # Unified LLM provider with shared prompt/parsing logic
 │   ├── OllamaClient.swift       # Ollama client implementing TextGenerationClient
 │   ├── MLXClient.swift          # MLX client implementing TextGenerationClient
-│   └── MLXService.swift         # MLX model loading, caching, generation
+│   ├── MLXService.swift         # MLX model loading, caching, generation
+│   └── UpdateService.swift      # Sparkle automatic update controller
 ├── Support/
 │   ├── HubApi+default.swift     # HuggingFace Hub configuration for model downloads
 │   └── KeyboardShortcuts+Names.swift # Global shortcut name definitions
@@ -28,7 +29,8 @@ Clipsa/
 │   ├── ClipboardRow.swift       # List items with hover effects
 │   ├── PreviewPane.swift        # Detail panel with AI response + mascot states
 │   ├── SearchBar.swift          # Search input
-│   └── SettingsView.swift       # Provider selection, model picker, prompt editor
+│   ├── SettingsView.swift       # Provider selection, model picker, prompt editor
+│   └── CheckForUpdatesView.swift # Sparkle update check button
 └── Utilities/
     └── Styling.swift            # Colors, fonts, shared components
 
@@ -300,6 +302,36 @@ This allows the main prompt result to be displayed immediately while tags are st
 ### Debug Test Data
 In Debug builds (when building from Xcode), sample clipboard items are automatically loaded on launch. This includes various content types: plain text, URLs, code snippets, JSON, SQL, and emoji. The test data is controlled by `#if DEBUG` in `ClipboardManager.loadTestData()` and is stripped from Release builds.
 
+## Automatic Updates (Sparkle)
+
+The app uses [Sparkle](https://github.com/sparkle-project/Sparkle) framework for automatic updates:
+
+| Component | Role |
+|-----------|------|
+| `UpdateService` | Singleton managing `SPUStandardUpdaterController` |
+| `CheckForUpdatesView` | SwiftUI button for menu bar "Check for Updates…" command |
+| `appcast.xml` | Update feed hosted on GitHub (raw.githubusercontent.com) |
+
+### Update Flow
+```
+App Launch ──▶ UpdateService.init() ──▶ SPUStandardUpdaterController
+                                              │
+                                              ▼ (if automatic checks enabled)
+                                        Fetch appcast.xml
+                                              │
+                                              ▼ (if new version available)
+                                        Show update dialog
+                                              │
+                                              ▼ (user clicks Install)
+                                        Download, verify EdDSA signature, install
+```
+
+### Releasing Updates
+1. Build release DMG
+2. Sign with `./build/DerivedData/SourcePackages/checkouts/Sparkle/bin/sign_update Clipsa.dmg`
+3. Update `appcast.xml` with new version, signature, and download URL
+4. Create GitHub Release, attach DMG
+
 ## Dependencies
 
 - **Xcode 26+** / **macOS Tahoe (26)+** - Required for Liquid Glass APIs
@@ -309,6 +341,7 @@ In Debug builds (when building from Xcode), sample clipboard items are automatic
 - **[mlx-swift](https://github.com/ml-explore/mlx-swift)** - MLX for Apple Silicon (v0.29.1+)
 - **[swift-transformers](https://github.com/huggingface/swift-transformers)** - HuggingFace Hub API (v1.1.0+)
 - **[KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts)** - Configurable global keyboard shortcuts with SwiftUI recorder
+- **[Sparkle](https://github.com/sparkle-project/Sparkle)** (v2.x) - Automatic app updates with EdDSA signing
 - SwiftUI + AppKit (macOS only)
 
 ---

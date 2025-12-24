@@ -28,5 +28,13 @@
 	<string>NSApplication</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Clipsa needs permission to paste content into other applications.</string>
+	
+	<!-- Sparkle Update Framework Configuration -->
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/rudskoy/clipsa/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>PLACEHOLDER_RUN_generate_keys_TO_GET_PUBLIC_KEY</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 </dict>
 </plist>
