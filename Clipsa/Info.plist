@@ -33,7 +33,7 @@
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/clipsa-ai/clipsa/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>PLACEHOLDER_RUN_generate_keys_TO_GET_PUBLIC_KEY</string>
+	<string>7EMjbuMyIxHTEbFHiHYzG2m1P9f0ZSC2bOKmOPD/UNs=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 </dict>
