@@ -71,7 +71,10 @@ struct PreviewPane: View {
                     
                     // Original content section
                     VStack(alignment: .leading, spacing: 0) {
-                        sectionHeader(title: "Original", icon: "doc.text", isActive: true)
+                        sectionHeader(title: "Original", icon: "doc.on.doc", isActive: true, timestamp: item.timestamp) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(item.content, forType: .string)
+                        }
                         ScrollView {
                             Text(item.content)
                                 .font(.body)
@@ -120,11 +123,16 @@ struct PreviewPane: View {
     
     // MARK: - Section Header
     
-    private func sectionHeader(title: String, icon: String, isProcessing: Bool = false, isActive: Bool = true) -> some View {
+    private func sectionHeader(title: String, icon: String, isProcessing: Bool = false, isActive: Bool = true, timestamp: Date? = nil, copyAction: (() -> Void)? = nil) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(icon == "sparkles" ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.secondary))
+            // Icon - clickable if copyAction is provided
+            if let copyAction = copyAction {
+                CopyButton(action: copyAction)
+            } else {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(icon == "sparkles" ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.secondary))
+            }
             
             Text(title)
                 .font(.system(size: 12, weight: .semibold, design: .default))
@@ -137,10 +145,53 @@ struct PreviewPane: View {
             }
             
             Spacer()
+            
+            // Show timestamp if provided (for Original section)
+            if let timestamp = timestamp {
+                Text(Self.dateFormatter.string(from: timestamp))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
     }
+    
+    // Copy button with checkmark feedback
+    private struct CopyButton: View {
+        let action: () -> Void
+        
+        @State private var showingCheckmark = false
+        @State private var isHovered = false
+        
+        var body: some View {
+            Button {
+                action()
+                showingCheckmark = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    showingCheckmark = false
+                }
+            } label: {
+                Image(systemName: showingCheckmark ? "checkmark" : "doc.on.doc")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(showingCheckmark ? .green : .secondary)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+            .buttonStyle(.plain)
+            .opacity(isHovered || showingCheckmark ? 1.0 : 0.7)
+            .onHover { isHovered = $0 }
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .help("Copy to clipboard")
+        }
+    }
+    
+    // Date formatter for copied timestamp
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
     
     // MARK: - Placeholders
     

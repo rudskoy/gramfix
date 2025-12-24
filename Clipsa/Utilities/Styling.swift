@@ -72,7 +72,7 @@ struct ClipboardTypeIcon: View {
             .font(.system(size: 12, weight: .medium))
             .foregroundStyle(.secondary)
             .frame(width: 20, height: 20)
-            .glassEffect(in: .rect(cornerRadius: 5, style: .continuous))
+            .glassEffect(in: .rect(cornerRadius: 5))
             .id(colorScheme)  // Force complete re-render when theme changes
     }
     
@@ -189,32 +189,6 @@ struct ContentTypeBadge: View {
         case "address": return "mappin"
         default: return "doc"
         }
-    }
-}
-
-// MARK: - Otter Mascot View
-
-struct OtterMascot: View {
-    var size: CGFloat = 80
-    var animated: Bool = false
-    @State private var isAnimating = false
-    
-    var body: some View {
-        Image(nsImage: NSApp.applicationIconImage)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.15, style: .continuous))
-            .rotationEffect(.degrees(animated && isAnimating ? -3 : 3))
-            .animation(
-                animated ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : .default,
-                value: isAnimating
-            )
-            .onAppear {
-                if animated {
-                    isAnimating = true
-                }
-            }
     }
 }
 
@@ -500,12 +474,12 @@ struct FixedTooltipView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.gray.opacity(0.15))
-                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                            .cornerRadius(4)
                     }
                 }
                 .padding(10)
                 .frame(width: 200, alignment: .leading)
-                .glassEffect(in: .rect(cornerRadius: 8, style: .continuous))
+                .glassEffect(in: .rect(cornerRadius: 8))
                 .compositingGroup()
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }

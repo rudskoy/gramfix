@@ -74,7 +74,7 @@ struct ClipsaApp: App {
 
 // MARK: - App Delegate for Global Shortcut
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupGlobalShortcut()
         
@@ -90,10 +90,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Configure window appearance when it becomes available
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if let window = NSApplication.shared.windows.first(where: { $0.title == "Clipsa" }) {
+                window.delegate = self
                 window.titlebarAppearsTransparent = true
                 window.collectionBehavior = [.moveToActiveSpace]
             }
         }
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return false
+    }
+    
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        sender.orderOut(nil)  // Hide the window
+        return false          // Prevent actual close
     }
     
     private func setupGlobalShortcut() {

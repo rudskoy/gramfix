@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "sparkles.square.filled.on.square.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "sparkle.text.clipboard.fill@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

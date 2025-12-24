@@ -139,9 +139,6 @@ struct SettingsView: View {
     
     private var header: some View {
         HStack(spacing: 12) {
-            // Otter mascot in settings
-            OtterMascot(size: 36, animated: false)
-            
             VStack(alignment: .leading, spacing: 2) {
                 Text("Settings")
                     .font(.clipHeader)

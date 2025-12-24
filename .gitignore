@@ -15,3 +15,9 @@ dist/
 # Archives
 *.xcarchive
 
+# Cursor
+.cursor/
+
+# Profiling
+*.profraw
+

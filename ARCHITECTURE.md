@@ -144,6 +144,24 @@ Models are downloaded from HuggingFace on first use and cached locally.
 | `MLXService` | `@Observable` class implementing `MLXServiceProtocol` for model loading, caching, generation |
 | `LMModel` | MLX model configuration with HuggingFace ModelConfiguration |
 
+## Window Management
+
+The app uses a "hide instead of close" pattern common to menu bar apps:
+
+| Action | Result |
+|--------|--------|
+| Close button (red X) | Window hides, app stays in menu bar |
+| Cmd+W | Window hides (same behavior) |
+| Menu bar "Show Window" | Window reappears instantly |
+| Global shortcut | Window reappears instantly |
+| Menu bar "Quit Clipsa" | App terminates completely |
+| Cmd+Q | App terminates completely |
+
+Implementation:
+- `AppDelegate` conforms to `NSWindowDelegate`
+- `windowShouldClose(_:)` calls `orderOut(nil)` and returns `false`
+- `applicationShouldTerminateAfterLastWindowClosed(_:)` returns `false`
+
 ## Global Shortcut & Paste Flow
 
 ### Global Shortcut (Default: Cmd+Shift+\\)
@@ -228,10 +246,6 @@ The system automatically handles:
 - Rounded corners and translucent blur
 - Traffic lights integrated inside sidebar panel
 - Native Finder-like behavior
-
-### Otter Mascot
-- `OtterMascot` view - Reusable mascot component with optional animation
-- Used in: Empty states, AI processing indicator
 
 ### Components
 - `HoverScaleModifier` - Interactive hover animations

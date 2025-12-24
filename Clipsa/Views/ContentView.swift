@@ -291,24 +291,19 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Empty State (with Otter Mascot)
+    // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 6) {
             Spacer()
             
-            // Otter mascot as the centerpiece
-            OtterMascot(size: 200, animated: false)
+            Text(clipboardManager.searchQuery.isEmpty ? "Ready to catch your clips!" : "No matching clips found")
+                .font(.system(size: 15, weight: .semibold, design: .default))
+                .foregroundStyle(.primary)
             
-            VStack(spacing: 6) {
-                Text(clipboardManager.searchQuery.isEmpty ? "Ready to catch your clips!" : "No matching clips found")
-                    .font(.system(size: 15, weight: .semibold, design: .default))
-                    .foregroundStyle(.primary)
-                
-                Text(clipboardManager.searchQuery.isEmpty ? "Copy something to get started" : "Try a different search term")
-                    .font(.system(size: 12, weight: .medium, design: .default))
-                    .foregroundStyle(.tertiary)
-            }
+            Text(clipboardManager.searchQuery.isEmpty ? "Copy something to get started" : "Try a different search term")
+                .font(.system(size: 12, weight: .medium, design: .default))
+                .foregroundStyle(.tertiary)
             
             Spacer()
         }

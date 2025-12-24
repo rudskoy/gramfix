@@ -99,7 +99,6 @@ Built on macOS Tahoe's Liquid Glass APIs:
 - System handles floating appearance, rounded corners, translucent blur, and traffic lights
 
 Custom components:
-- `OtterMascot`: Reusable mascot with optional animation (empty states, processing indicator)
 - `HoverScaleModifier`: Interactive hover animations
 - `GlowEffect`: Accent glow for selections
 
