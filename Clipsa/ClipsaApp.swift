@@ -63,6 +63,7 @@ struct ClipsaApp: App {
         // Settings scene automatically adds "Settings..." menu item with ⌘,
         Settings {
             SettingsView()
+                .environmentObject(clipboardManager)
         }
         
         MenuBarExtra("Clipsa", image: "MenuBarIcon") {

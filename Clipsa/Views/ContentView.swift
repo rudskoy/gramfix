@@ -200,6 +200,7 @@ struct ContentView: View {
         .padding(.bottom, 8)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+                .environmentObject(clipboardManager)
         }
         .background {
             // Hidden button to capture Cmd+, keyboard shortcut for settings

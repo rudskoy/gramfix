@@ -2,6 +2,7 @@ import SwiftUI
 import KeyboardShortcuts
 
 struct SettingsView: View {
+    @EnvironmentObject var clipboardManager: ClipboardManager
     @ObservedObject var settings = LLMSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -21,6 +22,10 @@ struct SettingsView: View {
     // MLX state - use shared singleton
     private var mlxService: MLXService { MLXService.shared }
     @State private var isMLXModelLoading: Bool = false
+    
+    // History cleanup confirmation alerts
+    @State private var showClearTodayAlert: Bool = false
+    @State private var showClearAllAlert: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -66,11 +71,33 @@ struct SettingsView: View {
                         .frame(height: 1)
                     
                     infoSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
+                    historySection
                 }
                 .padding(20)
             }
         }
-        .frame(width: 520, height: 560)
+        .frame(width: 520, height: 640)
+        .alert("Clear Today's History", isPresented: $showClearTodayAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear", role: .destructive) {
+                clipboardManager.clearHistoryForToday()
+            }
+        } message: {
+            Text("This will remove \(clipboardManager.todayItemsCount) item(s) from today. This action cannot be undone.")
+        }
+        .alert("Clear All History", isPresented: $showClearAllAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear All", role: .destructive) {
+                clipboardManager.clearHistory()
+            }
+        } message: {
+            Text("This will permanently delete all \(clipboardManager.items.count) clipboard items and the history file. This action cannot be undone.")
+        }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             promptText = settings.customPrompt
@@ -767,8 +794,98 @@ struct SettingsView: View {
         "Summarize in 3 bullet points: {text}",
         "Find bugs in this code: {text}"
     ]
+    
+    // MARK: - History Section
+    
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.red.opacity(0.8))
+                
+                Text("History Management")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Clear clipboard history items")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            // Clear today's history button
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Clear Today's History")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("\(clipboardManager.todayItemsCount) item(s) from today")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Button {
+                    showClearTodayAlert = true
+                } label: {
+                    Text("Clear")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(
+                            clipboardManager.todayItemsCount > 0
+                                ? Color.orange
+                                : Color.gray.opacity(0.5),
+                            in: Capsule()
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(clipboardManager.todayItemsCount == 0)
+            }
+            .padding(12)
+            
+            // Clear all history button
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Clear All History")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("\(clipboardManager.items.count) total item(s) + storage file")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Button {
+                    showClearAllAlert = true
+                } label: {
+                    Text("Clear All")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(
+                            clipboardManager.items.count > 0
+                                ? Color.red
+                                : Color.gray.opacity(0.5),
+                            in: Capsule()
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(clipboardManager.items.count == 0)
+            }
+            .padding(12)
+        }
+    }
 }
 
 #Preview {
     SettingsView()
+        .environmentObject(ClipboardManager())
 }

@@ -386,6 +386,21 @@ class ClipboardManager: ObservableObject {
         }
     }
     
+    /// Clear only items from today
+    func clearHistoryForToday() {
+        let calendar = Calendar.current
+        let todayCount = items.filter { calendar.isDateInToday($0.timestamp) }.count
+        items.removeAll { calendar.isDateInToday($0.timestamp) }
+        logger.info("🗑️ Cleared \(todayCount) items from today")
+        // Persistence will auto-save via debounced observer
+    }
+    
+    /// Count of items from today
+    var todayItemsCount: Int {
+        let calendar = Calendar.current
+        return items.filter { calendar.isDateInToday($0.timestamp) }.count
+    }
+    
     // MARK: - URL Detection
     
     /// Check if a string is a valid URL (http, https, ftp, or mailto)
