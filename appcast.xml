@@ -32,7 +32,7 @@
         ]]>
       </description>
       <enclosure 
-        url="https://github.com/clipsa-ai/clipsa/releases/download/v1.1/Clipsa-1.1.dmg"
+        url="https://github.com/clipsa-ai/releases/releases/download/v1.1/Clipsa-1.1.dmg"
         sparkle:edSignature="+cl7t/TOFvaDmKqJycq1yshRuq0F+whFMb+GpI/2hlUf3EGc/yI6UiWk8903Px9OoQ00hgQTu9ASNCL8TKFSBQ=="
         length="19687259"
         type="application/octet-stream"/>
