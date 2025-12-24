@@ -15,30 +15,6 @@
     -->
     
     <item>
-      <title>Version 1.1</title>
-      <pubDate>Tue, 24 Dec 2024 20:00:00 +0000</pubDate>
-      <sparkle:version>1.1</sparkle:version>
-      <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
-      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-      <description>
-        <![CDATA[
-          <h2>Version 1.1</h2>
-          <ul>
-            <li>Search filter system with type filters (-images, +text, type:yes/no)</li>
-            <li>Rich menu bar popover with AI status, stats, and actions</li>
-            <li>Clipboard history persistence to Application Support</li>
-            <li>Filter autocomplete in search bar</li>
-          </ul>
-        ]]>
-      </description>
-      <enclosure 
-        url="https://github.com/clipsa-ai/releases/releases/download/v1.1/Clipsa-1.1.dmg"
-        sparkle:edSignature="+cl7t/TOFvaDmKqJycq1yshRuq0F+whFMb+GpI/2hlUf3EGc/yI6UiWk8903Px9OoQ00hgQTu9ASNCL8TKFSBQ=="
-        length="19687259"
-        type="application/octet-stream"/>
-    </item>
-    
-    <item>
       <title>Version 1.0</title>
       <pubDate>Tue, 24 Dec 2024 12:00:00 +0000</pubDate>
       <sparkle:version>1.0</sparkle:version>
