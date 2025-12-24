@@ -62,7 +62,6 @@
 		D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */; };
 		D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */; };
 		D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */; };
-		D5C9EB982EFB5AA50066FE10 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D5C9EB972EFB5AA50066FE10 /* AppIcon.icon */; };
 		D5C9EB9B2EFB69FE0066FE10 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB9A2EFB69FE0066FE10 /* Sparkle */; };
 		D5C9EB9D2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
 		D5C9EB9E2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
@@ -112,7 +111,6 @@
 		D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXClient.swift; sourceTree = "<group>"; };
 		D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaClient.swift; sourceTree = "<group>"; };
 		D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderImplTests.swift; sourceTree = "<group>"; };
-		D5C9EB972EFB5AA50066FE10 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckForUpdatesView.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
@@ -206,7 +204,6 @@
 				E06 /* Views */,
 				E07 /* Utilities */,
 				B03 /* Assets.xcassets */,
-				D5C9EB972EFB5AA50066FE10 /* AppIcon.icon */,
 				B09 /* Clipsa.entitlements */,
 				B10 /* Info.plist */,
 			);
@@ -408,7 +405,6 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				A03 /* Assets.xcassets in Resources */,
-				D5C9EB982EFB5AA50066FE10 /* AppIcon.icon in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
