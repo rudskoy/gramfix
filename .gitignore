@@ -4,6 +4,12 @@ DerivedData/
 *.xcuserdata
 *.xcworkspace/xcuserdata/
 
+# JetBrains IDEs
+.idea/
+
+# MCP configuration
+.mcp.json
+
 # Distribution
 dist/
 
