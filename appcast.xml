@@ -15,6 +15,31 @@
     -->
     
     <item>
+      <title>Version 1.1</title>
+      <pubDate>Wed, 25 Dec 2024 12:00:00 +0000</pubDate>
+      <sparkle:version>1.1</sparkle:version>
+      <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description>
+        <![CDATA[
+          <h2>VLM Image Analysis</h2>
+          <ul>
+            <li>Vision language model (VLM) support for MLX</li>
+            <li>On-demand image analysis for clipboard images</li>
+            <li>Link action buttons in preview pane</li>
+            <li>Enhanced SearchBar appearance</li>
+            <li>Improved window detection</li>
+          </ul>
+        ]]>
+      </description>
+      <enclosure 
+        url="https://github.com/clipsa-ai/releases/releases/download/v1.1/Clipsa-1.1.dmg"
+        sparkle:edSignature="U6qxkHNmgcMrtUSOKjIxPGntcyHljW1vu3ucepzqlcrmw3Cbu4VWnyn2P6ZiEO2INJqRchEpLXuPxLZAnZtfCw=="
+        length="20701154"
+        type="application/octet-stream"/>
+    </item>
+    
+    <item>
       <title>Version 1.0</title>
       <pubDate>Tue, 24 Dec 2024 12:00:00 +0000</pubDate>
       <sparkle:version>1.0</sparkle:version>
