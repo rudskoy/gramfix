@@ -65,6 +65,85 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
         return try await client.generate(prompt: fullPrompt, systemPrompt: systemPrompt)
     }
     
+    // MARK: - Multi-Prompt Processing
+    
+    /// Process text with a specific prompt type from the predefined set
+    /// - Parameters:
+    ///   - text: The text content to process
+    ///   - promptType: The type of text transformation to apply
+    /// - Returns: The processed text response
+    func processWithPromptType(_ text: String, promptType: TextPromptType) async throws -> String {
+        let textPreview = String(text.prefix(50)).replacingOccurrences(of: "\n", with: " ")
+        logger.info("Processing text (\(text.count) chars) with prompt: \(promptType.displayName)")
+        
+        let prompt = promptType.buildPrompt(for: text)
+        
+        do {
+            let response = try await client.generate(prompt: prompt, systemPrompt: systemPrompt)
+            let cleaned = cleanResponse(response)
+            logger.info("Completed \(promptType.displayName): \(cleaned.prefix(50))...")
+            return cleaned
+        } catch {
+            logger.error("Failed \(promptType.displayName): \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Clean LLM response by removing prompt echoes and formatting artifacts
+    private func cleanResponse(_ response: String) -> String {
+        let lines = response.components(separatedBy: "\n")
+        var textLines: [String] = []
+        
+        // Patterns to skip (prompt echoes)
+        let skipPatterns = [
+            "fix grammar",
+            "correct grammar",
+            "output only",
+            "nothing else",
+            "corrected text",
+            "**corrected text",
+            "result:",
+            "here is",
+            "here's the",
+            "the corrected",
+            "corrected version",
+            "revised text",
+            "simplified text",
+            "rephrased text"
+        ]
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            let lowerLine = trimmedLine.lowercased()
+            
+            // Skip lines that look like prompt echoes
+            let isPromptEcho = skipPatterns.contains { lowerLine.hasPrefix($0) }
+            if isPromptEcho {
+                logger.debug("Skipping prompt echo: \(trimmedLine.prefix(30))...")
+                continue
+            }
+            
+            // Skip empty lines at the start
+            if textLines.isEmpty && trimmedLine.isEmpty {
+                continue
+            }
+            
+            textLines.append(line)
+        }
+        
+        var cleaned = textLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Clean up any remaining format markers and markdown
+        cleaned = cleaned
+            .replacingOccurrences(of: "[", with: "")
+            .replacingOccurrences(of: "]", with: "")
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "```", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return cleaned
+    }
+    
     // MARK: - Prompt Building
     
     /// Build the prompt based on request type
@@ -109,7 +188,8 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
             """
             
         case .custom:
-            return LLMSettings.shared.buildPrompt(for: text)
+            // Legacy: use grammar prompt as default
+            return TextPromptType.grammar.buildPrompt(for: text)
         }
     }
     

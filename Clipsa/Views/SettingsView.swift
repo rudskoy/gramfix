@@ -7,9 +7,6 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     
-    @State private var promptText: String = ""
-    @State private var hasChanges: Bool = false
-    
     // Ollama model selection state
     @State private var availableModels: [OllamaModel] = []
     @State private var isLoadingModels: Bool = false
@@ -65,12 +62,6 @@ struct SettingsView: View {
                         .fill(Color.clipBorder)
                         .frame(height: 1)
                     
-                    promptSection
-                    
-                    Rectangle()
-                        .fill(Color.clipBorder)
-                        .frame(height: 1)
-                    
                     infoSection
                     
                     Rectangle()
@@ -101,12 +92,8 @@ struct SettingsView: View {
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
-            promptText = settings.customPrompt
             fetchModels()
             // Model download status is cached in MLXService and refreshed at startup
-        }
-        .onChange(of: promptText) { _, newValue in
-            hasChanges = newValue != settings.customPrompt
         }
     }
     
@@ -269,7 +256,7 @@ struct SettingsView: View {
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(.primary)
                     
-                    Text("Automatically analyze copied text with AI")
+                    Text("Run all text transformations in parallel (Grammar, Formal, Casual, Polished)")
                         .font(.system(size: 11, weight: .regular, design: .rounded))
                         .foregroundStyle(.tertiary)
                 }
@@ -277,26 +264,6 @@ struct SettingsView: View {
                 Spacer()
                 
                 Toggle("", isOn: $settings.autoProcess)
-                    .toggleStyle(.switch)
-                    .labelsHidden()
-            }
-            .padding(12)
-            
-            // Detect tags toggle
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Detect tags")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.primary)
-                    
-                    Text("Extract keywords using a separate AI query")
-                        .font(.system(size: 11, weight: .regular, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                }
-                
-                Spacer()
-                
-                Toggle("", isOn: $settings.detectTags)
                     .toggleStyle(.switch)
                     .labelsHidden()
             }
@@ -826,95 +793,6 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - Prompt Section
-    
-    private var promptSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Section header
-            HStack(spacing: 8) {
-                Image(systemName: "text.bubble.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(LinearGradient.accentGradient)
-                
-                Text("Custom Prompt")
-                    .font(.clipTitle)
-                    .foregroundStyle(.primary)
-            }
-            
-            Text("Use {text} as a placeholder for clipboard content")
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.tertiary)
-            
-            // Text editor with glass styling
-            TextEditor(text: $promptText)
-                .font(.system(size: 12, design: .monospaced))
-                .scrollContentBackground(.hidden)
-                .padding(12)
-                .frame(minHeight: 180)
-                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                }
-            
-            // Action buttons
-            HStack {
-                Button {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        settings.resetToDefault()
-                        promptText = settings.customPrompt
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 10, weight: .medium))
-                        Text("Reset to Default")
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                    }
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.primary.opacity(0.1), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                
-                Spacer()
-                
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        settings.customPrompt = promptText
-                        hasChanges = false
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .bold))
-                        Text("Save")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(hasChanges ? .white : .secondary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background {
-                        if hasChanges {
-                            Capsule().fill(LinearGradient.accentGradient)
-                        } else {
-                            Capsule().fill(.clear)
-                        }
-                    }
-                    .background {
-                        if !hasChanges {
-                            Capsule().fill(Color.primary.opacity(0.1))
-                        }
-                    }
-                    .shadow(color: hasChanges ? Color.clipAccent.opacity(0.4) : .clear, radius: 8)
-                }
-                .buttonStyle(.plain)
-                .disabled(!hasChanges)
-            }
-        }
-    }
-    
     // MARK: - Info Section
     
     private var infoSection: some View {
@@ -933,20 +811,21 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 infoText
                 
-                // Example prompts in glass cards
+                // Text transformations
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Example prompts:")
+                    Text("Text transformations:")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                     
-                    ForEach(examplePrompts, id: \.self) { prompt in
+                    ForEach(TextPromptType.allCases) { promptType in
                         HStack(spacing: 8) {
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(.tertiary)
+                            Text(promptType.displayName)
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.primary)
+                                .frame(width: 60, alignment: .leading)
                             
-                            Text(prompt)
-                                .font(.system(size: 11, design: .monospaced))
+                            Text(promptTypeDescription(promptType))
+                                .font(.system(size: 11, design: .rounded))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 10)
@@ -959,18 +838,20 @@ struct SettingsView: View {
     }
     
     private var infoText: some View {
-        Text("When you copy text, Clipsa sends it to your selected LLM provider (Ollama or MLX) with your custom prompt. The AI response appears in the preview pane.")
+        Text("When you copy text, Clipsa runs 4 transformations in parallel. Click the prompt tags to switch between results. Press 1-4 to quickly select a result.")
             .font(.system(size: 12, weight: .regular, design: .rounded))
             .foregroundStyle(.secondary)
             .lineSpacing(4)
     }
     
-    private let examplePrompts = [
-        "Explain this code: {text}",
-        "Translate to English: {text}",
-        "Summarize in 3 bullet points: {text}",
-        "Find bugs in this code: {text}"
-    ]
+    private func promptTypeDescription(_ type: TextPromptType) -> String {
+        switch type {
+        case .grammar: return "Fix grammar and spelling errors"
+        case .formal: return "Make text more professional"
+        case .casual: return "Remove jargon, simplify"
+        case .polished: return "Polished business style"
+        }
+    }
     
     // MARK: - History Section
     

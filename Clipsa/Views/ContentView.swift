@@ -106,7 +106,7 @@ struct ContentView: View {
                         icon: "sparkles",
                         title: "Process with AI",
                         description: "Analyze content using AI",
-                        isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true || selectedItem?.imageAnalysisProcessing == true,
+                        isDisabled: selectedItem == nil || selectedItem?.isProcessing == true || selectedItem?.imageAnalysisProcessing == true,
                         tooltipAlignment: .trailing
                     ) {
                         if let item = selectedItem {
@@ -305,6 +305,24 @@ struct ContentView: View {
             default:
                 break
             }
+            
+            // Handle 1-4 number keys for prompt selection (only when search field is not focused)
+            // This allows typing numbers in search while providing quick prompt switching
+            if !isSearchFieldFocused && !hasUserModifiers {
+                var promptType: TextPromptType?
+                switch event.keyCode {
+                case 18: promptType = .grammar   // 1
+                case 19: promptType = .formal    // 2
+                case 20: promptType = .casual    // 3
+                case 21: promptType = .polished  // 4
+                default: break
+                }
+                if let promptType = promptType, let item = selectedItem {
+                    clipboardManager.selectPrompt(promptType, for: item)
+                    return nil // Consume the event
+                }
+            }
+            
             return event // Pass through unhandled events
         }
     }

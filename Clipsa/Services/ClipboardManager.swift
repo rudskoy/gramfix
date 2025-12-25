@@ -294,63 +294,71 @@ class ClipboardManager: ObservableObject {
         }
     }
     
-    /// Process a clipboard item with the LLM service
-    /// Fires main prompt and tag extraction as independent async queries
+    /// Process a clipboard item with all prompts in parallel
     func processItemWithLLM(_ item: ClipboardItem) async {
-        guard item.type == .text, !item.llmProcessed else {
-            logger.debug("⏭️ Skipping LLM processing: type=\(item.type.rawValue), alreadyProcessed=\(item.llmProcessed)")
+        guard item.type == .text else {
+            logger.debug("Skipping LLM processing: type=\(item.type.rawValue)")
+            return
+        }
+        
+        // Skip if already has any results
+        if item.hasAnyPromptResult {
+            logger.debug("Skipping LLM processing: already has results")
             return
         }
         
         // Find the item index
         guard let index = items.firstIndex(where: { $0.id == item.id }) else {
-            logger.warning("⚠️ Item not found in list, skipping processing")
+            logger.warning("Item not found in list, skipping processing")
             return
         }
         
         let itemId = item.id
         let content = item.content
         
-        logger.info("🔄 Starting LLM processing for item \(itemId)")
+        logger.info("Starting parallel LLM processing for item \(itemId) with \(TextPromptType.allCases.count) prompts")
         
-        // Mark as processing (main prompt)
-        items[index] = items[index].withProcessingState(true)
+        // Mark all prompts as processing
+        items[index] = items[index].withAllPromptsProcessing()
         
-        // Also mark tags as processing if detectTags is enabled
-        if LLMSettings.shared.detectTags {
+        // Get the active provider
+        guard let provider = llmService.activeProvider as? LLMProviderImpl else {
+            logger.error("No active LLM provider available")
             if let idx = items.firstIndex(where: { $0.id == itemId }) {
-                items[idx] = items[idx].withTagsProcessingState(true)
+                items[idx] = ClipboardItem(
+                    id: items[idx].id,
+                    content: items[idx].content,
+                    rawData: items[idx].rawData,
+                    type: items[idx].type,
+                    timestamp: items[idx].timestamp,
+                    appName: items[idx].appName,
+                    promptResults: [:],
+                    selectedPromptId: items[idx].selectedPromptId,
+                    promptProcessingIds: [],
+                    imageAnalysisResponse: items[idx].imageAnalysisResponse,
+                    imageAnalysisProcessing: items[idx].imageAnalysisProcessing,
+                    shouldAnalyzeImage: items[idx].shouldAnalyzeImage
+                )
             }
+            return
         }
         
-        // Fire main custom prompt query (independent task)
-        Task { @MainActor in
-            let result = await llmService.processContent(content)
-            
-            // Update the item with main prompt results
-            if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
-                items[currentIndex] = items[currentIndex].withLLMResult(result)
-                if let error = result.error {
-                    logger.error("❌ LLM processing failed: \(error)")
-                } else {
-                    logger.info("✅ LLM main prompt complete for item \(itemId)")
-                }
-            }
-        }
-        
-        // Fire tag extraction query (independent async task)
-        if LLMSettings.shared.detectTags {
+        // Run all prompts in parallel using individual tasks (so results stream in)
+        for promptType in TextPromptType.allCases {
             Task { @MainActor in
-                logger.info("🏷️ Starting async tag extraction for item \(itemId)")
-                let tagResult = await llmService.processContent(content, requestType: .extractTags)
-                
-                // Update the item with tags only
-                if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
-                    items[currentIndex] = items[currentIndex].withTagsResult(tagResult.tags)
-                    if let error = tagResult.error {
-                        logger.error("❌ Tag extraction failed: \(error)")
-                    } else {
-                        logger.info("✅ Tag extraction complete for item \(itemId): \(tagResult.tags)")
+                do {
+                    let response = try await provider.processWithPromptType(content, promptType: promptType)
+                    
+                    // Update the item with this prompt's result
+                    if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                        items[currentIndex] = items[currentIndex].withPromptResult(type: promptType, response: response)
+                        logger.info("Completed prompt '\(promptType.displayName)' for item \(itemId)")
+                    }
+                } catch {
+                    logger.error("Failed prompt '\(promptType.displayName)': \(error.localizedDescription)")
+                    // Clear processing state for this prompt on failure
+                    if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                        items[currentIndex] = items[currentIndex].withPromptProcessing(type: promptType, processing: false)
                     }
                 }
             }
@@ -434,14 +442,20 @@ class ClipboardManager: ObservableObject {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         
         var resetItem = items[index]
-        resetItem.llmProcessed = false
-        resetItem.llmTags = []
+        resetItem.promptResults = [:]
+        resetItem.promptProcessingIds = []
         items[index] = resetItem
         
         // Clear cache for this content
         llmService.clearCache()
         
         await processItemWithLLM(resetItem)
+    }
+    
+    /// Update the selected prompt for an item
+    func selectPrompt(_ promptType: TextPromptType, for item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index] = items[index].withSelectedPrompt(promptType.rawValue)
     }
     
     func copyToClipboard(_ item: ClipboardItem) {

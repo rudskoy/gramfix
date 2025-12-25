@@ -23,15 +23,15 @@ struct ClipboardRow: View {
             // LLM indicators
             HStack(spacing: 6) {
                 // Simple processing indicator
-                if item.llmProcessing {
+                if item.isProcessing {
                     Image(systemName: "sparkles")
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(LinearGradient.accentGradient)
                 }
                 
-                // Show content type if available
-                if let contentType = item.llmContentType, !item.llmProcessing {
-                    Text(contentType)
+                // Show prompt completion status if processing or has results
+                if item.hasAnyPromptResult && !item.isProcessing {
+                    Text("\(item.completedPromptCount)/\(item.totalPromptCount)")
                         .font(.system(size: 9, weight: .semibold, design: .rounded))
                         .foregroundColor(.clipContentType)
                 }

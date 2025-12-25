@@ -422,5 +422,109 @@ final class LLMProviderImplTests: XCTestCase {
         XCTAssertNotNil(mockClient.lastSystemPrompt)
         XCTAssertTrue(mockClient.lastSystemPrompt?.contains("helpful assistant") ?? false)
     }
+    
+    // MARK: - ProcessWithPromptType Tests (Multi-Prompt Feature)
+    
+    func testProcessWithPromptTypeGrammar() async throws {
+        // Given
+        mockClient.generateResult = "The quick brown fox jumps over the lazy dog."
+        let testText = "The quik brown fox jump over lazy dog."
+        
+        // When
+        let result = try await provider.processWithPromptType(testText, promptType: .grammar)
+        
+        // Then
+        XCTAssertEqual(result, "The quick brown fox jumps over the lazy dog.")
+        XCTAssertEqual(mockClient.generateCallCount, 1)
+        XCTAssertTrue(mockClient.lastPrompt?.contains("Fix grammar") ?? false)
+        XCTAssertTrue(mockClient.lastPrompt?.contains(testText) ?? false)
+    }
+    
+    func testProcessWithPromptTypeFormal() async throws {
+        // Given
+        mockClient.generateResult = "We would like to schedule a meeting."
+        let testText = "Let's have a meeting."
+        
+        // When
+        let result = try await provider.processWithPromptType(testText, promptType: .formal)
+        
+        // Then
+        XCTAssertEqual(result, "We would like to schedule a meeting.")
+        XCTAssertTrue(mockClient.lastPrompt?.contains("formal") ?? false)
+    }
+    
+    func testProcessWithPromptTypeCasual() async throws {
+        // Given
+        mockClient.generateResult = "Let's sync up tomorrow."
+        let testText = "Let's leverage our synergies to facilitate a strategic alignment meeting."
+        
+        // When
+        let result = try await provider.processWithPromptType(testText, promptType: .casual)
+        
+        // Then
+        XCTAssertEqual(result, "Let's sync up tomorrow.")
+        XCTAssertTrue(mockClient.lastPrompt?.contains("Simplify") ?? false)
+    }
+    
+    func testProcessWithPromptTypePolished() async throws {
+        // Given
+        mockClient.generateResult = "We are pleased to announce the successful completion of the project."
+        let testText = "We finished the project."
+        
+        // When
+        let result = try await provider.processWithPromptType(testText, promptType: .polished)
+        
+        // Then
+        XCTAssertEqual(result, "We are pleased to announce the successful completion of the project.")
+        XCTAssertTrue(mockClient.lastPrompt?.contains("polished") ?? false)
+    }
+    
+    func testProcessWithPromptTypeCleansResponse() async throws {
+        // Given - LLM adds unwanted formatting
+        mockClient.generateResult = """
+        Here is the corrected text:
+        **This is the actual result.**
+        """
+        
+        // When
+        let result = try await provider.processWithPromptType("test", promptType: .grammar)
+        
+        // Then - Should clean up the response
+        XCTAssertEqual(result, "This is the actual result.")
+    }
+    
+    func testProcessWithPromptTypeThrowsOnError() async throws {
+        // Given
+        mockClient.generateError = LLMError.networkError("Connection failed")
+        
+        // When/Then
+        do {
+            _ = try await provider.processWithPromptType("test", promptType: .grammar)
+            XCTFail("Expected error to be thrown")
+        } catch let error as LLMError {
+            if case .networkError(let message) = error {
+                XCTAssertEqual(message, "Connection failed")
+            } else {
+                XCTFail("Expected networkError")
+            }
+        }
+    }
+    
+    func testProcessWithPromptTypeAllPromptTypes() async throws {
+        // Test that all prompt types work and include the test text
+        let testText = "Sample text for processing"
+        mockClient.generateResult = "Processed result"
+        
+        for promptType in TextPromptType.allCases {
+            mockClient.reset()
+            mockClient.generateResult = "Processed result"
+            
+            let result = try await provider.processWithPromptType(testText, promptType: promptType)
+            
+            XCTAssertEqual(result, "Processed result")
+            XCTAssertTrue(mockClient.lastPrompt?.contains(testText) ?? false, 
+                "Prompt for \(promptType.displayName) should contain the input text")
+        }
+    }
 }
 

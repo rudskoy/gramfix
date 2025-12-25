@@ -65,6 +65,45 @@ enum LLMProviderType: String, CaseIterable, Identifiable {
     }
 }
 
+/// Predefined text transformation prompts for parallel processing
+enum TextPromptType: String, CaseIterable, Codable, Identifiable {
+    case grammar = "grammar"
+    case formal = "formal"
+    case casual = "casual"
+    case polished = "polished"
+    
+    var id: String { rawValue }
+    
+    /// Short label for tag display
+    var displayName: String {
+        switch self {
+        case .grammar: return "Grammar"
+        case .formal: return "+Formal"
+        case .casual: return "Casual"
+        case .polished: return "Polished"
+        }
+    }
+    
+    /// Full prompt template ({text} is replaced with content)
+    var prompt: String {
+        switch self {
+        case .grammar:
+            return "Fix grammar errors in this text. Output ONLY the corrected text, nothing else:\n\n{text}"
+        case .formal:
+            return "Make this text slightly more formal and professional. Keep the meaning intact. Output ONLY the revised text:\n\n{text}"
+        case .casual:
+            return "Simplify this text by removing jargon and buzzwords. Make it direct and clear. Output ONLY the simplified text:\n\n{text}"
+        case .polished:
+            return "Rephrase this text in a polished, professional style. Output ONLY the rephrased text:\n\n{text}"
+        }
+    }
+    
+    /// Build the final prompt by replacing {text} with actual content
+    func buildPrompt(for text: String) -> String {
+        prompt.replacingOccurrences(of: "{text}", with: text)
+    }
+}
+
 /// Global LLM settings stored in UserDefaults
 class LLMSettings: ObservableObject {
     static let shared = LLMSettings()
@@ -72,9 +111,7 @@ class LLMSettings: ObservableObject {
     private let defaults = UserDefaults.standard
     
     private enum Keys {
-        static let customPrompt = "llm_custom_prompt"
         static let autoProcess = "llm_auto_process"
-        static let detectTags = "llm_detect_tags"
         static let selectedModel = "llm_selected_model"
         static let selectedProvider = "llm_selected_provider"
         static let mlxSelectedModel = "llm_mlx_model" // Legacy key for migration
@@ -113,31 +150,10 @@ class LLMSettings: ObservableObject {
         #endif
     }
     
-    /// Default prompt template - {text} will be replaced with clipboard content
-    static let defaultPrompt = """
-Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
-
-{text}
-"""
-    
-    /// Custom processing prompt - use {text} as placeholder for clipboard content
-    @Published var customPrompt: String {
-        didSet {
-            defaults.set(customPrompt, forKey: Keys.customPrompt)
-        }
-    }
-    
     /// Whether auto-processing is enabled
     @Published var autoProcess: Bool {
         didSet {
             defaults.set(autoProcess, forKey: Keys.autoProcess)
-        }
-    }
-    
-    /// Whether to detect tags using a separate async LLM query
-    @Published var detectTags: Bool {
-        didSet {
-            defaults.set(detectTags, forKey: Keys.detectTags)
         }
     }
     
@@ -184,9 +200,7 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
     }
     
     private init() {
-        self.customPrompt = defaults.string(forKey: Keys.customPrompt) ?? Self.defaultPrompt
         self.autoProcess = defaults.bool(forKey: Keys.autoProcess)
-        self.detectTags = defaults.bool(forKey: Keys.detectTags)
         self.selectedModel = defaults.string(forKey: Keys.selectedModel) ?? Self.defaultModel
         
         // Load provider selection
@@ -226,22 +240,7 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
             self.autoProcess = true
         }
         
-        // Set default to true if never set
-        if defaults.object(forKey: Keys.detectTags) == nil {
-            self.detectTags = true
-        }
-        
         // Load image analysis setting (default: false)
         self.imageAnalysisEnabled = defaults.bool(forKey: Keys.imageAnalysisEnabled)
-    }
-    
-    /// Build the final prompt by replacing {text} with actual content
-    func buildPrompt(for text: String) -> String {
-        return customPrompt.replacingOccurrences(of: "{text}", with: text)
-    }
-    
-    /// Reset to default prompt
-    func resetToDefault() {
-        customPrompt = Self.defaultPrompt
     }
 }
