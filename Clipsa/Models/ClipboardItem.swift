@@ -264,12 +264,16 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
         lhs.id == rhs.id &&
         lhs.promptProcessingIds == rhs.promptProcessingIds &&
+        lhs.promptResults.count == rhs.promptResults.count &&
+        lhs.selectedPromptId == rhs.selectedPromptId &&
         lhs.imageAnalysisProcessing == rhs.imageAnalysisProcessing
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(promptProcessingIds)
+        hasher.combine(promptResults.count)
+        hasher.combine(selectedPromptId)
         hasher.combine(imageAnalysisProcessing)
     }
 }
