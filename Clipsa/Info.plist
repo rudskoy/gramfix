@@ -15,9 +15,9 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>1.1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
@@ -31,7 +31,7 @@
 	
 	<!-- Sparkle Update Framework Configuration -->
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/clipsa-ai/clipsa/main/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/clipsa-ai/releases/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>7EMjbuMyIxHTEbFHiHYzG2m1P9f0ZSC2bOKmOPD/UNs=</string>
 	<key>SUEnableAutomaticChecks</key>
