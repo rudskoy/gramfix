@@ -123,21 +123,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     static func showMainWindow() {
-        // Find the main Clipsa window FIRST
-        if let window = NSApplication.shared.windows.first(where: { $0.title == "Clipsa" }) {
+        // Find the main Clipsa window, excluding status bar windows and panels
+        let mainWindow = NSApplication.shared.windows.first { window in
+            // Exclude NSStatusBarWindow and other non-standard windows that can't become key
+            window.title == "Clipsa" && window.canBecomeKey
+        }
+        
+        if let window = mainWindow {
             window.titlebarAppearsTransparent = true
             // Set collection behavior BEFORE activating to prevent space switch
             window.collectionBehavior = [.moveToActiveSpace]
             NSApplication.shared.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
-        } else if let window = NSApplication.shared.windows.first {
-            window.titlebarAppearsTransparent = true
-            window.collectionBehavior = [.moveToActiveSpace]
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
         } else {
-            // Fallback if no window found yet
-            NSApplication.shared.activate(ignoringOtherApps: true)
+            // Fallback: find any regular window that can become key
+            if let fallbackWindow = NSApplication.shared.windows.first(where: { $0.canBecomeKey }) {
+                fallbackWindow.titlebarAppearsTransparent = true
+                fallbackWindow.collectionBehavior = [.moveToActiveSpace]
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                fallbackWindow.makeKeyAndOrderFront(nil)
+            } else {
+                // Last resort - just activate
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
         }
     }
 }
