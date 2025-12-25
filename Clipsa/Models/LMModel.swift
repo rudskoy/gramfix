@@ -7,8 +7,6 @@
 
 import MLXLMCommon
 
-// TODO: Fix conflicting types across packages - VLM support disabled until MLXVLM Message conflict is resolved
-
 /// Represents a language model configuration with its associated properties and type.
 /// Can represent either a large language model (LLM) or a vision-language model (VLM).
 struct LMModel {

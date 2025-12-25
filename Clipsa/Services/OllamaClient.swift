@@ -34,9 +34,12 @@ actor OllamaClient: TextGenerationClient {
     private let hostURL: URL
     private var _client: Client?
     
-    /// Model name - reads from LLMSettings
+    /// Custom model name (if provided)
+    private let customModelName: String?
+    
+    /// Model name - uses custom model if provided, otherwise reads from LLMSettings
     private var modelName: String {
-        LLMSettings.shared.selectedModel
+        customModelName ?? LLMSettings.shared.selectedModel
     }
     
     /// Lazily initialized client to avoid async init issues
@@ -69,9 +72,11 @@ actor OllamaClient: TextGenerationClient {
         return newClient
     }
     
-    init(baseURL: String = "http://localhost:11434") {
+    init(baseURL: String = "http://localhost:11434", modelName: String? = nil) {
         self.hostURL = URL(string: baseURL)!
-        logger.info("🤖 OllamaClient initialized: baseURL=\(baseURL)")
+        self.customModelName = modelName
+        let modelInfo = modelName.map { "model=\($0)" } ?? "model=<settings>"
+        logger.info("🤖 OllamaClient initialized: baseURL=\(baseURL), \(modelInfo)")
     }
     
     // MARK: - TextGenerationClient Protocol
@@ -116,6 +121,46 @@ actor OllamaClient: TextGenerationClient {
             return response.response
         } catch {
             logger.error("❌ Ollama request failed: \(error.localizedDescription)")
+            throw LLMError.networkError(error.localizedDescription)
+        }
+    }
+    
+    /// Generate text from a prompt with images using Ollama vision model
+    func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String {
+        // If no images, fall back to text-only generation
+        guard !images.isEmpty else {
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt)
+        }
+        
+        logger.debug("📤 Sending vision request to Ollama with model: \(self.modelName), images: \(images.count)")
+        let startTime = Date()
+        
+        do {
+            let ollamaClient = await client
+            
+            // Build chat messages with images
+            var messages: [Ollama.Chat.Message] = []
+            
+            if let systemPrompt = systemPrompt {
+                messages.append(.system(systemPrompt))
+            }
+            
+            messages.append(.user(prompt, images: images))
+            
+            // Use chat API for vision requests
+            let response = try await ollamaClient.chat(
+                model: Model.ID(stringLiteral: modelName),
+                messages: messages,
+                think: false
+            )
+            
+            let elapsed = Date().timeIntervalSince(startTime)
+            logger.info("📥 Vision response received in \(String(format: "%.2f", elapsed))s")
+            logger.info("📥 Ollama vision output:\n\(response.message.content)")
+            
+            return response.message.content
+        } catch {
+            logger.error("❌ Ollama vision request failed: \(error.localizedDescription)")
             throw LLMError.networkError(error.localizedDescription)
         }
     }

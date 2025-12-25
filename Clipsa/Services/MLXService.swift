@@ -5,22 +5,23 @@
 //  MLX on-device LLM service for text generation
 //
 
+import CoreImage
 import Foundation
 import Hub
 import MLX
 import MLXLLM
 import MLXLMCommon
-// TODO: Fix conflicting types across packages (MLXVLM's Message conflicts with Ollama's Message)
-// import MLXVLM
+import MLXVLM
 import os.log
 
 private let logger = Logger(subsystem: "com.clipsa.app", category: "MLX")
 
 /// Protocol defining the interface for MLX text generation services.
 /// Used for dependency injection and testing.
-@MainActor
+/// Note: Methods are NOT MainActor-isolated to allow background execution.
 protocol MLXServiceProtocol: AnyObject, Sendable {
     /// Generates text based on the provided prompt using the specified model.
+    /// Runs on a background thread to avoid blocking the UI.
     /// - Parameters:
     ///   - prompt: The user prompt to generate a response for
     ///   - systemPrompt: Optional system prompt to set context
@@ -28,19 +29,35 @@ protocol MLXServiceProtocol: AnyObject, Sendable {
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
     func generate(prompt: String, systemPrompt: String?, model: LMModel) async throws -> String
+    
+    /// Generates text based on the provided prompt and images using a vision model.
+    /// Runs on a background thread to avoid blocking the UI.
+    /// - Parameters:
+    ///   - prompt: The user prompt to generate a response for
+    ///   - systemPrompt: Optional system prompt to set context
+    ///   - images: Array of image data (PNG/JPEG) for vision understanding
+    ///   - model: The vision-language model to use for generation
+    /// - Returns: The generated text response
+    /// - Throws: Errors that might occur during generation
+    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel) async throws -> String
 }
 
 /// A service class that manages machine learning models for text generation using MLX.
 /// This class handles model loading, caching, and text generation using various LLM models.
+/// 
+/// Threading model:
+/// - UI state properties (isLoading, isDownloading, progress) are MainActor-isolated
+/// - Heavy computation (model loading, inference) runs on background threads
+/// - The `generate` methods hop off MainActor for inference work
 @Observable
-@MainActor
-class MLXService: MLXServiceProtocol {
+final class MLXService: MLXServiceProtocol, @unchecked Sendable {
     /// Shared instance for singleton access (used by SettingsView)
-    static let shared = MLXService()
+    @MainActor static let shared = MLXService()
     
     /// List of available models that can be used for generation.
-    /// Includes language models (LLM) optimized for Apple Silicon.
-    static let availableModels: [LMModel] = [
+    /// Includes language models (LLM) and vision-language models (VLM) optimized for Apple Silicon.
+    nonisolated static let availableModels: [LMModel] = [
+        // Text-only LLMs
         LMModel(name: "llama3.2:1b", configuration: LLMRegistry.llama3_2_1B_4bit, type: .llm),
         LMModel(name: "qwen2.5:1.5b", configuration: LLMRegistry.qwen2_5_1_5b, type: .llm),
         LMModel(name: "smolLM:135m", configuration: LLMRegistry.smolLM_135M_4bit, type: .llm),
@@ -48,50 +65,130 @@ class MLXService: MLXServiceProtocol {
         LMModel(name: "qwen3:1.7b", configuration: LLMRegistry.qwen3_1_7b_4bit, type: .llm),
         LMModel(name: "qwen3:4b", configuration: LLMRegistry.qwen3_4b_4bit, type: .llm),
         LMModel(name: "qwen3:8b", configuration: LLMRegistry.qwen3_8b_4bit, type: .llm),
+        // Vision-Language Models (VLM) - can understand images
+        LMModel(name: "qwen3-vl:4b", configuration: VLMRegistry.qwen3VL4BInstruct4Bit, type: .vlm),
+        LMModel(name: "gemma3:4b-vision", configuration: VLMRegistry.gemma3_4B_qat_4bit, type: .vlm),
+        LMModel(name: "gemma3:12b-vision", configuration: VLMRegistry.gemma3_12B_qat_4bit, type: .vlm),
     ]
     
+    /// Text-only models (LLM) for text processing
+    nonisolated static var textModels: [LMModel] {
+        availableModels.filter { $0.type == .llm }
+    }
+    
+    /// Vision-language models (VLM) for image analysis
+    nonisolated static var visionModels: [LMModel] {
+        availableModels.filter { $0.type == .vlm }
+    }
+    
     /// Cache to store loaded model containers to avoid reloading.
+    /// NSCache is thread-safe.
     private let modelCache = NSCache<NSString, ModelContainer>()
     
-    /// Tracks the current model download progress.
-    /// Access this property to monitor model download status.
-    private(set) var modelDownloadProgress: Progress?
+    /// Lock for synchronizing state updates
+    private let stateLock = NSLock()
     
-    /// Number of files that have completed downloading
-    private(set) var downloadedFileCount: Int = 0
+    /// Tracks the current model download progress (MainActor for UI).
+    @MainActor private(set) var modelDownloadProgress: Progress?
     
-    /// Total number of files being downloaded (discovered dynamically)
-    private(set) var totalFileCount: Int = 0
+    /// Number of files that have completed downloading (MainActor for UI)
+    @MainActor private(set) var downloadedFileCount: Int = 0
     
-    /// Whether a download is currently in progress
-    private(set) var isDownloading: Bool = false
+    /// Total number of files being downloaded (discovered dynamically) (MainActor for UI)
+    @MainActor private(set) var totalFileCount: Int = 0
+    
+    /// Whether a download is currently in progress (MainActor for UI)
+    @MainActor private(set) var isDownloading: Bool = false
+    
+    /// Name of the model currently being downloaded (MainActor for UI)
+    @MainActor private(set) var downloadingModelName: String?
+    
+    /// Overall download progress (0.0 to 1.0) for granular percentage display
+    @MainActor private(set) var overallProgress: Double = 0.0
+    
+    /// Current download speed in bytes per second
+    @MainActor private(set) var downloadSpeedBytesPerSec: Double? = nil
+    
+    /// Reference to the current download task for cancellation
+    @MainActor private var currentDownloadTask: Task<Void, Never>?
     
     /// Set of progress object identifiers we've seen (to count unique files)
-    private var seenProgressObjects = Set<ObjectIdentifier>()
+    @MainActor private var seenProgressObjects = Set<ObjectIdentifier>()
     
     /// Set of progress object identifiers that have completed
-    private var completedProgressObjects = Set<ObjectIdentifier>()
+    @MainActor private var completedProgressObjects = Set<ObjectIdentifier>()
     
-    /// Whether the service is currently loading a model
-    private(set) var isLoading: Bool = false
+    /// Whether the service is currently loading a model (MainActor for UI)
+    @MainActor private(set) var isLoading: Bool = false
     
-    /// Last error message if any operation failed
-    private(set) var lastError: String?
+    /// Last error message if any operation failed (MainActor for UI)
+    @MainActor private(set) var lastError: String?
     
+    /// Cached download status for all models (checked at startup and after downloads)
+    @MainActor private(set) var modelDownloadStatus: [String: Bool] = [:]
+    
+    /// Whether the download status is currently being refreshed
+    @MainActor private(set) var isRefreshingStatus: Bool = false
+    
+    @MainActor
     init() {
         logger.info("🤖 MLXService initialized")
+        // Check download status for all models at startup
+        Task {
+            await refreshDownloadStatus()
+        }
+    }
+    
+    /// Refresh the cached download status for all models
+    /// Called at startup and after downloads complete/cancel
+    @MainActor
+    func refreshDownloadStatus() async {
+        isRefreshingStatus = true
+        logger.debug("🔄 Refreshing model download status...")
+        
+        var status: [String: Bool] = [:]
+        for model in Self.availableModels {
+            status[model.name] = await isModelDownloaded(name: model.name)
+        }
+        
+        modelDownloadStatus = status
+        isRefreshingStatus = false
+        
+        let downloadedCount = status.values.filter { $0 }.count
+        logger.info("✅ Model status refreshed: \(downloadedCount)/\(status.count) downloaded")
+    }
+    
+    /// Synchronous check if a model is ready (from cache)
+    /// Returns false if status is unknown (not yet checked)
+    @MainActor
+    func isModelReady(_ name: String) -> Bool {
+        modelDownloadStatus[name] ?? false
+    }
+    
+    /// Formatted download speed for UI display (e.g., "2.3 MB/s")
+    @MainActor
+    var formattedDownloadSpeed: String? {
+        guard let speed = downloadSpeedBytesPerSec else { return nil }
+        if speed >= 1_000_000 {
+            return String(format: "%.1f MB/s", speed / 1_000_000)
+        } else if speed >= 1_000 {
+            return String(format: "%.0f KB/s", speed / 1_000)
+        } else {
+            return String(format: "%.0f B/s", speed)
+        }
     }
     
     /// Get a model by name from the available models list
-    static func model(named name: String) -> LMModel? {
+    nonisolated static func model(named name: String) -> LMModel? {
         availableModels.first { $0.name == name }
     }
     
     /// Loads a model from the hub or retrieves it from cache.
+    /// Runs on background thread, updates UI state on MainActor.
     /// - Parameter model: The model configuration to load
     /// - Returns: A ModelContainer instance containing the loaded model
     /// - Throws: Errors that might occur during model loading
-    private func load(model: LMModel) async throws -> ModelContainer {
+    private nonisolated func load(model: LMModel) async throws -> ModelContainer {
         // Set GPU memory limit to prevent out of memory issues
         MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
         
@@ -101,36 +198,62 @@ class MLXService: MLXServiceProtocol {
             return container
         }
         
-        isLoading = true
-        lastError = nil
+        // Check if model is already downloaded (on disk but not in memory cache)
+        let alreadyDownloaded = await isModelDownloaded(name: model.name)
         
-        defer {
-            isLoading = false
+        // Update UI state on MainActor
+        await MainActor.run {
+            self.isLoading = true
+            self.lastError = nil
+            self.resetDownloadTracking()
+            // Only show downloading UI if model is NOT already downloaded
+            if !alreadyDownloaded {
+                self.isDownloading = true
+                self.downloadingModelName = model.name
+            }
         }
         
-        logger.info("⬇️ Loading model: \(model.name)")
+        defer {
+            Task { @MainActor in
+                self.isLoading = false
+            }
+        }
         
-        // Reset download tracking state
-        resetDownloadTracking()
-        isDownloading = true
+        logger.info("⬇️ Loading model: \(model.name) (downloaded: \(alreadyDownloaded))")
         
         // Select appropriate factory based on model type
-        // TODO: Fix conflicting types across packages - re-enable VLM support when MLXVLM is fixed
         let factory: ModelFactory =
             switch model.type {
             case .llm:
                 LLMModelFactory.shared
             case .vlm:
-                // VLMModelFactory.shared - disabled due to Message type conflict with Ollama
-                fatalError("VLM models are currently disabled due to package conflicts")
+                VLMModelFactory.shared
             }
         
         // Load model and track download progress
+        // Note: Progress callbacks may fire even for cached files during verification
+        // Only show download UI if the model wasn't already downloaded
         let container = try await factory.loadContainer(
             hub: .default, configuration: model.configuration
-        ) { progress in
+        ) { [alreadyDownloaded] progress in
             Task { @MainActor in
+                // Skip download UI updates if model was already on disk
+                // (progress callbacks may fire during file verification)
+                guard !alreadyDownloaded else { return }
+                
+                // Enable downloading UI if not already showing
+                if !self.isDownloading {
+                    self.isDownloading = true
+                    self.downloadingModelName = model.name
+                }
+                
                 self.modelDownloadProgress = progress
+                
+                // Capture overall progress percentage (0.0 to 1.0)
+                self.overallProgress = progress.fractionCompleted
+                
+                // Capture download speed if available (bytes per second)
+                self.downloadSpeedBytesPerSec = progress.userInfo[.throughputKey] as? Double
                 
                 // Track unique files by their Progress object identity
                 let progressId = ObjectIdentifier(progress)
@@ -149,8 +272,13 @@ class MLXService: MLXServiceProtocol {
             }
         }
         
-        // Download complete
-        isDownloading = false
+        // Loading complete - update on MainActor
+        await MainActor.run {
+            self.isDownloading = false
+            self.downloadingModelName = nil
+            // Update the download status cache to reflect the model is now available
+            self.modelDownloadStatus[model.name] = true
+        }
         
         // Cache the loaded model for future use
         modelCache.setObject(container, forKey: model.name as NSString)
@@ -161,17 +289,18 @@ class MLXService: MLXServiceProtocol {
     }
     
     /// Generates text based on the provided prompt using the specified model.
+    /// Runs on a background thread to avoid blocking the UI.
     /// - Parameters:
     ///   - prompt: The user prompt to generate a response for
     ///   - systemPrompt: Optional system prompt to set context
     ///   - model: The language model to use for generation
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
-    func generate(prompt: String, systemPrompt: String? = nil, model: LMModel) async throws -> String {
+    nonisolated func generate(prompt: String, systemPrompt: String? = nil, model: LMModel) async throws -> String {
         logger.info("🚀 Generating response with model: \(model.name)")
         let startTime = Date()
         
-        // Load or retrieve model from cache
+        // Load or retrieve model from cache (runs on background)
         let modelContainer = try await load(model: model)
         
         // Build chat messages
@@ -186,7 +315,7 @@ class MLXService: MLXServiceProtocol {
         // Prepare input for model processing
         let userInput = UserInput(chat: chatMessages)
         
-        // Generate response using the model
+        // Generate response using the model (runs on background)
         var generatedText = ""
         
         let stream = try await modelContainer.perform { (context: ModelContext) in
@@ -216,23 +345,216 @@ class MLXService: MLXServiceProtocol {
         return generatedText
     }
     
-    /// Check if a specific model is loaded/cached
-    func isModelCached(name: String) -> Bool {
+    /// Generates text based on the provided prompt and images using a vision model.
+    /// Runs on a background thread to avoid blocking the UI.
+    /// - Parameters:
+    ///   - prompt: The user prompt to generate a response for
+    ///   - systemPrompt: Optional system prompt to set context
+    ///   - images: Array of image data (PNG/JPEG) for vision understanding
+    ///   - model: The vision-language model to use for generation
+    /// - Returns: The generated text response
+    /// - Throws: Errors that might occur during generation
+    nonisolated func generate(prompt: String, systemPrompt: String? = nil, images: [Data], model: LMModel) async throws -> String {
+        guard model.isVisionModel else {
+            // Fall back to text-only generation if not a vision model
+            logger.warning("⚠️ Model \(model.name) is not a vision model, ignoring images")
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt, model: model)
+        }
+        
+        logger.info("🚀 Generating vision response with model: \(model.name), images: \(images.count)")
+        let startTime = Date()
+        
+        // Load or retrieve model from cache (runs on background)
+        let modelContainer = try await load(model: model)
+        
+        // Convert image data to MLX UserInput.Image format (via CIImage)
+        // This runs on background thread
+        let mlxImages: [UserInput.Image] = images.compactMap { data in
+            guard let ciImage = CIImage(data: data) else {
+                logger.warning("⚠️ Failed to convert image data to CIImage")
+                return nil
+            }
+            return .ciImage(ciImage)
+        }
+        
+        if mlxImages.count != images.count {
+            logger.warning("⚠️ Some images failed to convert: \(images.count) provided, \(mlxImages.count) converted")
+        }
+        
+        // Build chat messages with images
+        var chatMessages: [MLXLMCommon.Chat.Message] = []
+        
+        if let systemPrompt = systemPrompt {
+            chatMessages.append(.system(systemPrompt))
+        }
+        
+        chatMessages.append(.user(prompt, images: mlxImages))
+        
+        // Prepare input for model processing
+        let userInput = UserInput(chat: chatMessages)
+        
+        // Generate response using the model (runs on background)
+        var generatedText = ""
+        
+        let stream = try await modelContainer.perform { (context: ModelContext) in
+            let lmInput = try await context.processor.prepare(input: userInput)
+            // Lower temperature for more focused image descriptions
+            let parameters = GenerateParameters(temperature: 0.5)
+            
+            return try MLXLMCommon.generate(
+                input: lmInput, parameters: parameters, context: context)
+        }
+        
+        // Collect generated tokens
+        for await generation in stream {
+            switch generation {
+            case .chunk(let chunk):
+                generatedText += chunk
+            case .info(let info):
+                logger.debug("📊 Generation stats: \(info.tokensPerSecond) tokens/sec")
+            case .toolCall:
+                break
+            }
+        }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        logger.info("📥 Vision response generated in \(String(format: "%.2f", elapsed))s")
+        
+        return generatedText
+    }
+    
+    /// Check if a specific model is loaded/cached in memory
+    nonisolated func isModelCached(name: String) -> Bool {
         modelCache.object(forKey: name as NSString) != nil
     }
     
+    /// Check if a model is downloaded on disk (Application Support cache)
+    /// - Parameter name: The model name to check
+    /// - Returns: True if the model files exist in the local cache
+    nonisolated func isModelDownloaded(name: String) async -> Bool {
+        guard let model = Self.model(named: name) else {
+            logger.warning("⚠️ Model not found: \(name)")
+            return false
+        }
+        
+        // Check if model is already cached in memory - if so, it's definitely downloaded
+        if isModelCached(name: name) {
+            return true
+        }
+        
+        // Use the same modelDirectory() method that the Hub API uses internally
+        // This ensures we check the exact same path where models are downloaded
+        let modelDir = model.configuration.modelDirectory(hub: .default)
+        
+        // Check for config.json which is always present in downloaded models
+        let configFile = modelDir.appendingPathComponent("config.json")
+        let exists = FileManager.default.fileExists(atPath: configFile.path)
+        
+        if exists {
+            logger.debug("✅ Model \(name) found in cache: \(modelDir.path)")
+            return true
+        }
+        
+        logger.debug("❌ Model \(name) not found in cache: \(modelDir.path)")
+        return false
+    }
+    
     /// Clear the model cache to free memory
-    func clearCache() {
+    nonisolated func clearCache() {
         modelCache.removeAllObjects()
         logger.info("🗑️ Model cache cleared")
     }
     
-    /// Reset download tracking state for a new download
+    /// Reset download tracking state for a new download (must be called on MainActor)
+    @MainActor
     private func resetDownloadTracking() {
         downloadedFileCount = 0
         totalFileCount = 0
         seenProgressObjects.removeAll()
         completedProgressObjects.removeAll()
         modelDownloadProgress = nil
+        overallProgress = 0.0
+        downloadSpeedBytesPerSec = nil
+    }
+    
+    /// Check download status for all available models
+    /// - Returns: Dictionary mapping model names to their downloaded status
+    nonisolated func checkDownloadedModels() async -> [String: Bool] {
+        var result: [String: Bool] = [:]
+        for model in Self.availableModels {
+            result[model.name] = await isModelDownloaded(name: model.name)
+        }
+        return result
+    }
+    
+    /// Explicitly download a model by name (for background downloading)
+    /// This triggers the model loading process which downloads if needed.
+    /// - Parameter modelName: Name of the model to download
+    @MainActor
+    func downloadModel(_ modelName: String) {
+        guard let model = Self.model(named: modelName) else {
+            logger.warning("⚠️ Cannot download unknown model: \(modelName)")
+            return
+        }
+        
+        // Cancel any existing download
+        currentDownloadTask?.cancel()
+        
+        // Store the task for potential cancellation
+        currentDownloadTask = Task {
+            // Check if already downloaded
+            if await isModelDownloaded(name: modelName) {
+                logger.info("✅ Model \(modelName) is already downloaded")
+                return
+            }
+            
+            logger.info("⬇️ Starting background download for model: \(modelName)")
+            
+            do {
+                // Check for cancellation before starting
+                try Task.checkCancellation()
+                
+                // Load the model which will trigger download if needed
+                _ = try await load(model: model)
+                logger.info("✅ Background download complete for model: \(modelName)")
+                // Refresh download status cache after successful download
+                await self.refreshDownloadStatus()
+            } catch is CancellationError {
+                logger.info("🛑 Download cancelled for model: \(modelName)")
+                await MainActor.run {
+                    self.isDownloading = false
+                    self.downloadingModelName = nil
+                    self.resetDownloadTracking()
+                }
+            } catch {
+                logger.error("❌ Failed to download model \(modelName): \(error.localizedDescription)")
+                await MainActor.run {
+                    self.lastError = "Failed to download \(modelName): \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+    
+    /// Cancel the current model download
+    @MainActor
+    func cancelDownload() {
+        guard isDownloading, let task = currentDownloadTask else {
+            logger.debug("No download to cancel")
+            return
+        }
+        
+        logger.info("🛑 Cancelling download for model: \(self.downloadingModelName ?? "unknown")")
+        task.cancel()
+        
+        // Immediately update UI state
+        isDownloading = false
+        downloadingModelName = nil
+        resetDownloadTracking()
+        currentDownloadTask = nil
+        
+        // Refresh download status cache (model may be partially downloaded)
+        Task {
+            await refreshDownloadStatus()
+        }
     }
 }

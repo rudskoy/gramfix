@@ -44,6 +44,23 @@ protocol TextGenerationClient: Sendable {
     ///   - systemPrompt: Optional system prompt to set context
     /// - Returns: Generated text response
     func generate(prompt: String, systemPrompt: String?) async throws -> String
+    
+    /// Generate text from a prompt with optional images (for vision models)
+    /// - Parameters:
+    ///   - prompt: The prompt to send to the LLM
+    ///   - systemPrompt: Optional system prompt to set context
+    ///   - images: Array of image data (PNG/JPEG) for vision models
+    /// - Returns: Generated text response
+    func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String
+}
+
+// MARK: - Default Implementation for Text-Only Clients
+
+extension TextGenerationClient {
+    /// Default implementation ignores images for text-only models
+    func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String {
+        try await generate(prompt: prompt, systemPrompt: systemPrompt)
+    }
 }
 
 /// Protocol defining the interface for LLM providers
