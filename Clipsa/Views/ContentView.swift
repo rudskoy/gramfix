@@ -322,14 +322,14 @@ struct ContentView: View {
                     return nil // Consume the event
                 }
             case 123: // Left arrow - previous prompt tag
-                if !hasUserModifiers && !isSearchFieldFocused {
+                if !hasUserModifiers {
                     if let item = selectedItem {
                         selectPreviousPrompt(for: item)
                         return nil // Consume the event
                     }
                 }
             case 124: // Right arrow - next prompt tag
-                if !hasUserModifiers && !isSearchFieldFocused {
+                if !hasUserModifiers {
                     if let item = selectedItem {
                         selectNextPrompt(for: item)
                         return nil // Consume the event
