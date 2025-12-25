@@ -38,20 +38,6 @@
 		D573EB1A2EF9F87900D03FAE /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB192EF9F87900D03FAE /* MLXLMCommon */; };
 		D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */; };
 		D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */; };
-		D573EB302EFA035F00D03FAE /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB2F2EFA035F00D03FAE /* HotKey */; };
-		D573EB322EFA035F00D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB312EFA035F00D03FAE /* Hub */; };
-		D573EB342EFA035F00D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB332EFA035F00D03FAE /* Tokenizers */; };
-		D573EB362EFA035F00D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB352EFA035F00D03FAE /* Transformers */; };
-		D573EB382EFA035F00D03FAE /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB372EFA035F00D03FAE /* MLX */; };
-		D573EB3A2EFA035F00D03FAE /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB392EFA035F00D03FAE /* MLXFast */; };
-		D573EB3C2EFA035F00D03FAE /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3B2EFA035F00D03FAE /* MLXFFT */; };
-		D573EB3E2EFA035F00D03FAE /* MLXLinalg in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3D2EFA035F00D03FAE /* MLXLinalg */; };
-		D573EB402EFA035F00D03FAE /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB3F2EFA035F00D03FAE /* MLXNN */; };
-		D573EB422EFA035F00D03FAE /* MLXOptimizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB412EFA035F00D03FAE /* MLXOptimizers */; };
-		D573EB442EFA035F00D03FAE /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB432EFA035F00D03FAE /* MLXRandom */; };
-		D573EB462EFA035F00D03FAE /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB452EFA035F00D03FAE /* MLXEmbedders */; };
-		D573EB482EFA035F00D03FAE /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB472EFA035F00D03FAE /* MLXLLM */; };
-		D573EB4A2EFA035F00D03FAE /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB492EFA035F00D03FAE /* MLXLMCommon */; };
 		D5C9EB7D2EFA10DF0066FE10 /* ComplexModule in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB7C2EFA10DF0066FE10 /* ComplexModule */; };
 		D5C9EB7F2EFA10DF0066FE10 /* Numerics in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB7E2EFA10DF0066FE10 /* Numerics */; };
 		D5C9EB812EFA10DF0066FE10 /* RealModule in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB802EFA10DF0066FE10 /* RealModule */; };
@@ -62,24 +48,19 @@
 		D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */; };
 		D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */; };
 		D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */; };
-		D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */; };
 		D5C9EB9B2EFB69FE0066FE10 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EB9A2EFB69FE0066FE10 /* Sparkle */; };
-		D5C9EB9D2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
 		D5C9EB9E2EFB6A100066FE10 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */; };
-		D5C9EBA02EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */; };
 		D5C9EBA12EFB6A1D0066FE10 /* CheckForUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */; };
-		D5C9EBA32EFB84BF0066FE10 /* ClipboardPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */; };
 		D5C9EBA42EFB84BF0066FE10 /* ClipboardPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */; };
-		D5C9EBA62EFC38F20066FE10 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */; };
 		D5C9EBA72EFC38F20066FE10 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */; };
 		D5C9EBA92EFC45040066FE10 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = D5C9EBA82EFC45040066FE10 /* AppIcon.icon */; };
 		D5C9EBAB2EFC63870066FE10 /* SearchFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */; };
-		D5C9EBAC2EFC63870066FE10 /* SearchFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */; };
+		D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */; };
+		D5C9EBAE2EFC968F0066FE10 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EBAD2EFC968F0066FE10 /* MLXVLM */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
 		T03 /* LLMSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB03 /* LLMSettingsTests.swift */; };
-		T04 /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = TP01 /* Ollama */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,13 +100,13 @@
 		D5C9EB8B2EFAEEA30066FE10 /* MLXClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXClient.swift; sourceTree = "<group>"; };
 		D5C9EB8C2EFAEEA30066FE10 /* OllamaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaClient.swift; sourceTree = "<group>"; };
 		D5C9EB932EFAEECC0066FE10 /* LLMProviderImplTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderImplTests.swift; sourceTree = "<group>"; };
-		D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterTests.swift; sourceTree = "<group>"; };
 		D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckForUpdatesView.swift; sourceTree = "<group>"; };
 		D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPersistence.swift; sourceTree = "<group>"; };
 		D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		D5C9EBA82EFC45040066FE10 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilter.swift; sourceTree = "<group>"; };
+		D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterTests.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
@@ -155,27 +136,13 @@
 				D573EB042EF9F58300D03FAE /* MLXFast in Frameworks */,
 				D573EB062EF9F58300D03FAE /* MLXLinalg in Frameworks */,
 				D573EB082EF9F58300D03FAE /* MLXNN in Frameworks */,
+				D5C9EBAE2EFC968F0066FE10 /* MLXVLM in Frameworks */,
 				D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */,
 			);
 		};
 		TD01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				D573EB482EFA035F00D03FAE /* MLXLLM in Frameworks */,
-				D573EB382EFA035F00D03FAE /* MLX in Frameworks */,
-				D573EB462EFA035F00D03FAE /* MLXEmbedders in Frameworks */,
-				D573EB342EFA035F00D03FAE /* Tokenizers in Frameworks */,
-				D573EB322EFA035F00D03FAE /* Hub in Frameworks */,
-				D573EB362EFA035F00D03FAE /* Transformers in Frameworks */,
-				D573EB3A2EFA035F00D03FAE /* MLXFast in Frameworks */,
-				D573EB302EFA035F00D03FAE /* HotKey in Frameworks */,
-				D573EB422EFA035F00D03FAE /* MLXOptimizers in Frameworks */,
-				D573EB442EFA035F00D03FAE /* MLXRandom in Frameworks */,
-				D573EB4A2EFA035F00D03FAE /* MLXLMCommon in Frameworks */,
-				T04 /* Ollama in Frameworks */,
-				D573EB3E2EFA035F00D03FAE /* MLXLinalg in Frameworks */,
-				D573EB402EFA035F00D03FAE /* MLXNN in Frameworks */,
-				D573EB3C2EFA035F00D03FAE /* MLXFFT in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -331,6 +298,7 @@
 				D5C9EB802EFA10DF0066FE10 /* RealModule */,
 				D5C9EB832EFAC67D0066FE10 /* KeyboardShortcuts */,
 				D5C9EB9A2EFB69FE0066FE10 /* Sparkle */,
+				D5C9EBAD2EFC968F0066FE10 /* MLXVLM */,
 			);
 			productName = Clipsa;
 			productReference = C01 /* Clipsa.app */;
@@ -349,23 +317,6 @@
 				TDEP01 /* PBXTargetDependency */,
 			);
 			name = ClipsaTests;
-			packageProductDependencies = (
-				TP01 /* Ollama */,
-				D573EB2F2EFA035F00D03FAE /* HotKey */,
-				D573EB312EFA035F00D03FAE /* Hub */,
-				D573EB332EFA035F00D03FAE /* Tokenizers */,
-				D573EB352EFA035F00D03FAE /* Transformers */,
-				D573EB372EFA035F00D03FAE /* MLX */,
-				D573EB392EFA035F00D03FAE /* MLXFast */,
-				D573EB3B2EFA035F00D03FAE /* MLXFFT */,
-				D573EB3D2EFA035F00D03FAE /* MLXLinalg */,
-				D573EB3F2EFA035F00D03FAE /* MLXNN */,
-				D573EB412EFA035F00D03FAE /* MLXOptimizers */,
-				D573EB432EFA035F00D03FAE /* MLXRandom */,
-				D573EB452EFA035F00D03FAE /* MLXEmbedders */,
-				D573EB472EFA035F00D03FAE /* MLXLLM */,
-				D573EB492EFA035F00D03FAE /* MLXLMCommon */,
-			);
 			productName = ClipsaTests;
 			productReference = TC01 /* ClipsaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -759,10 +710,10 @@
 		};
 		D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			repositoryURL = "https://github.com/clipsa-ai/mlx-swift-lm";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.29.2;
+				kind = branch;
+				branch = main;
 			};
 		};
 		D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */ = {
@@ -870,76 +821,6 @@
 			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
 			productName = MLXLMCommon;
 		};
-		D573EB2F2EFA035F00D03FAE /* HotKey */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */;
-			productName = HotKey;
-		};
-		D573EB312EFA035F00D03FAE /* Hub */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
-			productName = Hub;
-		};
-		D573EB332EFA035F00D03FAE /* Tokenizers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
-			productName = Tokenizers;
-		};
-		D573EB352EFA035F00D03FAE /* Transformers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;
-			productName = Transformers;
-		};
-		D573EB372EFA035F00D03FAE /* MLX */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLX;
-		};
-		D573EB392EFA035F00D03FAE /* MLXFast */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXFast;
-		};
-		D573EB3B2EFA035F00D03FAE /* MLXFFT */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXFFT;
-		};
-		D573EB3D2EFA035F00D03FAE /* MLXLinalg */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXLinalg;
-		};
-		D573EB3F2EFA035F00D03FAE /* MLXNN */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXNN;
-		};
-		D573EB412EFA035F00D03FAE /* MLXOptimizers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXOptimizers;
-		};
-		D573EB432EFA035F00D03FAE /* MLXRandom */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */;
-			productName = MLXRandom;
-		};
-		D573EB452EFA035F00D03FAE /* MLXEmbedders */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
-			productName = MLXEmbedders;
-		};
-		D573EB472EFA035F00D03FAE /* MLXLLM */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
-			productName = MLXLLM;
-		};
-		D573EB492EFA035F00D03FAE /* MLXLMCommon */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
-			productName = MLXLMCommon;
-		};
 		D5C9EB7C2EFA10DF0066FE10 /* ComplexModule */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D5C9EB7B2EFA10DF0066FE10 /* XCRemoteSwiftPackageReference "swift-numerics" */;
@@ -965,12 +846,12 @@
 			package = D5C9EB992EFB69FE0066FE10 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
-		D5FB7EBF2EF63E3C00F1871A /* Ollama */ = {
+		D5C9EBAD2EFC968F0066FE10 /* MLXVLM */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D5FB7EBE2EF63E3C00F1871A /* XCRemoteSwiftPackageReference "ollama-swift" */;
-			productName = Ollama;
+			package = D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXVLM;
 		};
-		TP01 /* Ollama */ = {
+		D5FB7EBF2EF63E3C00F1871A /* Ollama */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D5FB7EBE2EF63E3C00F1871A /* XCRemoteSwiftPackageReference "ollama-swift" */;
 			productName = Ollama;
