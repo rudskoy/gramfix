@@ -20,21 +20,11 @@ struct ClipboardRow: View {
             
             Spacer(minLength: 4)
             
-            // LLM indicators
-            HStack(spacing: 6) {
-                // Simple processing indicator
-                if item.isProcessing {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(LinearGradient.accentGradient)
-                }
-                
-                // Show prompt completion status if processing or has results
-                if item.hasAnyPromptResult && !item.isProcessing {
-                    Text("\(item.completedPromptCount)/\(item.totalPromptCount)")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
-                        .foregroundColor(.clipContentType)
-                }
+            // LLM processing indicator
+            if item.isProcessing {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
             }
         }
         .padding(.horizontal, 8)
