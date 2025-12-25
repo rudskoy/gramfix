@@ -158,10 +158,11 @@ struct SearchBar: View {
     
     private func suggestionRow(suggestion: SearchFilter.Suggestion, isSelected: Bool) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: isSelected ? "chevron.right" : "")
+            Image(systemName: "chevron.right")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(Color.clipAccent)
                 .frame(width: 10)
+                .opacity(isSelected ? 1 : 0)
             
             Text(suggestion.displayName)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
