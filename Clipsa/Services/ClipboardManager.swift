@@ -123,12 +123,21 @@ class ClipboardManager: ObservableObject {
             }
             .store(in: &cancellables)
         
-        // Observe MLX model changes
-        LLMSettings.shared.$mlxSelectedModel
+        // Observe MLX text model changes
+        LLMSettings.shared.$mlxSelectedTextModel
             .dropFirst()
             .sink { [weak self] newModel in
-                logger.info("🔄 MLX model changed to: \(newModel), clearing LLM cache")
+                logger.info("🔄 MLX text model changed to: \(newModel), clearing LLM cache")
                 self?.llmService.clearCache()
+            }
+            .store(in: &cancellables)
+        
+        // Observe MLX VLM model changes
+        LLMSettings.shared.$mlxSelectedVLMModel
+            .dropFirst()
+            .sink { [weak self] newModel in
+                logger.info("🔄 MLX VLM model changed to: \(newModel)")
+                // VLM cache clearing handled separately if needed
             }
             .store(in: &cancellables)
         
@@ -229,11 +238,14 @@ class ClipboardManager: ObservableObject {
         }
         // Try to get image
         else if let imageData = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff) {
+            // Capture whether image analysis is enabled NOW - this determines if the image
+            // should ever be auto-analyzed (even when focused later)
             let item = ClipboardItem(
                 content: "[Image]",
                 rawData: imageData,
                 type: .image,
-                appName: appName
+                appName: appName,
+                shouldAnalyzeImage: LLMSettings.shared.imageAnalysisEnabled
             )
             addItem(item)
         }
@@ -266,6 +278,19 @@ class ClipboardManager: ObservableObject {
             }
         } else if !llmAutoProcess {
             logger.debug("⏸️ LLM auto-processing is disabled")
+        }
+        
+        // Trigger image analysis for image items if enabled at capture time and model is ready
+        if item.shouldAnalyzeImage && item.type == .image {
+            let vlmModelName = LLMSettings.shared.mlxSelectedVLMModel
+            if MLXService.shared.isModelReady(vlmModelName) {
+                logger.info("🖼️ Image analysis enabled, starting analysis...")
+                Task {
+                    await analyzeImage(item)
+                }
+            } else {
+                logger.debug("⏸️ Image analysis enabled but VLM model not ready: \(vlmModelName)")
+            }
         }
     }
     
@@ -328,6 +353,75 @@ class ClipboardManager: ObservableObject {
                         logger.info("✅ Tag extraction complete for item \(itemId): \(tagResult.tags)")
                     }
                 }
+            }
+        }
+    }
+    
+    /// Minimum image dimensions required by VLM models
+    private static let minimumImageDimension: CGFloat = 32
+    
+    /// Analyze an image clipboard item using MLX VLM (on-device inference)
+    func analyzeImage(_ item: ClipboardItem) async {
+        guard item.type == .image, let imageData = item.rawData else {
+            logger.debug("⏭️ Skipping image analysis: not an image type or no data")
+            return
+        }
+        
+        // Check image dimensions - VLM requires at least 32x32 pixels
+        guard let nsImage = NSImage(data: imageData) else {
+            logger.warning("⚠️ Could not create image from data")
+            return
+        }
+        
+        let imageSize = nsImage.size
+        if imageSize.width < Self.minimumImageDimension || imageSize.height < Self.minimumImageDimension {
+            logger.info("⏭️ Image too small for analysis: \(Int(imageSize.width))x\(Int(imageSize.height)) (minimum: 32x32)")
+            return
+        }
+        
+        // Find the item index
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else {
+            logger.warning("⚠️ Item not found in list, skipping image analysis")
+            return
+        }
+        
+        let itemId = item.id
+        
+        logger.info("🖼️ Starting image analysis for item \(itemId) (\(Int(imageSize.width))x\(Int(imageSize.height))) using MLX VLM")
+        
+        // Mark as processing
+        items[index] = items[index].withImageAnalysisProcessingState(true)
+        
+        do {
+            // Get the VLM model from settings
+            let selectedVLMName = LLMSettings.shared.mlxSelectedVLMModel
+            guard let vlmModel = MLXService.model(named: selectedVLMName) else {
+                logger.error("❌ VLM model not found: \(selectedVLMName)")
+                if let idx = items.firstIndex(where: { $0.id == itemId }) {
+                    items[idx] = items[idx].withImageAnalysisProcessingState(false)
+                }
+                return
+            }
+            
+            // Generate image description using MLX
+            let prompt = "Describe this screenshot in 5-10 words for a filename. Output ONLY the description, nothing else."
+            let response = try await mlxService.generate(
+                prompt: prompt,
+                systemPrompt: "You are a helpful assistant that describes images concisely.",
+                images: [imageData],
+                model: vlmModel
+            )
+            
+            // Update the item with analysis result
+            if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                let cleanedResponse = response.trimmingCharacters(in: .whitespacesAndNewlines)
+                items[currentIndex] = items[currentIndex].withImageAnalysisResult(cleanedResponse)
+                logger.info("✅ Image analysis complete for item \(itemId): \(cleanedResponse)")
+            }
+        } catch {
+            logger.error("❌ Image analysis failed: \(error.localizedDescription)")
+            if let idx = items.firstIndex(where: { $0.id == itemId }) {
+                items[idx] = items[idx].withImageAnalysisProcessingState(false)
             }
         }
     }

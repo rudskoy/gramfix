@@ -43,12 +43,25 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     /// Whether tag extraction is currently in progress (transient, not persisted)
     var llmTagsProcessing: Bool
     
+    // MARK: - Image Analysis fields
+    
+    /// VLM-generated image description (for image clipboard items)
+    var imageAnalysisResponse: String?
+    
+    /// Whether image analysis is currently in progress (transient, not persisted)
+    var imageAnalysisProcessing: Bool
+    
+    /// Whether image analysis should be performed (captured when item was created)
+    /// Only images captured while the toggle was ON should be auto-analyzed
+    let shouldAnalyzeImage: Bool
+    
     // MARK: - Codable
     
     /// Coding keys - excludes transient processing states and computed formattedTime
     enum CodingKeys: String, CodingKey {
         case id, content, rawData, type, timestamp, appName
         case llmResponse, llmSummary, llmTags, llmContentType, llmProcessed
+        case imageAnalysisResponse, shouldAnalyzeImage
     }
     
     init(from decoder: Decoder) throws {
@@ -69,6 +82,12 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         llmProcessing = false
         llmTagsProcessing = false
         
+        // Image analysis fields
+        imageAnalysisResponse = try container.decodeIfPresent(String.self, forKey: .imageAnalysisResponse)
+        imageAnalysisProcessing = false
+        // Default to false for backward compatibility (old items won't be auto-analyzed)
+        shouldAnalyzeImage = try container.decodeIfPresent(Bool.self, forKey: .shouldAnalyzeImage) ?? false
+        
         // Recompute formatted time from timestamp
         formattedTime = Self.timeFormatter.localizedString(for: timestamp, relativeTo: Date())
     }
@@ -86,7 +105,10 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         llmContentType: String? = nil,
         llmProcessed: Bool = false,
         llmProcessing: Bool = false,
-        llmTagsProcessing: Bool = false
+        llmTagsProcessing: Bool = false,
+        imageAnalysisResponse: String? = nil,
+        imageAnalysisProcessing: Bool = false,
+        shouldAnalyzeImage: Bool = false
     ) {
         self.id = id
         self.content = content
@@ -102,6 +124,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         self.llmProcessed = llmProcessed
         self.llmProcessing = llmProcessing
         self.llmTagsProcessing = llmTagsProcessing
+        self.imageAnalysisResponse = imageAnalysisResponse
+        self.imageAnalysisProcessing = imageAnalysisProcessing
+        self.shouldAnalyzeImage = shouldAnalyzeImage
     }
     
     /// Create a copy with updated LLM result (main prompt only, tags come from separate query)
@@ -138,8 +163,29 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         return updated
     }
     
+    /// Create a copy with image analysis result
+    func withImageAnalysisResult(_ response: String) -> ClipboardItem {
+        var updated = self
+        updated.imageAnalysisResponse = response
+        updated.imageAnalysisProcessing = false
+        return updated
+    }
+    
+    /// Create a copy with image analysis processing state
+    func withImageAnalysisProcessingState(_ processing: Bool) -> ClipboardItem {
+        var updated = self
+        updated.imageAnalysisProcessing = processing
+        return updated
+    }
+    
     /// Display text showing AI response preview if processed, otherwise original content
     var smartPreview: String {
+        // For images, prefer VLM description if available
+        if type == .image, let analysis = imageAnalysisResponse, !analysis.isEmpty {
+            return analysis
+        }
+        
+        // For text, prefer LLM response if available
         if let response = llmResponse, !response.isEmpty {
             // Clean and truncate AI response same as compactPreview
             let cleaned = response
@@ -225,12 +271,16 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     }
     
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
-        lhs.id == rhs.id && lhs.llmProcessing == rhs.llmProcessing && lhs.llmTagsProcessing == rhs.llmTagsProcessing
+        lhs.id == rhs.id &&
+        lhs.llmProcessing == rhs.llmProcessing &&
+        lhs.llmTagsProcessing == rhs.llmTagsProcessing &&
+        lhs.imageAnalysisProcessing == rhs.imageAnalysisProcessing
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(llmProcessing)
         hasher.combine(llmTagsProcessing)
+        hasher.combine(imageAnalysisProcessing)
     }
 }

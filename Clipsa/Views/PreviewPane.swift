@@ -3,6 +3,12 @@ import AppKit
 
 struct PreviewPane: View {
     let item: ClipboardItem?
+    @EnvironmentObject var clipboardManager: ClipboardManager
+    @ObservedObject private var settings = LLMSettings.shared
+    
+    // Reference to shared MLX service for download status
+    // Using @State to store the reference ensures SwiftUI tracks @Observable changes
+    @State private var mlxService = MLXService.shared
     
     var body: some View {
         Group {
@@ -31,7 +37,7 @@ struct PreviewPane: View {
                 VStack(spacing: 0) {
                     // LLM processed content section
                     VStack(alignment: .leading, spacing: 0) {
-                        sectionHeader(title: "AI Response", icon: "sparkles", isProcessing: item.llmProcessing, isActive: true)
+                        textProcessingHeader(item: item)
                         
                         if item.llmProcessing {
                             processingPlaceholder
@@ -125,16 +131,32 @@ struct PreviewPane: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .image:
             if let data = item.rawData, let nsImage = NSImage(data: data) {
-                ScrollView([.horizontal, .vertical]) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(14)
-                        .padding(8)
-                        .glassEffect(in: .rect(cornerRadius: 12))
+                VStack(spacing: 0) {
+                    // Image Analysis section (when enabled)
+                    if settings.imageAnalysisEnabled {
+                        imageAnalysisSection(item: item, imageData: data)
+                    }
+                    
+                    // Image preview
+                    ScrollView([.horizontal, .vertical]) {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(14)
+                            .padding(8)
+                            .glassEffect(in: .rect(cornerRadius: 12))
+                    }
+                    .padding(8)
                 }
-                .padding(8)
+                .onAppear {
+                    checkModelAndAnalyze(item: item, imageData: data)
+                }
+                .onChange(of: settings.imageAnalysisEnabled) { _, newValue in
+                    if newValue {
+                        checkModelAndAnalyze(item: item, imageData: data)
+                    }
+                }
             } else {
                 placeholderContent(icon: "photo", text: "Image preview unavailable")
             }
@@ -155,6 +177,297 @@ struct PreviewPane: View {
         case .other:
             placeholderContent(icon: "doc", text: item.content)
         }
+    }
+    
+    // MARK: - Image Analysis
+    
+    @ViewBuilder
+    private func imageAnalysisSection(item: ClipboardItem, imageData: Data) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Custom header with model status on the right
+            imageAnalysisHeader(item: item, imageData: imageData)
+            
+            // Content area
+            if mlxService.isRefreshingStatus {
+                // Checking model status at startup - no extra content needed, shown in header
+                EmptyView()
+            } else if mlxService.isDownloading && mlxService.downloadingModelName == settings.mlxSelectedVLMModel {
+                // Downloading - progress shown in header
+                EmptyView()
+            } else if !mlxService.isModelReady(settings.mlxSelectedVLMModel) {
+                // Not downloaded - download button shown in header
+                EmptyView()
+            } else if mlxService.isLoading {
+                // Loading - shown in header
+                EmptyView()
+            } else if item.imageAnalysisProcessing {
+                // Processing - animated skeleton placeholder
+                AnalyzingPlaceholder()
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+            } else if let response = item.imageAnalysisResponse, !response.isEmpty {
+                // Show analysis result
+                Text(response)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+            }
+            // No "Ready to analyze" message - clean UI when ready
+        }
+        .background(Color.primary.opacity(0.03))
+    }
+    
+    /// Custom header for image analysis section with model status on the right
+    private func imageAnalysisHeader(item: ClipboardItem, imageData: Data) -> some View {
+        HStack(spacing: 8) {
+            // Left side: Icon and title
+            Image(systemName: "sparkles")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(LinearGradient.accentGradient)
+            
+            Text("AI Image Analysis")
+                .font(.system(size: 12, weight: .semibold, design: .default))
+                .foregroundStyle(.primary)
+            
+            if item.imageAnalysisProcessing {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+            }
+            
+            Spacer()
+            
+            // Right side: Model status (download, progress, loading, or ready)
+            imageAnalysisModelStatus(item: item, imageData: imageData)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+    
+    /// Model status view for the right side of the header
+    @ViewBuilder
+    private func imageAnalysisModelStatus(item: ClipboardItem, imageData: Data) -> some View {
+        if mlxService.isRefreshingStatus {
+            // Checking model status
+            HStack(spacing: 4) {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+                Text("Checking...")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+        } else if mlxService.isDownloading && mlxService.downloadingModelName == settings.mlxSelectedVLMModel {
+            // Downloading progress
+            HStack(spacing: 6) {
+                Text("Image analysis module")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                
+                if mlxService.overallProgress > 0 {
+                    ProgressView(value: mlxService.overallProgress)
+                        .frame(width: 60)
+                    
+                    Text("\(Int(mlxService.overallProgress * 100))%")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                    
+                    if let speed = mlxService.formattedDownloadSpeed {
+                        Text(speed)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                    }
+                } else {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .frame(width: 12, height: 12)
+                }
+                
+                Button {
+                    mlxService.cancelDownload()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .help("Cancel download")
+            }
+        } else if !mlxService.isModelReady(settings.mlxSelectedVLMModel) {
+            // Not downloaded - show download button
+            HStack(spacing: 6) {
+                Text("Image analysis module")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                
+                Button {
+                    Task {
+                        await downloadModelAndAnalyze(item: item, imageData: imageData)
+                    }
+                } label: {
+                    Text("Download")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(LinearGradient.accentGradient)
+                }
+                .buttonStyle(.plain)
+                .help("Download image analysis module")
+            }
+        } else if mlxService.isLoading {
+            // Loading into memory
+            HStack(spacing: 4) {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+                Text("Loading...")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        // When ready - show nothing (clean header)
+    }
+    
+    private func checkModelAndAnalyze(item: ClipboardItem, imageData: Data) {
+        guard settings.imageAnalysisEnabled else { return }
+        guard item.type == .image else { return }
+        // Only auto-analyze if the image was captured when the toggle was ON
+        guard item.shouldAnalyzeImage else { return }
+        
+        // Use cached status from MLXService (checked at startup)
+        let isReady = mlxService.isModelReady(settings.mlxSelectedVLMModel)
+        
+        // If model is available and not yet analyzed, trigger analysis
+        if isReady && item.imageAnalysisResponse == nil && !item.imageAnalysisProcessing {
+            Task {
+                await clipboardManager.analyzeImage(item)
+            }
+        }
+    }
+    
+    private func downloadModelAndAnalyze(item: ClipboardItem, imageData: Data) async {
+        // Trigger analysis - this will download the model if needed
+        // MLXService will automatically refresh the cached status after download
+        await clipboardManager.analyzeImage(item)
+    }
+    
+    // MARK: - Text Processing Header (AI Response)
+    
+    /// Custom header for AI Response section with MLX model status on the right
+    private func textProcessingHeader(item: ClipboardItem) -> some View {
+        HStack(spacing: 8) {
+            // Left side: Icon and title
+            Image(systemName: "sparkles")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(LinearGradient.accentGradient)
+            
+            Text("AI Response")
+                .font(.system(size: 12, weight: .semibold, design: .default))
+                .foregroundStyle(.primary)
+            
+            if item.llmProcessing {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+            }
+            
+            Spacer()
+            
+            // Right side: Model status (only for MLX provider)
+            if settings.selectedProvider == .mlx {
+                textProcessingModelStatus(item: item)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+    
+    /// Model status view for the right side of the text processing header
+    @ViewBuilder
+    private func textProcessingModelStatus(item: ClipboardItem) -> some View {
+        // Get current text model name directly from settings
+        let currentTextModel = settings.mlxSelectedTextModel
+        
+        if mlxService.isRefreshingStatus {
+            // Checking model status
+            HStack(spacing: 4) {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+                Text("Checking...")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+        } else if mlxService.isDownloading && mlxService.downloadingModelName == currentTextModel {
+            // Downloading progress for text model
+            HStack(spacing: 6) {
+                Text("Text processing module")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                
+                if mlxService.overallProgress > 0 {
+                    ProgressView(value: mlxService.overallProgress)
+                        .frame(width: 60)
+                    
+                    Text("\(Int(mlxService.overallProgress * 100))%")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                    
+                    if let speed = mlxService.formattedDownloadSpeed {
+                        Text(speed)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                    }
+                } else {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .frame(width: 12, height: 12)
+                }
+                
+                Button {
+                    mlxService.cancelDownload()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .help("Cancel download")
+            }
+        } else if !mlxService.isModelReady(currentTextModel) {
+            // Not downloaded - show download button
+            HStack(spacing: 6) {
+                Text("Text processing module")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                
+                Button {
+                    // Explicitly download the TEXT model, not VLM
+                    Task { @MainActor in
+                        MLXService.shared.downloadModel(settings.mlxSelectedTextModel)
+                    }
+                } label: {
+                    Text("Download")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(LinearGradient.accentGradient)
+                }
+                .buttonStyle(.plain)
+                .help("Download text processing module")
+            }
+        } else if mlxService.isLoading {
+            // Loading into memory
+            HStack(spacing: 4) {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 12, height: 12)
+                Text("Loading...")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        // When ready - show nothing (clean header)
     }
     
     // MARK: - Section Header
@@ -332,6 +645,56 @@ struct PreviewPane: View {
     }
 }
 
+// MARK: - Analyzing Placeholder (Skeleton Animation)
+
+/// Animated skeleton placeholder shown while image analysis is in progress
+struct AnalyzingPlaceholder: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Simulated text lines with varying widths
+            SkeletonLine(width: 0.85)
+            SkeletonLine(width: 0.6)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+/// Single animated skeleton line
+private struct SkeletonLine: View {
+    let width: CGFloat // Fraction of available width (0.0 - 1.0)
+    @State private var isAnimating = false
+    
+    var body: some View {
+        GeometryReader { geometry in
+            RoundedRectangle(cornerRadius: 4)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.primary.opacity(0.08),
+                            Color.primary.opacity(0.15),
+                            Color.primary.opacity(0.08)
+                        ],
+                        startPoint: isAnimating ? .leading : .trailing,
+                        endPoint: isAnimating ? .trailing : .leading
+                    )
+                )
+                .frame(width: geometry.size.width * width, height: 14)
+        }
+        .frame(height: 14)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
 // MARK: - Action Button
 
 struct ActionButton: View {
@@ -341,18 +704,9 @@ struct ActionButton: View {
     let action: () -> Void
     
     @State private var isHovered = false
-    @State private var isPressed = false
     
     var body: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                isPressed = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-            }
-            action()
-        }) {
+        Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isDestructive && isHovered ? .red : .secondary)
@@ -362,15 +716,10 @@ struct ActionButton: View {
                         Circle().glassEffect()
                     }
                 }
-                .scaleEffect(isPressed ? 0.9 : 1.0)
         }
         .buttonStyle(.plain)
         .help(tooltip)
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.15)) {
-                isHovered = hovering
-            }
-        }
+        .onHover { isHovered = $0 }
     }
 }
 
@@ -383,17 +732,10 @@ struct LinkActionButton: View {
     let action: () -> Void
     
     @State private var isHovered = false
-    @State private var isPressed = false
     @State private var showingCheckmark = false
     
     var body: some View {
         Button {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                isPressed = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-            }
             action()
             
             if showsCheckmark {
@@ -404,35 +746,28 @@ struct LinkActionButton: View {
             }
         } label: {
             VStack(spacing: 8) {
-                // Glassy circle with icon
+                // Glassy circle with icon - shows glass only on hover (toolbar style)
                 ZStack {
-                    Circle()
-                        .glassEffect()
-                        .shadow(color: isHovered ? .clipAccent.opacity(0.3) : .black.opacity(0.1), radius: isHovered ? 8 : 4)
+                    if isHovered {
+                        Circle().glassEffect()
+                    }
                     
                     Image(systemName: showingCheckmark ? "checkmark" : icon)
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(showingCheckmark ? .green : (isHovered ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.primary)))
+                        .foregroundStyle(showingCheckmark ? .green : .primary)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .frame(width: 44, height: 44)
-                .scaleEffect(isPressed ? 0.9 : (isHovered ? 1.05 : 1.0))
                 
                 // Label
                 Text(label)
                     .font(.system(size: 11, weight: .medium, design: .default))
-                    .foregroundStyle(isHovered ? .primary : .secondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .buttonStyle(.plain)
         .help(label)
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.2)) {
-                isHovered = hovering
-            }
-        }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+        .onHover { isHovered = $0 }
     }
 }
 

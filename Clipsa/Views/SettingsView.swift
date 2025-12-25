@@ -19,8 +19,9 @@ struct SettingsView: View {
     @State private var downloadProgress: Double = 0
     @State private var isServerReachable: Bool = true
     
-    // MLX state - use shared singleton
-    private var mlxService: MLXService { MLXService.shared }
+    // MLX state - use shared singleton (download status cached in MLXService)
+    // Using @State ensures SwiftUI tracks @Observable changes
+    @State private var mlxService = MLXService.shared
     @State private var isMLXModelLoading: Bool = false
     
     // History cleanup confirmation alerts
@@ -102,6 +103,7 @@ struct SettingsView: View {
         .onAppear {
             promptText = settings.customPrompt
             fetchModels()
+            // Model download status is cached in MLXService and refreshed at startup
         }
         .onChange(of: promptText) { _, newValue in
             hasChanges = newValue != settings.customPrompt
@@ -160,6 +162,18 @@ struct SettingsView: View {
     
     private var isCurrentModelAvailable: Bool {
         availableModels.contains { $0.name == settings.selectedModel || $0.name.hasPrefix(settings.selectedModel.split(separator: ":").first.map(String.init) ?? settings.selectedModel) }
+    }
+    
+    // MARK: - MLX Model Actions
+    
+    private func downloadMLXModel(_ modelName: String) {
+        mlxService.downloadModel(modelName)
+        // Status is automatically refreshed when download completes
+    }
+    
+    private func cancelMLXDownload() {
+        mlxService.cancelDownload()
+        // Status is automatically refreshed in MLXService.cancelDownload()
     }
     
     // MARK: - Header
@@ -577,61 +591,16 @@ struct SettingsView: View {
     // MARK: - MLX Model Section
     
     private var mlxModelSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Select from available MLX models")
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.tertiary)
+        VStack(alignment: .leading, spacing: 16) {
+            // Text Model Section
+            mlxTextModelPicker
             
-            // MLX model picker
-            Picker("", selection: $settings.mlxSelectedModel) {
-                ForEach(MLXService.availableModels) { model in
-                    HStack {
-                        Text(model.displayName)
-                        if model.isVisionModel {
-                            Image(systemName: "eye")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .tag(model.name)
-                }
-            }
-            .pickerStyle(.menu)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-            }
+            // VLM Model Section
+            mlxVLMModelPicker
             
-            // MLX download progress
+            // MLX download progress (shown for any model download)
             if mlxService.isDownloading {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.clipAccent)
-                    
-                    if mlxService.totalFileCount > 0 {
-                        // Show progress based on file count
-                        ProgressView(value: Double(mlxService.downloadedFileCount), total: Double(mlxService.totalFileCount))
-                            .frame(maxWidth: .infinity)
-                        
-                        Text("Downloading \(mlxService.downloadedFileCount)/\(mlxService.totalFileCount) files")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                    } else {
-                        // Show indeterminate progress while discovering files
-                        ProgressView()
-                            .scaleEffect(0.7)
-                        
-                        Text("Starting download...")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-                .padding(10)
-                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+                mlxDownloadProgressView
             }
             
             // MLX info
@@ -646,6 +615,214 @@ struct SettingsView: View {
             }
             .padding(10)
             .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 8))
+        }
+    }
+    
+    // MARK: - Text Model Picker
+    
+    private var mlxTextModelPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "text.bubble")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text("Text Model")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Used for processing text clipboard items")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            Picker("", selection: $settings.mlxSelectedTextModel) {
+                ForEach(MLXService.textModels) { model in
+                    mlxModelRow(model: model)
+                        .tag(model.name)
+                }
+            }
+            .pickerStyle(.menu)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+            }
+            .onChange(of: settings.mlxSelectedTextModel) { _, newValue in
+                handleModelSelection(newValue)
+            }
+            
+            // Show download prompt if selected text model is not downloaded
+            if !mlxService.isModelReady(settings.mlxSelectedTextModel) {
+                if mlxService.isDownloading && mlxService.downloadingModelName == settings.mlxSelectedTextModel {
+                    // Already downloading this model - progress shown in global progress view
+                } else {
+                    modelNotDownloadedBanner(modelName: settings.mlxSelectedTextModel)
+                }
+            }
+        }
+    }
+    
+    // MARK: - VLM Model Picker
+    
+    private var mlxVLMModelPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "eye")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text("Vision Model")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Used for analyzing image clipboard items")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            Picker("", selection: $settings.mlxSelectedVLMModel) {
+                ForEach(MLXService.visionModels) { model in
+                    mlxModelRow(model: model)
+                        .tag(model.name)
+                }
+            }
+            .pickerStyle(.menu)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+            }
+            .onChange(of: settings.mlxSelectedVLMModel) { _, newValue in
+                handleModelSelection(newValue)
+            }
+            
+            // Show download prompt if selected VLM model is not downloaded
+            if !mlxService.isModelReady(settings.mlxSelectedVLMModel) {
+                if mlxService.isDownloading && mlxService.downloadingModelName == settings.mlxSelectedVLMModel {
+                    // Already downloading this model - progress shown in global progress view
+                } else {
+                    modelNotDownloadedBanner(modelName: settings.mlxSelectedVLMModel)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Model Row Helper
+    
+    @ViewBuilder
+    private func mlxModelRow(model: LMModel) -> some View {
+        HStack(spacing: 6) {
+            Text(model.name)
+            
+            if mlxService.isRefreshingStatus {
+                // Still checking at startup
+            } else if mlxService.isModelReady(model.name) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.green)
+            } else {
+                Image(systemName: "arrow.down.circle")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+    
+    // MARK: - Model Not Downloaded Banner
+    
+    private func modelNotDownloadedBanner(modelName: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.clipAccent)
+            
+            Text("Model not downloaded")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+            
+            Spacer()
+            
+            Button {
+                downloadMLXModel(modelName)
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 11))
+                    Text("Download")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(LinearGradient.accentGradient, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+    }
+    
+    // MARK: - Download Progress View
+    
+    private var mlxDownloadProgressView: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.clipAccent)
+            
+            if let modelName = mlxService.downloadingModelName {
+                Text(modelName)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
+            
+            if mlxService.overallProgress > 0 {
+                ProgressView(value: mlxService.overallProgress)
+                    .frame(maxWidth: .infinity)
+                
+                Text("\(Int(mlxService.overallProgress * 100))%")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                
+                if let speed = mlxService.formattedDownloadSpeed {
+                    Text(speed)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
+            } else {
+                ProgressView()
+                    .scaleEffect(0.7)
+                
+                Text("Starting...")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            }
+            
+            // Cancel button
+            Button {
+                cancelMLXDownload()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Cancel download")
+        }
+        .padding(10)
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+    }
+    
+    // MARK: - Handle Model Selection
+    
+    private func handleModelSelection(_ modelName: String) {
+        // Check if model is downloaded (from cached status)
+        if !mlxService.isModelReady(modelName) {
+            // Auto-download in background when selecting a non-downloaded model
+            downloadMLXModel(modelName)
         }
     }
     

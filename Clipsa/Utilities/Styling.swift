@@ -332,6 +332,55 @@ struct ThemeToggleButton: View {
     }
 }
 
+// MARK: - Image Analysis Toggle Button
+
+struct ImageAnalysisToggleButton: View {
+    @ObservedObject private var settings = LLMSettings.shared
+    @ObservedObject private var tooltipState = TooltipState.shared
+    @State private var hoverTask: Task<Void, Never>?
+    
+    var body: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                settings.imageAnalysisEnabled.toggle()
+            }
+        } label: {
+            Group {
+                if settings.imageAnalysisEnabled {
+                    Image(systemName: "eye")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(LinearGradient.accentGradient)
+                } else {
+                    Image(systemName: "eye.slash")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .contentTransition(.symbolEffect(.replace))
+        }
+        .onHover { hovering in
+            hoverTask?.cancel()
+            if hovering {
+                hoverTask = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(200))
+                    if !Task.isCancelled {
+                        tooltipState.activeTooltip = TooltipInfo(
+                            title: "Image Analysis",
+                            description: settings.imageAnalysisEnabled
+                                ? "Auto-analyze copied images with AI"
+                                : "Enable to auto-analyze copied images",
+                            shortcut: nil,
+                            alignment: .trailing
+                        )
+                    }
+                }
+            } else {
+                tooltipState.activeTooltip = nil
+            }
+        }
+    }
+}
+
 // MARK: - Glow Effect Modifier
 
 struct GlowEffect: ViewModifier {

@@ -77,15 +77,21 @@ class LLMSettings: ObservableObject {
         static let detectTags = "llm_detect_tags"
         static let selectedModel = "llm_selected_model"
         static let selectedProvider = "llm_selected_provider"
-        static let mlxSelectedModel = "llm_mlx_model"
+        static let mlxSelectedModel = "llm_mlx_model" // Legacy key for migration
+        static let mlxSelectedTextModel = "llm_mlx_text_model"
+        static let mlxSelectedVLMModel = "llm_mlx_vlm_model"
         static let appTheme = "app_theme"
+        static let imageAnalysisEnabled = "llm_image_analysis_enabled"
     }
     
     /// Default Ollama model name
     static let defaultModel = "qwen2.5:1.5b"
     
-    /// Default MLX model name
-    static let defaultMLXModel = "qwen2.5:1.5b"
+    /// Default MLX text model name
+    static let defaultMLXTextModel = "qwen2.5:1.5b"
+    
+    /// Default MLX VLM model name for image analysis
+    static let defaultMLXVLMModel = "qwen3-vl:4b"
     
     /// Default provider - auto-detect Apple Silicon and prefer MLX
     static var defaultProvider: LLMProviderType {
@@ -149,10 +155,17 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
         }
     }
     
-    /// Selected MLX model name
-    @Published var mlxSelectedModel: String {
+    /// Selected MLX text model name (for text processing)
+    @Published var mlxSelectedTextModel: String {
         didSet {
-            defaults.set(mlxSelectedModel, forKey: Keys.mlxSelectedModel)
+            defaults.set(mlxSelectedTextModel, forKey: Keys.mlxSelectedTextModel)
+        }
+    }
+    
+    /// Selected MLX VLM model name (for image analysis)
+    @Published var mlxSelectedVLMModel: String {
+        didSet {
+            defaults.set(mlxSelectedVLMModel, forKey: Keys.mlxSelectedVLMModel)
         }
     }
     
@@ -160,6 +173,13 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
     @Published var appTheme: AppTheme {
         didSet {
             defaults.set(appTheme.rawValue, forKey: Keys.appTheme)
+        }
+    }
+    
+    /// Whether on-demand image analysis is enabled
+    @Published var imageAnalysisEnabled: Bool {
+        didSet {
+            defaults.set(imageAnalysisEnabled, forKey: Keys.imageAnalysisEnabled)
         }
     }
     
@@ -177,8 +197,21 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
             self.selectedProvider = Self.defaultProvider
         }
         
-        // Load MLX model selection
-        self.mlxSelectedModel = defaults.string(forKey: Keys.mlxSelectedModel) ?? Self.defaultMLXModel
+        // Load MLX model selections with migration from legacy single model
+        let legacyModel = defaults.string(forKey: Keys.mlxSelectedModel)
+        
+        // Load text model (migrate from legacy if new key doesn't exist)
+        if let textModel = defaults.string(forKey: Keys.mlxSelectedTextModel) {
+            self.mlxSelectedTextModel = textModel
+        } else if let legacy = legacyModel {
+            // Migrate: if legacy was a text model, use it; otherwise use default
+            self.mlxSelectedTextModel = legacy.contains("vision") || legacy.contains("-vl:") ? Self.defaultMLXTextModel : legacy
+        } else {
+            self.mlxSelectedTextModel = Self.defaultMLXTextModel
+        }
+        
+        // Load VLM model (always use default if not set, don't migrate from legacy text model)
+        self.mlxSelectedVLMModel = defaults.string(forKey: Keys.mlxSelectedVLMModel) ?? Self.defaultMLXVLMModel
         
         // Load app theme
         if let themeRaw = defaults.string(forKey: Keys.appTheme),
@@ -197,6 +230,9 @@ Fix grammar errors in this text. Output ONLY the corrected text, nothing else:
         if defaults.object(forKey: Keys.detectTags) == nil {
             self.detectTags = true
         }
+        
+        // Load image analysis setting (default: false)
+        self.imageAnalysisEnabled = defaults.bool(forKey: Keys.imageAnalysisEnabled)
     }
     
     /// Build the final prompt by replacing {text} with actual content

@@ -100,16 +100,22 @@ struct ContentView: View {
                 GlassToolbarGroup {
                     ThemeToggleButton()
                     
+                    ImageAnalysisToggleButton()
+                    
                     ToolbarActionButton(
                         icon: "sparkles",
                         title: "Process with AI",
-                        description: "Analyze content using Ollama LLM",
-                        isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true,
+                        description: "Analyze content using AI",
+                        isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true || selectedItem?.imageAnalysisProcessing == true,
                         tooltipAlignment: .trailing
                     ) {
                         if let item = selectedItem {
                             Task {
-                                await clipboardManager.processItemWithLLM(item)
+                                if item.type == .image {
+                                    await clipboardManager.analyzeImage(item)
+                                } else {
+                                    await clipboardManager.processItemWithLLM(item)
+                                }
                             }
                         }
                     }
@@ -227,25 +233,18 @@ struct ContentView: View {
     // MARK: - Item List
     
     private var itemList: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(clipboardManager.filteredItems) { item in
-                        ClipboardRow(item: item, isSelected: selectedItemId == item.id)
-                            .id(item.id)
-                            .onTapGesture {
-                                selectedItemId = item.id
-                            }
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-            }
-            .onChange(of: selectedItemId) { _, newId in
-                if let id = newId {
-                    proxy.scrollTo(id, anchor: .center)
+        ScrollView {
+            LazyVStack(spacing: 4) {
+                ForEach(clipboardManager.filteredItems) { item in
+                    ClipboardRow(item: item, isSelected: selectedItemId == item.id)
+                        .id(item.id)
+                        .onTapGesture {
+                            selectedItemId = item.id
+                        }
                 }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
         }
     }
     
