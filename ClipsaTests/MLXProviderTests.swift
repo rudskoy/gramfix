@@ -44,6 +44,22 @@ final class MockMLXService: MLXServiceProtocol {
         return generateResult
     }
     
+    /// Last images passed to generate()
+    var lastImages: [Data]?
+    
+    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel) async throws -> String {
+        generateCallCount += 1
+        lastPrompt = prompt
+        lastSystemPrompt = systemPrompt
+        lastImages = images
+        lastModel = model
+        
+        if let error = generateError {
+            throw error
+        }
+        return generateResult
+    }
+    
     /// Reset all recorded state
     func reset() {
         generateResult = ""
@@ -51,6 +67,7 @@ final class MockMLXService: MLXServiceProtocol {
         generateCallCount = 0
         lastPrompt = nil
         lastSystemPrompt = nil
+        lastImages = nil
         lastModel = nil
     }
 }
@@ -71,8 +88,8 @@ final class MLXProviderTests: XCTestCase {
         try await super.setUp()
         
         // Save original model name and set a valid one for tests
-        originalModelName = LLMSettings.shared.mlxSelectedModel
-        LLMSettings.shared.mlxSelectedModel = "llama3.2:1b"
+        originalModelName = LLMSettings.shared.mlxSelectedTextModel
+        LLMSettings.shared.mlxSelectedTextModel = "llama3.2:1b"
         
         mockService = MockMLXService()
         client = MLXClient(mlxService: mockService)
@@ -82,7 +99,7 @@ final class MLXProviderTests: XCTestCase {
     @MainActor
     override func tearDown() async throws {
         // Restore original model name
-        LLMSettings.shared.mlxSelectedModel = originalModelName
+        LLMSettings.shared.mlxSelectedTextModel = originalModelName
         
         provider = nil
         client = nil
@@ -150,7 +167,7 @@ final class MLXProviderTests: XCTestCase {
     @MainActor
     func testClientGenerateThrowsOnInvalidModel() async throws {
         // Given - set an invalid model name
-        LLMSettings.shared.mlxSelectedModel = "nonexistent-model"
+        LLMSettings.shared.mlxSelectedTextModel = "nonexistent-model"
         
         // When/Then
         do {
@@ -218,10 +235,11 @@ final class MLXProviderTests: XCTestCase {
     }
     
     @MainActor
-    func testAllModelsAreLLMType() async throws {
+    func testAllModelsHaveValidType() async throws {
         for model in MLXService.availableModels {
-            XCTAssertTrue(model.isLanguageModel, "All current models should be LLM type")
-            XCTAssertFalse(model.isVisionModel, "No vision models should be available")
+            // Each model should be exactly one type (LLM or VLM)
+            XCTAssertTrue(model.isLanguageModel || model.isVisionModel, "Model \(model.name) should have a valid type")
+            XCTAssertNotEqual(model.isLanguageModel, model.isVisionModel, "Model \(model.name) should be either LLM or VLM, not both")
         }
     }
     
