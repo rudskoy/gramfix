@@ -232,7 +232,7 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
         
         // Load model and track download progress
         // Note: Progress callbacks may fire even for cached files during verification
-        // Only show download UI if the model wasn't already downloaded
+        // Only show download UI if the model was not already downloaded
         let container = try await factory.loadContainer(
             hub: .default, configuration: model.configuration
         ) { [alreadyDownloaded] progress in
