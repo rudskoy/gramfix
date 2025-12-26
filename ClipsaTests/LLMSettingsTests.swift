@@ -62,9 +62,9 @@ final class LLMSettingsTests: XCTestCase {
     
     func testTextPromptTypeDisplayNames() {
         XCTAssertEqual(TextPromptType.grammar.displayName, "Grammar")
-        XCTAssertEqual(TextPromptType.formal.displayName, "+Formal")
-        XCTAssertEqual(TextPromptType.casual.displayName, "Casual")
-        XCTAssertEqual(TextPromptType.polished.displayName, "Polished")
+        XCTAssertEqual(TextPromptType.formal.displayName, "Corporate BS")
+        XCTAssertEqual(TextPromptType.casual.displayName, "Reddit-like")
+        XCTAssertEqual(TextPromptType.polished.displayName, "No Corporate BS")
     }
     
     func testTextPromptTypeRawValues() {
@@ -83,15 +83,15 @@ final class LLMSettingsTests: XCTestCase {
         
         let formalPrompt = TextPromptType.formal.buildPrompt(for: testText)
         XCTAssertTrue(formalPrompt.contains(testText))
-        XCTAssertTrue(formalPrompt.contains("formal"))
+        XCTAssertTrue(formalPrompt.contains("corporate"))
         
         let casualPrompt = TextPromptType.casual.buildPrompt(for: testText)
         XCTAssertTrue(casualPrompt.contains(testText))
-        XCTAssertTrue(casualPrompt.contains("Simplify"))
+        XCTAssertTrue(casualPrompt.contains("Reddit"))
         
         let polishedPrompt = TextPromptType.polished.buildPrompt(for: testText)
         XCTAssertTrue(polishedPrompt.contains(testText))
-        XCTAssertTrue(polishedPrompt.contains("polished"))
+        XCTAssertTrue(polishedPrompt.contains("corporate"))
     }
     
     func testTextPromptTypeId() {

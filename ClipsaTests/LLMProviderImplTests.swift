@@ -450,7 +450,7 @@ final class LLMProviderImplTests: XCTestCase {
         
         // Then
         XCTAssertEqual(result, "We would like to schedule a meeting.")
-        XCTAssertTrue(mockClient.lastPrompt?.contains("formal") ?? false)
+        XCTAssertTrue(mockClient.lastPrompt?.contains("corporate") ?? false)
     }
     
     func testProcessWithPromptTypeCasual() async throws {
@@ -463,7 +463,7 @@ final class LLMProviderImplTests: XCTestCase {
         
         // Then
         XCTAssertEqual(result, "Let's sync up tomorrow.")
-        XCTAssertTrue(mockClient.lastPrompt?.contains("Simplify") ?? false)
+        XCTAssertTrue(mockClient.lastPrompt?.contains("Reddit") ?? false)
     }
     
     func testProcessWithPromptTypePolished() async throws {
@@ -476,7 +476,7 @@ final class LLMProviderImplTests: XCTestCase {
         
         // Then
         XCTAssertEqual(result, "We are pleased to announce the successful completion of the project.")
-        XCTAssertTrue(mockClient.lastPrompt?.contains("polished") ?? false)
+        XCTAssertTrue(mockClient.lastPrompt?.contains("corporate") ?? false)
     }
     
     func testProcessWithPromptTypeCleansResponse() async throws {
