@@ -78,9 +78,10 @@ enum TextPromptType: String, CaseIterable, Codable, Identifiable {
     var displayName: String {
         switch self {
         case .grammar: return "Grammar"
-        case .formal: return "+Formal"
-        case .casual: return "Casual"
-        case .polished: return "Polished"
+        case .formal: return "Corporate BS"
+        case .polished: return "No Corporate BS"
+        case .casual: return "Reddit-like"
+        
         }
     }
     
@@ -90,11 +91,11 @@ enum TextPromptType: String, CaseIterable, Codable, Identifiable {
         case .grammar:
             return "Fix grammar errors in this text. Output ONLY the corrected text, nothing else:\n\n{text}"
         case .formal:
-            return "Make this text slightly more formal and professional. Keep the meaning intact. Output ONLY the revised text:\n\n{text}"
-        case .casual:
-            return "Simplify this text by removing jargon and buzzwords. Make it direct and clear. Output ONLY the simplified text:\n\n{text}"
+            return "Make this text slightly more corporate and professional. Keep the meaning intact. Output ONLY the revised text:\n\n{text}"
         case .polished:
-            return "Rephrase this text in a polished, professional style. Output ONLY the rephrased text:\n\n{text}"
+            return "Remove corporate/formal bullshit. Output ONLY the rephrased text:\n\n{text}"
+        case .casual:
+            return "Make it Reddit-style casual Output ONLY the simplified text:\n\n{text}"
         }
     }
     
