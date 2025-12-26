@@ -142,6 +142,9 @@ struct ContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // Force immediate clipboard check before comparing counts
+            clipboardManager.checkClipboardNow()
+            
             if clipboardManager.items.count != itemCountOnUnfocus {
                 selectFirstItem()
             }

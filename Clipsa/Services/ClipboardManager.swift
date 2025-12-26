@@ -208,6 +208,11 @@ class ClipboardManager: ObservableObject {
         timer = nil
     }
     
+    /// Force an immediate clipboard check (useful when app becomes active)
+    func checkClipboardNow() {
+        checkClipboard()
+    }
+    
     private func checkClipboard() {
         let pasteboard = NSPasteboard.general
         let currentChangeCount = pasteboard.changeCount
