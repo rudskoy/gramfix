@@ -106,7 +106,7 @@ struct ContentView: View {
                         icon: "sparkles",
                         title: "Process with AI",
                         description: "Analyze content using AI",
-                        isDisabled: selectedItem == nil || selectedItem?.llmProcessing == true || selectedItem?.imageAnalysisProcessing == true,
+                        isDisabled: selectedItem == nil || selectedItem?.isProcessing == true || selectedItem?.imageAnalysisProcessing == true,
                         tooltipAlignment: .trailing
                     ) {
                         if let item = selectedItem {
@@ -276,6 +276,26 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Prompt Tag Navigation
+    
+    private func selectPreviousPrompt(for item: ClipboardItem) {
+        let allPrompts = TextPromptType.allCases
+        guard let currentIndex = allPrompts.firstIndex(where: { $0.rawValue == item.selectedPromptId }) else {
+            return
+        }
+        let previousIndex = currentIndex > 0 ? currentIndex - 1 : allPrompts.count - 1
+        clipboardManager.selectPrompt(allPrompts[previousIndex], for: item)
+    }
+    
+    private func selectNextPrompt(for item: ClipboardItem) {
+        let allPrompts = TextPromptType.allCases
+        guard let currentIndex = allPrompts.firstIndex(where: { $0.rawValue == item.selectedPromptId }) else {
+            return
+        }
+        let nextIndex = currentIndex < allPrompts.count - 1 ? currentIndex + 1 : 0
+        clipboardManager.selectPrompt(allPrompts[nextIndex], for: item)
+    }
+    
     // MARK: - Keyboard Monitor (NSEvent)
     
     private func setupKeyboardMonitor() {
@@ -289,22 +309,53 @@ struct ContentView: View {
                 return event
             }
             
-            // Handle arrow keys for list navigation (works even when search field is focused,
-            // since up/down arrows have no useful function in a single-line text field)
+            // Handle arrow keys for navigation
             switch event.keyCode {
-            case 126: // Up arrow
+            case 126: // Up arrow - list navigation
                 if !hasUserModifiers {
                     selectPreviousItem()
                     return nil // Consume the event
                 }
-            case 125: // Down arrow
+            case 125: // Down arrow - list navigation
                 if !hasUserModifiers {
                     selectNextItem()
                     return nil // Consume the event
                 }
+            case 123: // Left arrow - previous prompt tag
+                if !hasUserModifiers {
+                    if let item = selectedItem {
+                        selectPreviousPrompt(for: item)
+                        return nil // Consume the event
+                    }
+                }
+            case 124: // Right arrow - next prompt tag
+                if !hasUserModifiers {
+                    if let item = selectedItem {
+                        selectNextPrompt(for: item)
+                        return nil // Consume the event
+                    }
+                }
             default:
                 break
             }
+            
+            // Handle 1-4 number keys for prompt selection (only when search field is not focused)
+            // This allows typing numbers in search while providing quick prompt switching
+            if !isSearchFieldFocused && !hasUserModifiers {
+                var promptType: TextPromptType?
+                switch event.keyCode {
+                case 18: promptType = .grammar   // 1
+                case 19: promptType = .formal    // 2
+                case 20: promptType = .casual    // 3
+                case 21: promptType = .polished  // 4
+                default: break
+                }
+                if let promptType = promptType, let item = selectedItem {
+                    clipboardManager.selectPrompt(promptType, for: item)
+                    return nil // Consume the event
+                }
+            }
+            
             return event // Pass through unhandled events
         }
     }

@@ -4,112 +4,18 @@ import XCTest
 /// Tests for LLMSettings
 final class LLMSettingsTests: XCTestCase {
     
-    private var originalPrompt: String!
     private var originalAutoProcess: Bool!
     
     override func setUp() {
         super.setUp()
         // Save original values
-        originalPrompt = LLMSettings.shared.customPrompt
         originalAutoProcess = LLMSettings.shared.autoProcess
     }
     
     override func tearDown() {
         // Restore original values
-        LLMSettings.shared.customPrompt = originalPrompt
         LLMSettings.shared.autoProcess = originalAutoProcess
         super.tearDown()
-    }
-    
-    // MARK: - Build Prompt Tests
-    
-    func testBuildPromptReplacesPlaceholder() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "Process this: {text}"
-        
-        let result = settings.buildPrompt(for: "Hello World")
-        
-        XCTAssertEqual(result, "Process this: Hello World")
-    }
-    
-    func testBuildPromptWithNoPlaceholder() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "Static prompt without placeholder"
-        
-        let result = settings.buildPrompt(for: "Any text")
-        
-        XCTAssertEqual(result, "Static prompt without placeholder")
-    }
-    
-    func testBuildPromptWithMultiplePlaceholders() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "First: {text}, Second: {text}"
-        
-        let result = settings.buildPrompt(for: "Test")
-        
-        XCTAssertEqual(result, "First: Test, Second: Test")
-    }
-    
-    func testBuildPromptWithEmptyText() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "Text: {text}"
-        
-        let result = settings.buildPrompt(for: "")
-        
-        XCTAssertEqual(result, "Text: ")
-    }
-    
-    func testBuildPromptWithMultilineText() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "Content:\n{text}"
-        
-        let multilineText = """
-        Line 1
-        Line 2
-        Line 3
-        """
-        
-        let result = settings.buildPrompt(for: multilineText)
-        
-        XCTAssertTrue(result.contains("Line 1"))
-        XCTAssertTrue(result.contains("Line 2"))
-        XCTAssertTrue(result.contains("Line 3"))
-    }
-    
-    func testBuildPromptWithSpecialCharacters() {
-        let settings = LLMSettings.shared
-        settings.customPrompt = "Process: {text}"
-        
-        let textWithSpecialChars = "Hello $100 & @user <tag> \"quotes\""
-        
-        let result = settings.buildPrompt(for: textWithSpecialChars)
-        
-        XCTAssertEqual(result, "Process: \(textWithSpecialChars)")
-    }
-    
-    // MARK: - Reset Tests
-    
-    func testResetToDefault() {
-        let settings = LLMSettings.shared
-        
-        // Change from default
-        settings.customPrompt = "Custom prompt"
-        XCTAssertNotEqual(settings.customPrompt, LLMSettings.defaultPrompt)
-        
-        // Reset
-        settings.resetToDefault()
-        
-        XCTAssertEqual(settings.customPrompt, LLMSettings.defaultPrompt)
-    }
-    
-    // MARK: - Default Prompt Tests
-    
-    func testDefaultPromptContainsPlaceholder() {
-        XCTAssertTrue(LLMSettings.defaultPrompt.contains("{text}"))
-    }
-    
-    func testDefaultPromptNotEmpty() {
-        XCTAssertFalse(LLMSettings.defaultPrompt.isEmpty)
     }
     
     // MARK: - Auto Process Tests
@@ -122,18 +28,6 @@ final class LLMSettingsTests: XCTestCase {
         
         settings.autoProcess = false
         XCTAssertFalse(settings.autoProcess)
-    }
-    
-    // MARK: - Persistence Tests
-    
-    func testCustomPromptPersistence() {
-        let settings = LLMSettings.shared
-        let customPrompt = "Test prompt for persistence: {text}"
-        
-        settings.customPrompt = customPrompt
-        
-        // Value should be stored
-        XCTAssertEqual(settings.customPrompt, customPrompt)
     }
     
     func testAutoProcessPersistence() {
@@ -153,5 +47,70 @@ final class LLMSettingsTests: XCTestCase {
         let instance2 = LLMSettings.shared
         
         XCTAssertTrue(instance1 === instance2, "Should be the same instance")
+    }
+    
+    // MARK: - TextPromptType Tests
+    
+    func testTextPromptTypeAllCases() {
+        let allCases = TextPromptType.allCases
+        XCTAssertEqual(allCases.count, 4)
+        XCTAssertTrue(allCases.contains(.grammar))
+        XCTAssertTrue(allCases.contains(.formal))
+        XCTAssertTrue(allCases.contains(.casual))
+        XCTAssertTrue(allCases.contains(.polished))
+    }
+    
+    func testTextPromptTypeDisplayNames() {
+        XCTAssertEqual(TextPromptType.grammar.displayName, "Grammar")
+        XCTAssertEqual(TextPromptType.formal.displayName, "Corporate BS")
+        XCTAssertEqual(TextPromptType.casual.displayName, "Reddit-like")
+        XCTAssertEqual(TextPromptType.polished.displayName, "No Corporate BS")
+    }
+    
+    func testTextPromptTypeRawValues() {
+        XCTAssertEqual(TextPromptType.grammar.rawValue, "grammar")
+        XCTAssertEqual(TextPromptType.formal.rawValue, "formal")
+        XCTAssertEqual(TextPromptType.casual.rawValue, "casual")
+        XCTAssertEqual(TextPromptType.polished.rawValue, "polished")
+    }
+    
+    func testTextPromptTypeBuildPrompt() {
+        let testText = "Hello world"
+        
+        let grammarPrompt = TextPromptType.grammar.buildPrompt(for: testText)
+        XCTAssertTrue(grammarPrompt.contains(testText))
+        XCTAssertTrue(grammarPrompt.contains("Fix grammar"))
+        
+        let formalPrompt = TextPromptType.formal.buildPrompt(for: testText)
+        XCTAssertTrue(formalPrompt.contains(testText))
+        XCTAssertTrue(formalPrompt.contains("corporate"))
+        
+        let casualPrompt = TextPromptType.casual.buildPrompt(for: testText)
+        XCTAssertTrue(casualPrompt.contains(testText))
+        XCTAssertTrue(casualPrompt.contains("Reddit"))
+        
+        let polishedPrompt = TextPromptType.polished.buildPrompt(for: testText)
+        XCTAssertTrue(polishedPrompt.contains(testText))
+        XCTAssertTrue(polishedPrompt.contains("corporate"))
+    }
+    
+    func testTextPromptTypeId() {
+        // Test Identifiable conformance
+        XCTAssertEqual(TextPromptType.grammar.id, "grammar")
+        XCTAssertEqual(TextPromptType.formal.id, "formal")
+        XCTAssertEqual(TextPromptType.casual.id, "casual")
+        XCTAssertEqual(TextPromptType.polished.id, "polished")
+    }
+    
+    func testTextPromptTypeCodable() throws {
+        // Test encoding
+        let encoder = JSONEncoder()
+        let grammarData = try encoder.encode(TextPromptType.grammar)
+        
+        // Test decoding
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(TextPromptType.self, from: grammarData)
+        
+        XCTAssertEqual(decoded, TextPromptType.grammar)
     }
 }

@@ -87,7 +87,7 @@ struct ClipboardTypeIcon: View {
     }
 }
 
-// MARK: - LLM Tag View
+// MARK: - LLM Tag View (Legacy - kept for compatibility)
 
 struct LLMTagView: View {
     let tag: String
@@ -99,6 +99,103 @@ struct LLMTagView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .glassEffect(in: .capsule)
+    }
+}
+
+// MARK: - Prompt Tag View (Multi-Prompt Selection)
+
+struct PromptTagView: View {
+    let promptType: TextPromptType
+    let isSelected: Bool
+    let isProcessing: Bool
+    let hasResult: Bool
+    let onSelect: () -> Void
+    
+    @State private var isHovered = false
+    @State private var pulseAnimation = false
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 4) {
+                // Status icon
+                statusIcon
+                    .font(.system(size: 8, weight: .bold))
+                
+                // Prompt name
+                Text(promptType.displayName)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(foregroundStyle)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background {
+                Capsule().fill(backgroundFill)
+            }
+            .overlay {
+                if isSelected {
+                    Capsule()
+                        .strokeBorder(Color.clipAccent.opacity(0.6), lineWidth: 1.5)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .opacity(isHovered ? 1.0 : (isSelected ? 1.0 : 0.85))
+        .scaleEffect(isHovered ? 1.05 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .animation(.easeOut(duration: 0.2), value: isSelected)
+        .onHover { isHovered = $0 }
+        .onAppear {
+            if isProcessing {
+                startPulseAnimation()
+            }
+        }
+        .onChange(of: isProcessing) { _, processing in
+            if processing {
+                startPulseAnimation()
+            } else {
+                pulseAnimation = false
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var statusIcon: some View {
+        if isProcessing {
+            Image(systemName: "circle.dotted")
+                .opacity(pulseAnimation ? 0.4 : 1.0)
+        } else if hasResult {
+            Image(systemName: "checkmark")
+                .foregroundStyle(.green)
+        } else {
+            Image(systemName: "circle")
+                .opacity(0.5)
+        }
+    }
+    
+    private var foregroundStyle: some ShapeStyle {
+        if isSelected {
+            return AnyShapeStyle(Color.white)
+        } else if hasResult {
+            return AnyShapeStyle(Color.primary)
+        } else {
+            return AnyShapeStyle(Color.secondary)
+        }
+    }
+    
+    private var backgroundFill: AnyShapeStyle {
+        if isSelected {
+            return AnyShapeStyle(LinearGradient.accentGradient)
+        } else if isHovered {
+            return AnyShapeStyle(Color.white.opacity(0.15))
+        } else {
+            return AnyShapeStyle(Color.white.opacity(0.08))
+        }
+    }
+    
+    private func startPulseAnimation() {
+        withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+            pulseAnimation = true
+        }
     }
 }
 

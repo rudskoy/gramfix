@@ -39,38 +39,32 @@ struct PreviewPane: View {
                     VStack(alignment: .leading, spacing: 0) {
                         textProcessingHeader(item: item)
                         
-                        if item.llmProcessing {
-                            processingPlaceholder
-                        } else if let response = item.llmResponse, !response.isEmpty {
+                        if item.isProcessing && !item.hasAnyPromptResult {
+                            // All prompts still processing, none complete yet
+                            processingPlaceholder(item: item)
+                        } else if item.hasAnyPromptResult {
+                            // At least one result available
                             VStack(spacing: 0) {
                                 ScrollView {
-                                    Text(response)
-                                        .font(.body)
-                                        .foregroundStyle(.primary)
-                                        .textSelection(.enabled)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(14)
+                                    if let response = item.selectedPromptResult {
+                                        Text(response)
+                                            .font(.body)
+                                            .foregroundStyle(.primary)
+                                            .textSelection(.enabled)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(14)
+                                    } else {
+                                        // Selected prompt not ready yet
+                                        AnalyzingPlaceholder()
+                                            .padding(14)
+                                    }
                                 }
                                 
-                                // Tags at the bottom
-                                if !item.llmTags.isEmpty {
-                                    tagsFooter(tags: item.llmTags)
-                                }
+                                // Prompt tags at the bottom
+                                promptTagsFooter(item: item)
                             }
-                        } else if !item.llmProcessed {
-                            notProcessedPlaceholder
                         } else {
-                            VStack(spacing: 8) {
-                                Text("¯\\_(ツ)_/¯")
-                                    .font(.system(size: 28, weight: .light))
-                                    .foregroundStyle(.tertiary)
-                                
-                                Text("Nothing to generate.")
-                                    .font(.system(size: 12, weight: .medium, design: .default))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .padding()
+                            notProcessedPlaceholder
                         }
                     }
                     .frame(height: geometry.size.height / 2)
@@ -366,10 +360,17 @@ struct PreviewPane: View {
                 .font(.system(size: 12, weight: .semibold, design: .default))
                 .foregroundStyle(.primary)
             
-            if item.llmProcessing {
-                ProgressView()
-                    .scaleEffect(0.5)
-                    .frame(width: 12, height: 12)
+            // Show processing progress
+            if item.isProcessing {
+                HStack(spacing: 4) {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .frame(width: 12, height: 12)
+                    
+                    Text("\(item.completedPromptCount)/\(item.totalPromptCount)")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
             }
             
             Spacer()
@@ -544,7 +545,7 @@ struct PreviewPane: View {
     
     // MARK: - Placeholders
     
-    private var processingPlaceholder: some View {
+    private func processingPlaceholder(item: ClipboardItem) -> some View {
         VStack(spacing: 14) {
             // Purple sparkles animation - centered in fixed container
             LLMProcessingIndicator()
@@ -555,7 +556,7 @@ struct PreviewPane: View {
                     .font(.system(size: 13, weight: .semibold, design: .default))
                     .foregroundStyle(.primary)
                 
-                Text("Analyzing your clipboard content")
+                Text("Running \(item.totalPromptCount) transformations in parallel")
                     .font(.system(size: 11, weight: .medium, design: .default))
                     .foregroundStyle(.tertiary)
             }
@@ -587,24 +588,32 @@ struct PreviewPane: View {
         .frame(maxWidth: .infinity)
     }
     
-    // MARK: - Tags Footer
+    // MARK: - Prompt Tags Footer
     
-    private func tagsFooter(tags: [String]) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+    private func promptTagsFooter(item: ClipboardItem) -> some View {
+        HStack(alignment: .center, spacing: 8) {
             Image(systemName: "tag")
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.tertiary)
-                .padding(.top, 3) // Align with first tag line
             
             FlowLayout(horizontalSpacing: 6, verticalSpacing: 6) {
-                ForEach(tags, id: \.self) { tag in
-                    LLMTagView(tag: tag)
+                ForEach(TextPromptType.allCases) { promptType in
+                    PromptTagView(
+                        promptType: promptType,
+                        isSelected: item.selectedPromptId == promptType.rawValue,
+                        isProcessing: item.promptProcessingIds.contains(promptType.rawValue),
+                        hasResult: item.promptResults[promptType.rawValue] != nil,
+                        onSelect: {
+                            clipboardManager.selectPrompt(promptType, for: item)
+                        }
+                    )
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+        .background(Color.primary.opacity(0.02))
     }
     
     private func placeholderContent(icon: String, text: String) -> some View {

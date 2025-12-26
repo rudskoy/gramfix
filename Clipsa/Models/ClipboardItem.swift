@@ -20,28 +20,16 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     // Cached formatted time string for performance (not persisted, recomputed on load)
     let formattedTime: String
     
-    // MARK: - LLM-generated fields
+    // MARK: - Multi-Prompt Results
     
-    /// Full LLM response text (the main processed output)
-    var llmResponse: String?
+    /// Results from multiple prompts (keyed by TextPromptType.rawValue)
+    var promptResults: [String: String]
     
-    /// AI-generated summary of the content (legacy, kept for compatibility)
-    var llmSummary: String?
+    /// Currently selected prompt ID for display/paste (defaults to "grammar")
+    var selectedPromptId: String
     
-    /// AI-extracted tags/keywords
-    var llmTags: [String]
-    
-    /// AI-classified content type (code, email, url, note, etc.)
-    var llmContentType: String?
-    
-    /// Whether LLM processing has been attempted
-    var llmProcessed: Bool
-    
-    /// Whether LLM processing is currently in progress (transient, not persisted)
-    var llmProcessing: Bool
-    
-    /// Whether tag extraction is currently in progress (transient, not persisted)
-    var llmTagsProcessing: Bool
+    /// Set of prompt IDs currently being processed (transient, not persisted)
+    var promptProcessingIds: Set<String>
     
     // MARK: - Image Analysis fields
     
@@ -60,7 +48,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     /// Coding keys - excludes transient processing states and computed formattedTime
     enum CodingKeys: String, CodingKey {
         case id, content, rawData, type, timestamp, appName
-        case llmResponse, llmSummary, llmTags, llmContentType, llmProcessed
+        case promptResults, selectedPromptId
         case imageAnalysisResponse, shouldAnalyzeImage
     }
     
@@ -72,15 +60,13 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         type = try container.decode(ClipboardType.self, forKey: .type)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
         appName = try container.decodeIfPresent(String.self, forKey: .appName)
-        llmResponse = try container.decodeIfPresent(String.self, forKey: .llmResponse)
-        llmSummary = try container.decodeIfPresent(String.self, forKey: .llmSummary)
-        llmTags = try container.decodeIfPresent([String].self, forKey: .llmTags) ?? []
-        llmContentType = try container.decodeIfPresent(String.self, forKey: .llmContentType)
-        llmProcessed = try container.decodeIfPresent(Bool.self, forKey: .llmProcessed) ?? false
         
-        // Transient states - always start as false when loading
-        llmProcessing = false
-        llmTagsProcessing = false
+        // Multi-prompt fields (default to empty if not present - legacy items)
+        promptResults = try container.decodeIfPresent([String: String].self, forKey: .promptResults) ?? [:]
+        selectedPromptId = try container.decodeIfPresent(String.self, forKey: .selectedPromptId) ?? TextPromptType.grammar.rawValue
+        
+        // Transient state - always start empty when loading
+        promptProcessingIds = []
         
         // Image analysis fields
         imageAnalysisResponse = try container.decodeIfPresent(String.self, forKey: .imageAnalysisResponse)
@@ -99,13 +85,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         type: ClipboardType = .text,
         timestamp: Date = Date(),
         appName: String? = nil,
-        llmResponse: String? = nil,
-        llmSummary: String? = nil,
-        llmTags: [String] = [],
-        llmContentType: String? = nil,
-        llmProcessed: Bool = false,
-        llmProcessing: Bool = false,
-        llmTagsProcessing: Bool = false,
+        promptResults: [String: String] = [:],
+        selectedPromptId: String = TextPromptType.grammar.rawValue,
+        promptProcessingIds: Set<String> = [],
         imageAnalysisResponse: String? = nil,
         imageAnalysisProcessing: Bool = false,
         shouldAnalyzeImage: Bool = false
@@ -117,49 +99,71 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         self.timestamp = timestamp
         self.appName = appName
         self.formattedTime = Self.timeFormatter.localizedString(for: timestamp, relativeTo: Date())
-        self.llmResponse = llmResponse
-        self.llmSummary = llmSummary
-        self.llmTags = llmTags
-        self.llmContentType = llmContentType
-        self.llmProcessed = llmProcessed
-        self.llmProcessing = llmProcessing
-        self.llmTagsProcessing = llmTagsProcessing
+        self.promptResults = promptResults
+        self.selectedPromptId = selectedPromptId
+        self.promptProcessingIds = promptProcessingIds
         self.imageAnalysisResponse = imageAnalysisResponse
         self.imageAnalysisProcessing = imageAnalysisProcessing
         self.shouldAnalyzeImage = shouldAnalyzeImage
     }
     
-    /// Create a copy with updated LLM result (main prompt only, tags come from separate query)
-    func withLLMResult(_ result: LLMResult) -> ClipboardItem {
+    // MARK: - Prompt Result Helpers
+    
+    /// Whether any prompt has been processed
+    var hasAnyPromptResult: Bool {
+        !promptResults.isEmpty
+    }
+    
+    /// Whether any prompt is currently processing
+    var isProcessing: Bool {
+        !promptProcessingIds.isEmpty
+    }
+    
+    /// Number of completed prompt results
+    var completedPromptCount: Int {
+        promptResults.count
+    }
+    
+    /// Total number of prompts
+    var totalPromptCount: Int {
+        TextPromptType.allCases.count
+    }
+    
+    /// Get result for the currently selected prompt
+    var selectedPromptResult: String? {
+        promptResults[selectedPromptId]
+    }
+    
+    /// Create a copy with a prompt result
+    func withPromptResult(type: TextPromptType, response: String) -> ClipboardItem {
         var updated = self
-        updated.llmResponse = result.response
-        updated.llmSummary = result.summary
-        // Note: Tags are NOT updated here - they come from a separate async query
-        updated.llmContentType = result.contentType
-        updated.llmProcessed = true
-        updated.llmProcessing = false
+        updated.promptResults[type.rawValue] = response
+        updated.promptProcessingIds.remove(type.rawValue)
         return updated
     }
     
-    /// Create a copy with updated tags from the async tag extraction query
-    func withTagsResult(_ tags: [String]) -> ClipboardItem {
+    /// Create a copy with prompt processing state
+    func withPromptProcessing(type: TextPromptType, processing: Bool) -> ClipboardItem {
         var updated = self
-        updated.llmTags = tags
-        updated.llmTagsProcessing = false
+        if processing {
+            updated.promptProcessingIds.insert(type.rawValue)
+        } else {
+            updated.promptProcessingIds.remove(type.rawValue)
+        }
         return updated
     }
     
-    /// Create a copy with processing state
-    func withProcessingState(_ processing: Bool) -> ClipboardItem {
+    /// Create a copy with all prompts marked as processing
+    func withAllPromptsProcessing() -> ClipboardItem {
         var updated = self
-        updated.llmProcessing = processing
+        updated.promptProcessingIds = Set(TextPromptType.allCases.map(\.rawValue))
         return updated
     }
     
-    /// Create a copy with tag processing state
-    func withTagsProcessingState(_ processing: Bool) -> ClipboardItem {
+    /// Create a copy with selected prompt ID
+    func withSelectedPrompt(_ promptId: String) -> ClipboardItem {
         var updated = self
-        updated.llmTagsProcessing = processing
+        updated.selectedPromptId = promptId
         return updated
     }
     
@@ -185,8 +189,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
             return analysis
         }
         
-        // For text, prefer LLM response if available
-        if let response = llmResponse, !response.isEmpty {
+        // For text, prefer selected prompt result if available
+        if let response = selectedPromptResult, !response.isEmpty {
             // Clean and truncate AI response same as compactPreview
             let cleaned = response
                 .replacingOccurrences(of: "\n", with: " ")
@@ -201,12 +205,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         return compactPreview
     }
     
-    /// Formatted tags for display
-    var formattedTags: String {
-        llmTags.joined(separator: ", ")
-    }
-    
-    /// Check if content matches search query (includes LLM fields)
+    /// Check if content matches search query (includes prompt results)
     func matchesSearch(_ query: String) -> Bool {
         let lowercasedQuery = query.lowercased()
         
@@ -215,19 +214,11 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
             return true
         }
         
-        // Check LLM summary
-        if let summary = llmSummary, summary.localizedCaseInsensitiveContains(query) {
-            return true
-        }
-        
-        // Check LLM tags
-        if llmTags.contains(where: { $0.lowercased().contains(lowercasedQuery) }) {
-            return true
-        }
-        
-        // Check LLM content type
-        if let contentType = llmContentType, contentType.lowercased().contains(lowercasedQuery) {
-            return true
+        // Check all prompt results
+        for (_, result) in promptResults {
+            if result.localizedCaseInsensitiveContains(query) {
+                return true
+            }
         }
         
         return false
@@ -262,9 +253,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         return trimmed
     }
     
-    /// Content to paste - AI response if available, otherwise original
+    /// Content to paste - selected prompt result if available, otherwise original
     var pasteContent: String {
-        if let aiResponse = llmResponse, !aiResponse.isEmpty {
+        if let aiResponse = selectedPromptResult, !aiResponse.isEmpty {
             return aiResponse
         }
         return content
@@ -272,15 +263,17 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
         lhs.id == rhs.id &&
-        lhs.llmProcessing == rhs.llmProcessing &&
-        lhs.llmTagsProcessing == rhs.llmTagsProcessing &&
+        lhs.promptProcessingIds == rhs.promptProcessingIds &&
+        lhs.promptResults == rhs.promptResults &&
+        lhs.selectedPromptId == rhs.selectedPromptId &&
         lhs.imageAnalysisProcessing == rhs.imageAnalysisProcessing
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-        hasher.combine(llmProcessing)
-        hasher.combine(llmTagsProcessing)
+        hasher.combine(promptProcessingIds)
+        hasher.combine(promptResults)
+        hasher.combine(selectedPromptId)
         hasher.combine(imageAnalysisProcessing)
     }
 }
