@@ -13,9 +13,14 @@ permissions:
   contents: write  # Required for creating releases and uploading assets
 
 jobs:
-  build-and-release:
-    name: Build, Sign, and Release
+  build:
+    name: Build and Sign
     runs-on: macos-26  # macOS Tahoe with Xcode 26 (Liquid Glass support)
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      dmg_name: ${{ steps.version.outputs.DMG_NAME }}
+      signature: ${{ steps.sign.outputs.SIGNATURE }}
+      size: ${{ steps.sign.outputs.SIZE }}
     
     steps:
       - name: Checkout code
@@ -82,6 +87,7 @@ jobs:
           ls -la "$APP_PATH"
       
       - name: Create DMG
+        id: version
         run: |
           APP_PATH="build/DerivedData/Build/Products/Release/Clipsa.app"
           VERSION="${GITHUB_REF_NAME#v}"  # Remove 'v' prefix: v1.0 -> 1.0
@@ -102,8 +108,8 @@ jobs:
             -format UDZO \
             "$DMG_NAME"
           
-          echo "DMG_NAME=$DMG_NAME" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "DMG_NAME=$DMG_NAME" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       
       - name: Download Sparkle tools
         run: |
@@ -114,9 +120,12 @@ jobs:
           tar -xf sparkle.tar.xz -C sparkle
       
       - name: Sign DMG with Sparkle
+        id: sign
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
+          DMG_NAME="${{ steps.version.outputs.DMG_NAME }}"
+          
           # Write private key to temp file (will be deleted after)
           echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_key
           
@@ -130,46 +139,76 @@ jobs:
           # Get file size
           SIZE=$(stat -f%z "$DMG_NAME")
           
-          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
-          echo "SIZE=$SIZE" >> $GITHUB_ENV
+          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
+          echo "SIZE=$SIZE" >> $GITHUB_OUTPUT
           
-          echo "✅ DMG signed successfully"
+          echo "DMG signed successfully"
           echo "   Size: $SIZE bytes"
       
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: "Clipsa v${{ env.VERSION }}"
-          files: |
-            ${{ env.DMG_NAME }}
-          body: |
-            ## Clipsa v${{ env.VERSION }}
-            
-            ### Download
-            - **[Clipsa-${{ env.VERSION }}.dmg](https://github.com/clipsa-ai/clipsa/releases/download/v${{ env.VERSION }}/Clipsa-${{ env.VERSION }}.dmg)**
-            
-            ### Installation
-            1. Download the DMG
-            2. Open it and drag Clipsa to Applications
-            3. Right-click Clipsa → Open (first time only, to bypass Gatekeeper)
-            
-            ---
-            
-            ### For appcast.xml (copy this):
-            ```xml
-            <item>
-              <title>Version ${{ env.VERSION }}</title>
-              <sparkle:version>${{ env.VERSION }}</sparkle:version>
-              <sparkle:shortVersionString>${{ env.VERSION }}</sparkle:shortVersionString>
-              <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-              <enclosure 
-                url="https://github.com/clipsa-ai/clipsa/releases/download/v${{ env.VERSION }}/Clipsa-${{ env.VERSION }}.dmg"
-                sparkle:edSignature="${{ env.SIGNATURE }}"
-                length="${{ env.SIZE }}"
-                type="application/octet-stream"/>
-            </item>
-            ```
-          draft: false
-          prerelease: false
+          name: clipsa-dmg
+          path: ${{ steps.version.outputs.DMG_NAME }}
+          retention-days: 7
+
+  # ==========================================================================
+  # Manual Approval Gate: Publish to clipsa-ai/releases
+  # ==========================================================================
+  # This job requires manual approval via the "production" environment.
+  # Set up the environment in: Settings > Environments > New environment > "production"
+  # Enable "Required reviewers" and add yourself.
+  # ==========================================================================
+  
+  publish-to-releases:
+    name: Publish to clipsa-ai/releases
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval
+    
+    steps:
+      - name: Download DMG artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: clipsa-dmg
+      
+      - name: Create Release on clipsa-ai/releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASES_PAT }}
+          VERSION: ${{ needs.build.outputs.version }}
+          DMG_NAME: ${{ needs.build.outputs.dmg_name }}
+          SIGNATURE: ${{ needs.build.outputs.signature }}
+          SIZE: ${{ needs.build.outputs.size }}
+        run: |
+          gh release create "v${VERSION}" \
+            --repo clipsa-ai/releases \
+            --title "Clipsa v${VERSION}" \
+            --notes "## Clipsa v${VERSION}
+          
+          ### Download
+          - **[Clipsa-${VERSION}.dmg](https://github.com/clipsa-ai/releases/releases/download/v${VERSION}/Clipsa-${VERSION}.dmg)**
+          
+          ### Installation
+          1. Download the DMG
+          2. Open it and drag Clipsa to Applications
+          3. Right-click Clipsa → Open (first time only, to bypass Gatekeeper)
+          
+          ---
+          
+          ### For appcast.xml (copy this):
+          \`\`\`xml
+          <item>
+            <title>Version ${VERSION}</title>
+            <sparkle:version>${VERSION}</sparkle:version>
+            <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure 
+              url=\"https://github.com/clipsa-ai/releases/releases/download/v${VERSION}/Clipsa-${VERSION}.dmg\"
+              sparkle:edSignature=\"${SIGNATURE}\"
+              length=\"${SIZE}\"
+              type=\"application/octet-stream\"/>
+          </item>
+          \`\`\`" \
+            "${DMG_NAME}"
+          
+          echo "Release created: https://github.com/clipsa-ai/releases/releases/tag/v${VERSION}"
