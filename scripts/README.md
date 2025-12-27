@@ -10,13 +10,13 @@
    - Click + → Developer ID Application
 
 3. **Set your Team ID in Xcode**
-   - Open `Clipsa.xcodeproj`
-   - Select the Clipsa target → Signing & Capabilities
+   - Open `Gramfix.xcodeproj`
+   - Select the Gramfix target → Signing & Capabilities
    - Select your team for Release configuration
 
 4. **Store Notarization Credentials** (one-time)
    ```bash
-   xcrun notarytool store-credentials "ClipsaNotary" \
+   xcrun notarytool store-credentials "GramfixNotary" \
      --apple-id "your@email.com" \
      --team-id "YOUR_TEAM_ID" \
      --password "app-specific-password"
@@ -39,7 +39,7 @@ This will:
 4. Submit for notarization (~2-10 min)
 5. Staple the notarization ticket
 
-Output: `dist/Clipsa-1.0.dmg`
+Output: `dist/Gramfix-1.0.dmg`
 
 ### Quick Build (Signed, No Notarization)
 
@@ -80,7 +80,7 @@ Make sure you:
 
 Check the logs:
 ```bash
-xcrun notarytool log <submission-id> --keychain-profile "ClipsaNotary"
+xcrun notarytool log <submission-id> --keychain-profile "GramfixNotary"
 ```
 
 Common issues:
@@ -92,4 +92,3 @@ Common issues:
 
 The DMG wasn't notarized or the notarization ticket wasn't stapled.
 Run the full build with notarization.
-

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate a beautiful DMG background for Clipsa
+Generate a beautiful DMG background for Gramfix
 Matches the app's pink-to-blue gradient aesthetic with arrow and instructions
 """
 
@@ -24,7 +24,7 @@ APP_Y = 190 * 2
 APPS_X = 410 * 2
 APPS_Y = 190 * 2
 
-# Colors from Clipsa's gradient (pink to blue)
+# Colors from Gramfix's gradient (pink to blue)
 PINK = (255, 138, 216)
 BLUE = (84, 175, 255)
 DARK_BG = (30, 30, 34)
@@ -164,7 +164,7 @@ def main():
     draw.text((text_x, text_y), text_main, fill=(*text_color, 255), font=font_large)
     
     # Subtitle
-    text_sub = "Drop Clipsa onto the Applications folder"
+    text_sub = "Drop Gramfix onto the Applications folder"
     bbox_sub = draw.textbbox((0, 0), text_sub, font=font_small)
     text_sub_width = bbox_sub[2] - bbox_sub[0]
     text_sub_x = (WIDTH - text_sub_width) / 2

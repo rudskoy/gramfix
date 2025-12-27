@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Clipsa Updates</title>
-    <link>https://github.com/clipsa-ai/releases</link>
-    <description>Most recent updates to Clipsa</description>
+    <title>Gramfix Updates</title>
+    <link>https://github.com/rudskoy/gramfix</link>
+    <description>Most recent updates to Gramfix</description>
     <language>en</language>
     
     <!-- 
@@ -33,7 +33,7 @@
         ]]>
       </description>
       <enclosure 
-        url="https://github.com/clipsa-ai/releases/releases/download/v1.1/Clipsa-1.1.dmg"
+        url="https://github.com/rudskoy/gramfix/releases/download/v1.1/Gramfix-1.1.dmg"
         sparkle:edSignature="U6qxkHNmgcMrtUSOKjIxPGntcyHljW1vu3ucepzqlcrmw3Cbu4VWnyn2P6ZiEO2INJqRchEpLXuPxLZAnZtfCw=="
         length="20701154"
         type="application/octet-stream"/>
@@ -58,7 +58,7 @@
         ]]>
       </description>
       <enclosure 
-        url="https://github.com/clipsa-ai/releases/releases/download/v1.0/Clipsa-1.0.dmg"
+        url="https://github.com/rudskoy/gramfix/releases/download/v1.0/Gramfix-1.0.dmg"
         sparkle:edSignature="IknUQ/TMFknQLBmMFo0MMEAfjXoHUGPYpNuPgEZ/CbMdoJypIwJsU379wcKwZV0KzV/5lcjSzdhZ0ZSrTMAFBg=="
         length="15610373"
         type="application/octet-stream"/>

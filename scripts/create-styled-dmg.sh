@@ -12,7 +12,7 @@ set -e
 # Run after build-dmg.sh --unsigned for testing the layout
 # ============================================================================
 
-APP_NAME="Clipsa"
+APP_NAME="Gramfix"
 VERSION="1.0"
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${PROJECT_DIR}/build"
@@ -40,7 +40,7 @@ if [ ! -d "${APP_PATH}" ]; then
 fi
 
 # Ensure the app has the icns icon (for compatibility with non-Tahoe systems)
-ICNS_PATH="${SCRIPTS_DIR}/Clipsa.icns"
+ICNS_PATH="${SCRIPTS_DIR}/Gramfix.icns"
 if [ -f "${ICNS_PATH}" ]; then
     log "Copying app icon to bundle..."
     cp "${ICNS_PATH}" "${APP_PATH}/Contents/Resources/AppIcon.icns"

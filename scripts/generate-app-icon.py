@@ -144,7 +144,7 @@ def main():
     print(f"✓ Composed icon saved: {output_path}")
     
     # Now create iconset and icns
-    iconset_dir = os.path.join(SCRIPTS_DIR, "Clipsa.iconset")
+    iconset_dir = os.path.join(SCRIPTS_DIR, "Gramfix.iconset")
     os.makedirs(iconset_dir, exist_ok=True)
     
     sizes = [
@@ -166,7 +166,7 @@ def main():
         resized.save(os.path.join(iconset_dir, filename), 'PNG')
     
     # Convert to icns
-    icns_path = os.path.join(SCRIPTS_DIR, "Clipsa.icns")
+    icns_path = os.path.join(SCRIPTS_DIR, "Gramfix.icns")
     print("Converting to icns...")
     subprocess.run(['iconutil', '-c', 'icns', iconset_dir, '-o', icns_path], check=True)
     
@@ -175,6 +175,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

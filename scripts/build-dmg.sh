@@ -2,13 +2,13 @@
 set -e
 
 # ============================================================================
-# Clipsa DMG Build Script
+# Gramfix DMG Build Script
 # ============================================================================
 # 
 # Prerequisites:
 # 1. Apple Developer Account with Developer ID Application certificate
 # 2. Store notarization credentials (one-time):
-#    xcrun notarytool store-credentials "ClipsaNotary" \
+#    xcrun notarytool store-credentials "GramfixNotary" \
 #      --apple-id "your@email.com" \
 #      --team-id "YOURTEAMID" \
 #      --password "app-specific-password"
@@ -21,9 +21,9 @@ set -e
 # ============================================================================
 
 # Configuration
-APP_NAME="Clipsa"
-BUNDLE_ID="com.clipsa.app"
-VERSION=$(grep -A1 'MARKETING_VERSION' Clipsa.xcodeproj/project.pbxproj | head -1 | grep -o '[0-9.]*' | head -1)
+APP_NAME="Gramfix"
+BUNDLE_ID="com.gramfix.app"
+VERSION=$(grep -A1 'MARKETING_VERSION' Gramfix.xcodeproj/project.pbxproj | head -1 | grep -o '[0-9.]*' | head -1)
 VERSION=${VERSION:-1.0}
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,7 +33,7 @@ DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 APP_PATH="${BUILD_DIR}/Release/${APP_NAME}.app"
 
 # Notarization profile name (set up with xcrun notarytool store-credentials)
-NOTARY_PROFILE="ClipsaNotary"
+NOTARY_PROFILE="GramfixNotary"
 
 # Parse arguments
 SKIP_NOTARIZE=false
@@ -71,8 +71,8 @@ mkdir -p "${BUILD_DIR}" "${DIST_DIR}"
 # Build the app
 if [ "$UNSIGNED" = true ]; then
     log "Building unsigned (for testing only)..."
-    xcodebuild -project Clipsa.xcodeproj \
-        -scheme Clipsa \
+    xcodebuild -project Gramfix.xcodeproj \
+        -scheme Gramfix \
         -configuration Release \
         -derivedDataPath "${BUILD_DIR}/DerivedData" \
         CODE_SIGN_IDENTITY="-" \
@@ -81,8 +81,8 @@ if [ "$UNSIGNED" = true ]; then
         build
 else
     log "Building with Developer ID signing..."
-    xcodebuild -project Clipsa.xcodeproj \
-        -scheme Clipsa \
+    xcodebuild -project Gramfix.xcodeproj \
+        -scheme Gramfix \
         -configuration Release \
         -derivedDataPath "${BUILD_DIR}/DerivedData" \
         ONLY_ACTIVE_ARCH=NO \

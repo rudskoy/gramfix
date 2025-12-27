@@ -12,8 +12,8 @@
 	"argv": [
 		"/opt/homebrew/bin/xcode-build-server"
 	],
-	"workspace": "/Users/Vladislav.Rudskoy/ij/Clipsa/Clipsa.xcodeproj/project.xcworkspace",
-	"build_root": "/Users/Vladislav.Rudskoy/Library/Developer/Xcode/DerivedData/Clipsa-ebjlszpayirxisgreeqgltgfcalm",
-	"scheme": "Clipsa",
+	"workspace": "/Users/Vladislav.Rudskoy/ij/Gramfix/Gramfix.xcodeproj/project.xcworkspace",
+	"build_root": "/Users/Vladislav.Rudskoy/Library/Developer/Xcode/DerivedData/Gramfix-ebjlszpayirxisgreeqgltgfcalm",
+	"scheme": "Gramfix",
 	"kind": "xcode"
 }
