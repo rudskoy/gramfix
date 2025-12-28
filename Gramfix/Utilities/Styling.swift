@@ -204,11 +204,12 @@ struct PromptTagView: View {
 struct LanguageFlagView: View {
     let item: ClipboardItem
     let isFocused: Bool
+    @Binding var showPopover: Bool
     let onSelectLanguage: (SupportedLanguage) -> Void
     
     @State private var isHovered = false
-    @State private var showPopover = false
     @State private var pulseAnimation = false
+    @State private var selectedLanguageIndex: Int = 0
     
     var body: some View {
         Button {
@@ -225,6 +226,11 @@ struct LanguageFlagView: View {
             // Auto-open popover when focused via keyboard
             if focused && !showPopover {
                 showPopover = true
+                // Reset selection to first item when opening
+                selectedLanguageIndex = 0
+            } else if !focused && showPopover {
+                // Close popover when focus is lost
+                showPopover = false
             }
         }
         .onChange(of: item.languageDetectionProcessing) { _, processing in
@@ -243,12 +249,14 @@ struct LanguageFlagView: View {
     
     @ViewBuilder
     private var languageMenu: some View {
+        let languages = SupportedLanguage.orderedList(detectedLanguage: item.detectedLanguage)
+        
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(SupportedLanguage.orderedList(detectedLanguage: item.detectedLanguage)) { language in
-                Button {
+            ForEach(Array(languages.enumerated()), id: \.element.id) { index, language in
+                Button(action: {
                     onSelectLanguage(language)
                     showPopover = false
-                } label: {
+                }) {
                     HStack(spacing: 8) {
                         Text(language.flag)
                             .font(.system(size: 14))
@@ -286,12 +294,57 @@ struct LanguageFlagView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .frame(minWidth: 160, alignment: .leading)
-                    .background(isCurrentSelection(language) ? Color.clipAccent.opacity(0.15) : Color.clear, in: RoundedRectangle(cornerRadius: 6))
+                    .contentShape(Rectangle())
+                    .background(
+                        (index == selectedLanguageIndex || isCurrentSelection(language)) 
+                            ? Color.clipAccent.opacity(0.15) 
+                            : Color.clear, 
+                        in: RoundedRectangle(cornerRadius: 6)
+                    )
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(6)
+        .padding(10)
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+        }
+        .allowsHitTesting(true)
+        .onKeyPress(.upArrow) {
+            if !languages.isEmpty {
+                selectedLanguageIndex = (selectedLanguageIndex - 1 + languages.count) % languages.count
+            }
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            if !languages.isEmpty {
+                selectedLanguageIndex = (selectedLanguageIndex + 1) % languages.count
+            }
+            return .handled
+        }
+        .onKeyPress(.return) {
+            if !languages.isEmpty && selectedLanguageIndex < languages.count {
+                onSelectLanguage(languages[selectedLanguageIndex])
+                showPopover = false
+            }
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            showPopover = false
+            return .handled
+        }
+        .onAppear {
+            // Always start selection from first item
+            selectedLanguageIndex = 0
+        }
+        .onChange(of: showPopover) { _, isOpen in
+            // Reset selection to first item when opening
+            if isOpen {
+                selectedLanguageIndex = 0
+            }
+        }
     }
     
     @ViewBuilder
@@ -831,4 +884,5 @@ struct FixedTooltipView: View {
         .animation(.easeOut(duration: 0.15), value: tooltipState.activeTooltip)
     }
 }
+
 

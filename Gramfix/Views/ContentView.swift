@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var searchAttention: Bool = false
     @State private var searchShowingSuggestions: Bool = false
     @State private var isLanguageFocused: Bool = false
+    @State private var isLanguageDropdownOpen: Bool = false
+    @State private var wasSearchFieldFocusedBeforeDropdown: Bool = false
     
     private var selectedItem: ClipboardItem? {
         guard let id = selectedItemId else { return nil }
@@ -24,7 +26,7 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 220, ideal: 300, max: 420)
         } detail: {
             // Detail pane - positioned next to sidebar, not under it
-            PreviewPane(item: selectedItem, isLanguageFocused: $isLanguageFocused)
+            PreviewPane(selectedItemId: selectedItemId, isLanguageFocused: $isLanguageFocused, isLanguageDropdownOpen: $isLanguageDropdownOpen)
                 .frame(minWidth: 280)
                 .overlay(alignment: .topLeading) {
                     FixedTooltipView(alignment: .leading)
@@ -140,6 +142,21 @@ struct ContentView: View {
         .onChange(of: selectedItemId) { _, _ in
             // Reset language focus when changing items
             isLanguageFocused = false
+            // Keep search field focused even when language dropdown opens
+        }
+        .onChange(of: isLanguageDropdownOpen) { _, isOpen in
+            if isOpen {
+                // Remember if search field was focused, then unfocus to allow popover interaction
+                wasSearchFieldFocusedBeforeDropdown = isSearchFieldFocused
+                isSearchFieldFocused = false
+            } else {
+                // Re-focus search field when dropdown closes (only if it was focused before)
+                if wasSearchFieldFocusedBeforeDropdown {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isSearchFieldFocused = true
+                    }
+                }
+            }
         }
         .onChange(of: clipboardManager.searchQuery) { _, newQuery in
             if !newQuery.isEmpty {
@@ -347,11 +364,24 @@ struct ContentView: View {
             switch event.keyCode {
             case 126: // Up arrow - list navigation
                 if !hasUserModifiers {
+                    // Skip up arrow when language dropdown is open (let LanguageFlagView handle it)
+                    if isLanguageDropdownOpen {
+                        return event
+                    }
                     selectPreviousItem()
                     return nil // Consume the event
                 }
             case 125: // Down arrow - list navigation
                 if !hasUserModifiers {
+                    // Skip down arrow when language dropdown is open (let LanguageFlagView handle it)
+                    if isLanguageDropdownOpen {
+                        return event
+                    }
+                    // If language tag is focused but dropdown isn't shown, open the dropdown
+                    if isLanguageFocused {
+                        isLanguageDropdownOpen = true
+                        return nil // Consume the event
+                    }
                     selectNextItem()
                     return nil // Consume the event
                 }

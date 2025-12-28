@@ -2,8 +2,9 @@ import SwiftUI
 import AppKit
 
 struct PreviewPane: View {
-    let item: ClipboardItem?
+    let selectedItemId: UUID?
     @Binding var isLanguageFocused: Bool
+    @Binding var isLanguageDropdownOpen: Bool
     @EnvironmentObject var clipboardManager: ClipboardManager
     @ObservedObject private var settings = LLMSettings.shared
     
@@ -11,9 +12,16 @@ struct PreviewPane: View {
     // Using @State to store the reference ensures SwiftUI tracks @Observable changes
     @State private var mlxService = MLXService.shared
     
-    init(item: ClipboardItem?, isLanguageFocused: Binding<Bool> = .constant(false)) {
-        self.item = item
+    // Computed property to get the current item from clipboardManager
+    private var item: ClipboardItem? {
+        guard let id = selectedItemId else { return nil }
+        return clipboardManager.items.first { $0.id == id }
+    }
+    
+    init(selectedItemId: UUID?, isLanguageFocused: Binding<Bool> = .constant(false), isLanguageDropdownOpen: Binding<Bool> = .constant(false)) {
+        self.selectedItemId = selectedItemId
         self._isLanguageFocused = isLanguageFocused
+        self._isLanguageDropdownOpen = isLanguageDropdownOpen
     }
     
     var body: some View {
@@ -23,7 +31,7 @@ struct PreviewPane: View {
                     // Content
                     previewContent(item: item)
                 }
-                .id(item.id)  // Stabilize view identity to prevent recreation
+                .id("\(item.id)-\(item.selectedPromptId)-\(item.selectedTargetLanguage?.rawValue ?? "nil")")  // Include prompt and language in ID to force updates
                 .transaction { $0.animation = nil }  // Prevent animation flash on item change
             } else {
                 emptyPreview
@@ -615,6 +623,7 @@ struct PreviewPane: View {
             LanguageFlagView(
                 item: item,
                 isFocused: isLanguageFocused,
+                showPopover: $isLanguageDropdownOpen,
                 onSelectLanguage: { language in
                     clipboardManager.selectTargetLanguage(language, for: item)
                 }
@@ -624,11 +633,13 @@ struct PreviewPane: View {
                 ForEach(TextPromptType.allCases) { promptType in
                     PromptTagView(
                         promptType: promptType,
-                        isSelected: item.selectedPromptId == promptType.rawValue,
+                        isSelected: !isLanguageFocused && item.selectedPromptId == promptType.rawValue,
                         isProcessing: item.promptProcessingIds.contains(promptType.rawValue),
                         hasResult: item.promptResults[promptType.rawValue] != nil,
                         onSelect: {
                             clipboardManager.selectPrompt(promptType, for: item)
+                            // Clear language focus when selecting a prompt tag
+                            isLanguageFocused = false
                         }
                     )
                 }
@@ -851,10 +862,13 @@ extension ClipboardType {
 }
 
 #Preview {
-    HStack(spacing: 0) {
-        PreviewPane(
-            item: ClipboardItem(content: "Hello, this is some preview text that should be displayed in the preview pane.\n\nIt can have multiple lines and should be scrollable.")
-        )
+    let testItem = ClipboardItem(content: "Hello, this is some preview text that should be displayed in the preview pane.\n\nIt can have multiple lines and should be scrollable.")
+    let manager = ClipboardManager()
+    manager.items = [testItem]
+    
+    return HStack(spacing: 0) {
+        PreviewPane(selectedItemId: testItem.id)
+            .environmentObject(manager)
     }
     .frame(width: 450, height: 350)
     .glassEffect()

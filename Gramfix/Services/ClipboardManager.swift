@@ -362,6 +362,19 @@ class ClipboardManager: ObservableObject {
                     if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
                         items[currentIndex] = items[currentIndex].withPromptResult(type: promptType, response: response)
                         logger.info("Completed prompt '\(promptType.displayName)' for item \(itemId)")
+                        
+                        // If language is already detected and we have AI-processed content, trigger translations
+                        // Trigger when we get the first prompt result (to update translations with AI content)
+                        let updatedItem = items[currentIndex]
+                        if updatedItem.detectedLanguage != nil,
+                           updatedItem.selectedPromptResult != nil,
+                           updatedItem.promptResults.count == 1 { // Only trigger once on first prompt completion
+                            // Trigger translations in parallel (will use AI-processed content)
+                            // translateToAllLanguages will handle re-translation if needed
+                            Task {
+                                await translateToAllLanguages(updatedItem)
+                            }
+                        }
                     }
                 } catch {
                     logger.error("Failed prompt '\(promptType.displayName)': \(error.localizedDescription)")
@@ -542,7 +555,7 @@ class ClipboardManager: ObservableObject {
         }
     }
     
-    /// Translate content to ALL other languages in parallel (called after detection)
+    /// Translate content to ALL other languages in parallel (called after detection or when AI processing completes)
     func translateToAllLanguages(_ item: ClipboardItem) async {
         guard item.type == .text else { return }
         guard let detectedLanguage = item.detectedLanguage else { return }
@@ -552,30 +565,58 @@ class ClipboardManager: ObservableObject {
         
         let itemId = item.id
         
-        // Get the content to translate - use the selected prompt result if available, otherwise original
+        // Get the content to translate - prefer AI-processed content if available
         let contentToTranslate = item.selectedPromptResult ?? item.content
         
         // Get languages to translate to (all except detected)
         let languagesToTranslate = SupportedLanguage.allCases.filter { $0 != detectedLanguage }
         
-        logger.info("Starting parallel translation for item \(itemId) to \(languagesToTranslate.count) languages")
+        logger.info("Starting parallel translation for item \(itemId) to \(languagesToTranslate.count) languages (using \(item.selectedPromptResult != nil ? "AI-processed" : "original") content)")
         
-        // Mark all as processing
-        items[index] = items[index].withAllTranslationsProcessing()
+        // Mark languages as processing only if they don't already have translations
+        // This allows re-translation with AI-processed content if needed
+        var languagesNeedingTranslation: [SupportedLanguage] = []
+        for language in languagesToTranslate {
+            if items[index].translatedResults[language.rawValue] == nil {
+                languagesNeedingTranslation.append(language)
+                items[index] = items[index].withTranslationProcessing(languageCode: language.rawValue, processing: true)
+            }
+        }
+        
+        // If all translations already exist and we're using original content, skip
+        // But if we have AI-processed content and translations were done with original, re-translate
+        if languagesNeedingTranslation.isEmpty && item.selectedPromptResult != nil {
+            // Check if existing translations were done with original content
+            // If so, re-translate with AI-processed content
+            let hasOriginalTranslations = !items[index].translatedResults.isEmpty
+            if hasOriginalTranslations {
+                // Re-translate all languages with AI-processed content
+                languagesNeedingTranslation = languagesToTranslate
+                // Mark all as processing
+                items[index] = items[index].withAllTranslationsProcessing()
+            } else {
+                // All translations already exist and are up to date
+                return
+            }
+        }
+        
+        if languagesNeedingTranslation.isEmpty {
+            return
+        }
         
         // Get the active provider
         guard let provider = llmService.activeProvider as? LLMProviderImpl else {
             logger.error("No active LLM provider available for translation")
             if let idx = items.firstIndex(where: { $0.id == itemId }) {
-                var item = items[idx]
-                item.translationProcessingLanguages = []
-                items[idx] = item
+                for language in languagesNeedingTranslation {
+                    items[idx] = items[idx].withTranslationProcessing(languageCode: language.rawValue, processing: false)
+                }
             }
             return
         }
         
         // Run all translations in parallel
-        for targetLanguage in languagesToTranslate {
+        for targetLanguage in languagesNeedingTranslation {
             Task { @MainActor in
                 do {
                     let prompt = SupportedLanguage.translationPrompt(to: targetLanguage)
@@ -614,8 +655,70 @@ class ClipboardManager: ObservableObject {
             return
         }
         
-        // Set the target language (translation result already cached in translatedResults)
+        // Set the target language
         items[index] = items[index].withSelectedTargetLanguage(language)
+        
+        // Check if translation exists, if not trigger it
+        let updatedItem = items[index]
+        if updatedItem.translatedResults[language.rawValue] == nil {
+            // Translation doesn't exist yet, trigger it
+            Task {
+                await translateLanguage(language, for: updatedItem)
+            }
+        }
+    }
+    
+    /// Translate content to a specific language (used when user selects a language without translation)
+    private func translateLanguage(_ targetLanguage: SupportedLanguage, for item: ClipboardItem) async {
+        guard item.type == .text else { return }
+        guard let detectedLanguage = item.detectedLanguage else { return }
+        guard targetLanguage != detectedLanguage else { return }
+        
+        // Find the item index
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        
+        let itemId = item.id
+        
+        // Get the content to translate - prefer AI-processed content if available
+        let contentToTranslate = item.selectedPromptResult ?? item.content
+        
+        logger.info("Starting translation for item \(itemId) to \(targetLanguage.displayName)")
+        
+        // Mark as processing
+        items[index] = items[index].withTranslationProcessing(languageCode: targetLanguage.rawValue, processing: true)
+        
+        // Get the active provider
+        guard let provider = llmService.activeProvider as? LLMProviderImpl else {
+            logger.error("No active LLM provider available for translation")
+            if let idx = items.firstIndex(where: { $0.id == itemId }) {
+                items[idx] = items[idx].withTranslationProcessing(languageCode: targetLanguage.rawValue, processing: false)
+            }
+            return
+        }
+        
+        do {
+            let prompt = SupportedLanguage.translationPrompt(to: targetLanguage)
+                .replacingOccurrences(of: "{text}", with: contentToTranslate)
+            let response = try await provider.generate(prompt: prompt, context: nil)
+            let translatedText = response.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Store translation result
+            if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                items[currentIndex] = items[currentIndex].withTranslationResult(
+                    languageCode: targetLanguage.rawValue,
+                    translation: translatedText
+                )
+                logger.info("Translation complete for item \(itemId) to \(targetLanguage.displayName)")
+            }
+        } catch {
+            logger.error("Translation to \(targetLanguage.displayName) failed: \(error.localizedDescription)")
+            if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                items[currentIndex] = items[currentIndex].withTranslationProcessing(
+                    languageCode: targetLanguage.rawValue,
+                    processing: false
+                )
+            }
+        }
     }
     
     func copyToClipboard(_ item: ClipboardItem) {
