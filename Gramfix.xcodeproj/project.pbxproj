@@ -20,7 +20,6 @@
 		A14 /* LLMSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14 /* LLMSettings.swift */; };
 		A15 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15 /* SettingsView.swift */; };
 		D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F955F2EF8E2C70019A164 /* PasteService.swift */; };
-		D51F95642EF8EBA90019A164 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = D51F95632EF8EBA90019A164 /* HotKey */; };
 		D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F95652EF8F1230019A164 /* AccessibilityService.swift */; };
 		D573EAF92EF9F56600D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAF82EF9F56600D03FAE /* Hub */; };
 		D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFA2EF9F56600D03FAE /* Tokenizers */; };
@@ -34,7 +33,6 @@
 		D573EB112EF9F78C00D03FAE /* MLXOptimizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB102EF9F78C00D03FAE /* MLXOptimizers */; };
 		D573EB132EF9F78C00D03FAE /* MLXRandom in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB122EF9F78C00D03FAE /* MLXRandom */; };
 		D573EB162EF9F87900D03FAE /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB152EF9F87900D03FAE /* MLXEmbedders */; };
-		D573EB182EF9F87900D03FAE /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB172EF9F87900D03FAE /* MLXLLM */; };
 		D573EB1A2EF9F87900D03FAE /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB192EF9F87900D03FAE /* MLXLMCommon */; };
 		D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */; };
 		D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */ = {isa = PBXBuildFile; fileRef = D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */; };
@@ -117,7 +115,6 @@
 		D01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				D573EB182EF9F87900D03FAE /* MLXLLM in Frameworks */,
 				D573EB002EF9F58300D03FAE /* MLX in Frameworks */,
 				D573EB162EF9F87900D03FAE /* MLXEmbedders in Frameworks */,
 				D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */,
@@ -127,7 +124,6 @@
 				D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */,
 				D573EB022EF9F58300D03FAE /* MLXFFT in Frameworks */,
 				D5C9EB812EFA10DF0066FE10 /* RealModule in Frameworks */,
-				D51F95642EF8EBA90019A164 /* HotKey in Frameworks */,
 				D573EB112EF9F78C00D03FAE /* MLXOptimizers in Frameworks */,
 				D5C9EB842EFAC67D0066FE10 /* KeyboardShortcuts in Frameworks */,
 				D573EB132EF9F78C00D03FAE /* MLXRandom in Frameworks */,
@@ -279,7 +275,6 @@
 			name = Gramfix;
 			packageProductDependencies = (
 				D5FB7EBF2EF63E3C00F1871A /* Ollama */,
-				D51F95632EF8EBA90019A164 /* HotKey */,
 				D573EAF82EF9F56600D03FAE /* Hub */,
 				D573EAFA2EF9F56600D03FAE /* Tokenizers */,
 				D573EAFC2EF9F56600D03FAE /* Transformers */,
@@ -350,7 +345,6 @@
 			mainGroup = E01;
 			packageReferences = (
 				D5FB7EBE2EF63E3C00F1871A /* XCRemoteSwiftPackageReference "ollama-swift" */,
-				D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */,
 				D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */,
 				D573EAFE2EF9F58300D03FAE /* XCRemoteSwiftPackageReference "mlx-swift" */,
 				D573EB142EF9F87900D03FAE /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
@@ -692,14 +686,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/soffes/HotKey";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/huggingface/swift-transformers";
@@ -759,11 +745,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D51F95632EF8EBA90019A164 /* HotKey */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D51F95622EF8EBA90019A164 /* XCRemoteSwiftPackageReference "HotKey" */;
-			productName = HotKey;
-		};
 		D573EAF82EF9F56600D03FAE /* Hub */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D573EAF72EF9F56600D03FAE /* XCRemoteSwiftPackageReference "swift-transformers" */;

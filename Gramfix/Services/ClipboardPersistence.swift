@@ -24,7 +24,11 @@ actor ClipboardPersistence {
     
     /// Storage directory: ~/Library/Application Support/Gramfix/
     private var storageDirectory: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            // Fallback to home directory if Application Support is unavailable (should never happen on macOS)
+            let homeDir = FileManager.default.homeDirectoryForCurrentUser
+            return homeDir.appendingPathComponent("Library/Application Support/Gramfix", isDirectory: true)
+        }
         return appSupport.appendingPathComponent("Gramfix", isDirectory: true)
     }
     
@@ -57,12 +61,21 @@ actor ClipboardPersistence {
     
     /// Load clipboard items from disk
     func load() async throws -> [ClipboardItem] {
-        guard FileManager.default.fileExists(atPath: historyFileURL.path) else {
-            logger.info("📂 No existing clipboard history found")
+        let fileURL = self.historyFileURL
+        
+        // Check if file exists (this works even if directory doesn't exist)
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            logger.info("📂 No existing clipboard history found at \(fileURL.path)")
             return []
         }
         
-        let data = try Data(contentsOf: historyFileURL)
+        // Verify the file is actually readable
+        guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
+            logger.warning("⚠️ Clipboard history file exists but is not readable at \(fileURL.path)")
+            return []
+        }
+        
+        let data = try Data(contentsOf: fileURL)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         
@@ -71,7 +84,7 @@ actor ClipboardPersistence {
         // Handle version migrations if needed
         let items = migrateIfNeeded(history)
         
-        logger.info("📂 Loaded \(items.count) clipboard items from disk (version \(history.version))")
+        logger.info("📂 Loaded \(items.count) clipboard items from disk (version \(history.version)) from \(fileURL.path)")
         return items
     }
     
