@@ -103,10 +103,7 @@ struct PreviewPane: View {
                             NSPasteboard.general.setString(item.content, forType: .string)
                         }
                         ScrollView {
-                            Text(item.content)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                                .textSelection(.enabled)
+                            RichTextView(rtfData: item.rtfData, htmlData: item.htmlData, plainText: item.content)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(14)
                         }
@@ -844,6 +841,68 @@ struct LinkActionButton: View {
         .buttonStyle(.plain)
         .help(label)
         .onHover { isHovered = $0 }
+    }
+}
+
+// MARK: - Rich Text View
+
+/// A view that displays RTF/HTML content when available, falling back to plain text
+struct RichTextView: View {
+    let rtfData: Data?
+    let htmlData: Data?
+    let plainText: String
+    
+    /// Convert RTF or HTML data to AttributedString for display
+    private var attributedText: AttributedString? {
+        // Try RTF first
+        if let rtfData = rtfData, !rtfData.isEmpty {
+            if let nsAttr = try? NSAttributedString(
+                data: rtfData,
+                options: [.documentType: NSAttributedString.DocumentType.rtf],
+                documentAttributes: nil
+            ) {
+                // Convert to SwiftUI AttributedString using AppKit scope for macOS
+                if let attr = try? AttributedString(nsAttr, including: \.appKit) {
+                    return attr
+                }
+            }
+        }
+        
+        // Try HTML if RTF not available or failed
+        if let htmlData = htmlData, !htmlData.isEmpty {
+            if let nsAttr = try? NSAttributedString(
+                data: htmlData,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue
+                ],
+                documentAttributes: nil
+            ) {
+                if let attr = try? AttributedString(nsAttr, including: \.appKit) {
+                    return attr
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    var body: some View {
+        if plainText.isEmpty {
+            Text("(empty)")
+                .font(.body)
+                .foregroundStyle(.tertiary)
+        } else if let attributed = attributedText {
+            // Display rich text with formatting
+            Text(attributed)
+                .textSelection(.enabled)
+        } else {
+            // Fall back to plain text
+            Text(plainText)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .textSelection(.enabled)
+        }
     }
 }
 
