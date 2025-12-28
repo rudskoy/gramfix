@@ -456,9 +456,19 @@ struct ContentView: View {
     private func pasteItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
-            PasteService.shared.pasteAndReturn(content: item.pasteContent)
+            // Use RTF if available and we're pasting original content (not AI-processed)
+            if let rtfData = item.rtfData, item.pasteContent == item.content {
+                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.pasteContent)
+            } else {
+                PasteService.shared.pasteAndReturn(content: item.pasteContent)
+            }
         case .link:
-            PasteService.shared.pasteAndReturn(content: item.content)
+            // Use RTF if available for links
+            if let rtfData = item.rtfData {
+                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
+            } else {
+                PasteService.shared.pasteAndReturn(content: item.content)
+            }
         case .image:
             if let data = item.rawData {
                 PasteService.shared.pasteAndReturn(data: data, type: .png)
@@ -471,9 +481,19 @@ struct ContentView: View {
     private func immediatePasteItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
-            PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+            // Use RTF if available and we're pasting original content (not AI-processed)
+            if let rtfData = item.rtfData, item.pasteContent == item.content {
+                PasteService.shared.immediatePasteAndReturn(rtfData: rtfData, content: item.pasteContent)
+            } else {
+                PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+            }
         case .link:
-            PasteService.shared.immediatePasteAndReturn(content: item.content)
+            // Use RTF if available for links
+            if let rtfData = item.rtfData {
+                PasteService.shared.immediatePasteAndReturn(rtfData: rtfData, content: item.content)
+            } else {
+                PasteService.shared.immediatePasteAndReturn(content: item.content)
+            }
         case .image:
             if let data = item.rawData {
                 PasteService.shared.immediatePasteAndReturn(data: data, type: .png)
@@ -486,9 +506,19 @@ struct ContentView: View {
     private func pasteOriginalItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
-            PasteService.shared.pasteAndReturn(content: item.content)
+            // Always use RTF if available for original content
+            if let rtfData = item.rtfData {
+                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
+            } else {
+                PasteService.shared.pasteAndReturn(content: item.content)
+            }
         case .link:
-            PasteService.shared.pasteAndReturn(content: item.content)
+            // Use RTF if available for links
+            if let rtfData = item.rtfData {
+                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
+            } else {
+                PasteService.shared.pasteAndReturn(content: item.content)
+            }
         case .image:
             if let data = item.rawData {
                 PasteService.shared.pasteAndReturn(data: data, type: .png)

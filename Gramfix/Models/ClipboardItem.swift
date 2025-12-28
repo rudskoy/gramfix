@@ -13,6 +13,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     let id: UUID
     let content: String
     let rawData: Data?
+    let rtfData: Data?
     let type: ClipboardType
     let timestamp: Date
     let appName: String?
@@ -67,7 +68,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     
     /// Coding keys - excludes transient processing states and computed formattedTime
     enum CodingKeys: String, CodingKey {
-        case id, content, rawData, type, timestamp, appName
+        case id, content, rawData, rtfData, type, timestamp, appName
         case promptResults, selectedPromptId
         case imageAnalysisResponse, shouldAnalyzeImage
         case detectedLanguage, selectedTargetLanguage, translatedResults
@@ -78,6 +79,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         id = try container.decode(UUID.self, forKey: .id)
         content = try container.decode(String.self, forKey: .content)
         rawData = try container.decodeIfPresent(Data.self, forKey: .rawData)
+        rtfData = try container.decodeIfPresent(Data.self, forKey: .rtfData)
         type = try container.decode(ClipboardType.self, forKey: .type)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
         appName = try container.decodeIfPresent(String.self, forKey: .appName)
@@ -111,6 +113,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         id: UUID = UUID(),
         content: String,
         rawData: Data? = nil,
+        rtfData: Data? = nil,
         type: ClipboardType = .text,
         timestamp: Date = Date(),
         appName: String? = nil,
@@ -130,6 +133,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         self.id = id
         self.content = content
         self.rawData = rawData
+        self.rtfData = rtfData
         self.type = type
         self.timestamp = timestamp
         self.appName = appName

@@ -234,8 +234,12 @@ class ClipboardManager: ObservableObject {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             let isLink = Self.isValidURL(trimmed)
             
+            // Try to capture RTF data if available (preserves formatting)
+            let rtfData = pasteboard.data(forType: .rtf)
+            
             let item = ClipboardItem(
                 content: string,
+                rtfData: rtfData,
                 type: isLink ? .link : .text,
                 appName: appName
             )
@@ -727,6 +731,11 @@ class ClipboardManager: ObservableObject {
         
         switch item.type {
         case .text, .link:
+            // Set RTF data if available (preserves formatting)
+            if let rtfData = item.rtfData {
+                pasteboard.setData(rtfData, forType: .rtf)
+            }
+            // Always set plain text as fallback for compatibility
             pasteboard.setString(item.content, forType: .string)
         case .image:
             if let data = item.rawData {

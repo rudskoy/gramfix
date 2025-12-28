@@ -89,13 +89,13 @@ enum TextPromptType: String, CaseIterable, Codable, Identifiable {
     var prompt: String {
         switch self {
         case .grammar:
-            return "Fix grammar errors in this text. Output ONLY the corrected text, nothing else:\n\n{text}"
+            return "Fix grammar errors in this text. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the corrected text, nothing else:\n\n{text}"
         case .formal:
-            return "Make this text slightly more corporate and professional. Keep the meaning intact. Output ONLY the revised text:\n\n{text}"
+            return "Make this text slightly more corporate and professional. Keep the meaning intact. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the revised text:\n\n{text}"
         case .polished:
-            return "Remove corporate/formal bullshit. Output ONLY the rephrased text:\n\n{text}"
+            return "Remove corporate/formal bullshit. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the rephrased text:\n\n{text}"
         case .casual:
-            return "Make it Reddit-style casual Output ONLY the simplified text:\n\n{text}"
+            return "Make it Reddit-style casual. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the simplified text:\n\n{text}"
         }
     }
     

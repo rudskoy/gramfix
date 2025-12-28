@@ -72,6 +72,46 @@ class PasteService {
         }
     }
     
+    /// Paste RTF content to the previous app. The content stays on the clipboard.
+    /// Preserves formatting when available.
+    func pasteAndReturn(rtfData: Data, content: String) {
+        // Check Accessibility permission
+        guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
+            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            return
+        }
+        
+        guard let app = previousApp, app != NSRunningApplication.current else {
+            NSApplication.shared.hide(nil)
+            return
+        }
+        
+        // 1. Copy to clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(rtfData, forType: .rtf)
+        // Always set plain text as fallback for compatibility
+        pasteboard.setString(content, forType: .string)
+        
+        // Notify ClipboardManager to ignore this change
+        NotificationCenter.default.post(
+            name: NSNotification.Name("GramfixInternalPaste"),
+            object: nil,
+            userInfo: ["changeCount": pasteboard.changeCount]
+        )
+        
+        // 2. Hide Gramfix
+        NSApplication.shared.hide(nil)
+        
+        // 3. Activate previous app
+        app.activate()
+        
+        // 4. Simulate Cmd+V after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.simulatePaste()
+        }
+    }
+    
     /// Paste raw data to the previous app. The content stays on the clipboard.
     /// Used for images and other binary content.
     func pasteAndReturn(data: Data, type: NSPasteboard.PasteboardType) {
@@ -131,6 +171,54 @@ class PasteService {
         // 2. Copy new content to clipboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
+        pasteboard.setString(content, forType: .string)
+        
+        // Notify ClipboardManager to ignore this change
+        NotificationCenter.default.post(
+            name: NSNotification.Name("GramfixInternalPaste"),
+            object: nil,
+            userInfo: ["changeCount": pasteboard.changeCount]
+        )
+        
+        // 3. Hide Gramfix
+        NSApplication.shared.hide(nil)
+        
+        // 4. Activate previous app
+        app.activate()
+        
+        // 5. Simulate Cmd+V after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.simulatePaste()
+            
+            // 6. Restore original clipboard after paste completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.restoreClipboard(savedItems)
+            }
+        }
+    }
+    
+    /// Paste RTF content to the previous app, then restore the original clipboard contents.
+    /// Preserves formatting when available.
+    func immediatePasteAndReturn(rtfData: Data, content: String) {
+        // Check Accessibility permission
+        guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
+            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            return
+        }
+        
+        guard let app = previousApp, app != NSRunningApplication.current else {
+            NSApplication.shared.hide(nil)
+            return
+        }
+        
+        // 1. Save current clipboard contents
+        let savedItems = saveClipboard()
+        
+        // 2. Copy new content to clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(rtfData, forType: .rtf)
+        // Always set plain text as fallback for compatibility
         pasteboard.setString(content, forType: .string)
         
         // Notify ClipboardManager to ignore this change
