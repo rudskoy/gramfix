@@ -148,7 +148,7 @@ struct PreviewPane: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .image:
-            if let data = item.rawData, let nsImage = NSImage(data: data) {
+            if let data = item.rawData, let image = Image(data: data) {
                 VStack(spacing: 0) {
                     // Image Analysis section (when enabled)
                     if settings.imageAnalysisEnabled {
@@ -157,7 +157,7 @@ struct PreviewPane: View {
                     
                     // Image preview
                     ScrollView([.horizontal, .vertical]) {
-                        Image(nsImage: nsImage)
+                        image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)

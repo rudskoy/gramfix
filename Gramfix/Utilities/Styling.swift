@@ -885,4 +885,18 @@ struct FixedTooltipView: View {
     }
 }
 
+// MARK: - Image Extensions
+
+extension Image {
+    /// Create a SwiftUI Image from Data
+    /// - Parameter data: Image data (PNG, JPEG, TIFF, etc.)
+    /// - Returns: Optional Image if data can be converted
+    init?(data: Data) {
+        guard let nsImage = NSImage(data: data) else {
+            return nil
+        }
+        self.init(nsImage: nsImage)
+    }
+}
+
 
