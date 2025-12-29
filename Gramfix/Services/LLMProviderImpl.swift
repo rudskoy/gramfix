@@ -138,7 +138,11 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
             .replacingOccurrences(of: "[", with: "")
             .replacingOccurrences(of: "]", with: "")
             .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "*", with: "")
+            .replacingOccurrences(of: "_", with: "")
             .replacingOccurrences(of: "```", with: "")
+            // Remove HTML tags
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         
         return cleaned
@@ -308,7 +312,10 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
             .replacingOccurrences(of: "[", with: "")
             .replacingOccurrences(of: "]", with: "")
             .replacingOccurrences(of: "**", with: "")
-            .replacingOccurrences(of: "```", with: "")
+            .replacingOccurrences(of: "*", with: "")
+            .replacingOccurrences(of: "_", with: "")
+            // Remove HTML tags
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         
         logger.info("✅ PARSED CUSTOM: text=\(correctedText.prefix(50))...")

@@ -9,6 +9,7 @@ private let logger = Logger(subsystem: "com.gramfix.app", category: "ClipboardMa
 class ClipboardManager: ObservableObject {
     @Published var items: [ClipboardItem] = []
     @Published var searchQuery: String = ""
+    @Published var selectedTabType: ClipboardType? = nil
     
     /// LLM service for processing clipboard content
     let llmService = LLMService()
@@ -20,6 +21,7 @@ class ClipboardManager: ObservableObject {
     }
     
     private var lastChangeCount: Int = 0
+    private var changeCountOnUnfocus: Int = 0
     private var timer: Timer?
     private let maxItems = 100
     private var cancellables = Set<AnyCancellable>()
@@ -28,16 +30,31 @@ class ClipboardManager: ObservableObject {
     private var historyLoaded = false
     
     var filteredItems: [ClipboardItem] {
-        if searchQuery.isEmpty {
-            return items
+        var filtered = items
+        
+        // Apply tab type filter if selected
+        if let tabType = selectedTabType {
+            filtered = filtered.filter { $0.type == tabType }
         }
-        // Parse search query for type filters and search text
-        let filter = SearchFilter.parse(searchQuery)
-        return items.filter { filter.matches($0) }
+        
+        // Apply search query filters
+        if !searchQuery.isEmpty {
+            let filter = SearchFilter.parse(searchQuery)
+            // If search filter has type filters, they take precedence over tab selection
+            if filter.hasFilters {
+                filtered = filtered.filter { filter.matches($0) }
+            } else if !filter.searchText.isEmpty {
+                // Only text search, apply to already filtered items
+                filtered = filtered.filter { filter.matches($0) }
+            }
+        }
+        
+        return filtered
     }
     
     init() {
         lastChangeCount = NSPasteboard.general.changeCount
+        changeCountOnUnfocus = NSPasteboard.general.changeCount
         setupLLMProviders()
         observeModelChanges()
         setupPersistence()
@@ -208,6 +225,17 @@ class ClipboardManager: ObservableObject {
         timer = nil
     }
     
+    /// Save the current clipboard change count (called when app resigns active)
+    func saveChangeCountOnUnfocus() {
+        changeCountOnUnfocus = NSPasteboard.general.changeCount
+    }
+    
+    /// Check if clipboard changed since app was unfocused
+    func hasClipboardChangedSinceUnfocus() -> Bool {
+        let currentChangeCount = NSPasteboard.general.changeCount
+        return currentChangeCount != changeCountOnUnfocus
+    }
+    
     /// Force an immediate clipboard check (useful when app becomes active)
     func checkClipboardNow() {
         checkClipboard()
@@ -347,7 +375,7 @@ class ClipboardManager: ObservableObject {
         }
         
         let itemId = item.id
-        let content = item.content
+        let content = Self.extractPlainTextForLLM(from: item)
         
         logger.info("Starting parallel LLM processing for item \(itemId) with \(TextPromptType.allCases.count) prompts")
         
@@ -526,7 +554,7 @@ class ClipboardManager: ObservableObject {
         }
         
         let itemId = item.id
-        let content = item.content
+        let content = Self.extractPlainTextForLLM(from: item)
         
         // Skip very short content
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -590,7 +618,8 @@ class ClipboardManager: ObservableObject {
         let itemId = item.id
         
         // Get the content to translate - prefer AI-processed content if available
-        let contentToTranslate = item.selectedPromptResult ?? item.content
+        // If using original content, extract plain text from RTF/HTML to avoid formatting markers
+        let contentToTranslate = item.selectedPromptResult ?? Self.extractPlainTextForLLM(from: item)
         
         // Get languages to translate to (all except detected)
         let languagesToTranslate = SupportedLanguage.allCases.filter { $0 != detectedLanguage }
@@ -704,7 +733,8 @@ class ClipboardManager: ObservableObject {
         let itemId = item.id
         
         // Get the content to translate - prefer AI-processed content if available
-        let contentToTranslate = item.selectedPromptResult ?? item.content
+        // If using original content, extract plain text from RTF/HTML to avoid formatting markers
+        let contentToTranslate = item.selectedPromptResult ?? Self.extractPlainTextForLLM(from: item)
         
         logger.info("Starting translation for item \(itemId) to \(targetLanguage.displayName)")
         
@@ -819,6 +849,64 @@ class ClipboardManager: ObservableObject {
     var todayItemsCount: Int {
         let calendar = Calendar.current
         return items.filter { calendar.isDateInToday($0.timestamp) }.count
+    }
+    
+    // MARK: - Plain Text Extraction
+    
+    /// Extract plain text from RTF or HTML data, falling back to provided string
+    /// Used when sending content to LLM to avoid formatting markers in responses
+    /// - Parameters:
+    ///   - item: ClipboardItem containing RTF/HTML data and content
+    /// - Returns: Plain text string without formatting markers
+    private static func extractPlainTextForLLM(from item: ClipboardItem) -> String {
+        /// Strip formatting markers (underscores, asterisks) from text
+        /// These can appear in RTF-extracted text even after NSAttributedString conversion
+        func stripFormattingMarkers(_ text: String) -> String {
+            var cleaned = text
+            // Remove markdown-style formatting markers that might be in the text
+            // Match underscores/asterisks that are used for formatting (not in code blocks)
+            // Simple approach: remove standalone underscores and asterisks used for emphasis
+            cleaned = cleaned.replacingOccurrences(of: "_", with: "")
+            cleaned = cleaned.replacingOccurrences(of: "*", with: "")
+            return cleaned
+        }
+        
+        // Try RTF first
+        if let rtfData = item.rtfData, !rtfData.isEmpty {
+            if let nsAttr = try? NSAttributedString(
+                data: rtfData,
+                options: [.documentType: NSAttributedString.DocumentType.rtf],
+                documentAttributes: nil
+            ) {
+                let plainText = nsAttr.string
+                if !plainText.isEmpty {
+                    let cleanedText = stripFormattingMarkers(plainText)
+                    return cleanedText
+                }
+            }
+        }
+        
+        // Try HTML if RTF not available or failed
+        if let htmlData = item.htmlData, !htmlData.isEmpty {
+            if let nsAttr = try? NSAttributedString(
+                data: htmlData,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue
+                ],
+                documentAttributes: nil
+            ) {
+                let plainText = nsAttr.string
+                if !plainText.isEmpty {
+                    let cleanedText = stripFormattingMarkers(plainText)
+                    return cleanedText
+                }
+            }
+        }
+        
+        // Fall back to item.content (may contain formatting markers, but better than nothing)
+        let cleanedContent = stripFormattingMarkers(item.content)
+        return cleanedContent
     }
     
     // MARK: - URL Detection
