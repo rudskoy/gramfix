@@ -22,6 +22,8 @@
 		D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F955F2EF8E2C70019A164 /* PasteService.swift */; };
 		D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F95652EF8F1230019A164 /* AccessibilityService.swift */; };
 		D56FD7F12F015C7D00E99CB6 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB172EF9F87900D03FAE /* MLXLLM */; };
+		D56FD7F32F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */; };
+		D56FD7F42F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */; };
 		D573EAF92EF9F56600D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAF82EF9F56600D03FAE /* Hub */; };
 		D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFA2EF9F56600D03FAE /* Tokenizers */; };
 		D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFC2EF9F56600D03FAE /* Transformers */; };
@@ -90,6 +92,7 @@
 		C01 /* Gramfix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gramfix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D51F955F2EF8E2C70019A164 /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
 		D51F95652EF8F1230019A164 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
+		D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAlertCoordinator.swift; sourceTree = "<group>"; };
 		D573EB0A2EF9F5C300D03FAE /* MLXService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXService.swift; sourceTree = "<group>"; };
 		D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMModel.swift; sourceTree = "<group>"; };
 		D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HubApi+default.swift"; sourceTree = "<group>"; };
@@ -212,6 +215,7 @@
 		E05 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */,
 				D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */,
 				D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */,
 				D5C9EB8A2EFAEEA30066FE10 /* LLMProviderImpl.swift */,
@@ -398,6 +402,7 @@
 				A08 /* Styling.swift in Sources */,
 				A09 /* PreviewPane.swift in Sources */,
 				D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */,
+				D56FD7F42F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */,
 				A10 /* LLMService.swift in Sources */,
 				D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */,
 				D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */,
@@ -409,6 +414,7 @@
 		TF02 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				D56FD7F32F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */,
 				T01 /* OllamaProviderTests.swift in Sources */,
 				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
 				D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */,
