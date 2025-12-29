@@ -21,6 +21,7 @@
 		A15 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15 /* SettingsView.swift */; };
 		D51F95602EF8E2C70019A164 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F955F2EF8E2C70019A164 /* PasteService.swift */; };
 		D51F95672EF8F1230019A164 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51F95652EF8F1230019A164 /* AccessibilityService.swift */; };
+		D56FD7F12F015C7D00E99CB6 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = D573EB172EF9F87900D03FAE /* MLXLLM */; };
 		D573EAF92EF9F56600D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAF82EF9F56600D03FAE /* Hub */; };
 		D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFA2EF9F56600D03FAE /* Tokenizers */; };
 		D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFC2EF9F56600D03FAE /* Transformers */; };
@@ -115,6 +116,7 @@
 		D01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				D56FD7F12F015C7D00E99CB6 /* MLXLLM in Frameworks */,
 				D573EB002EF9F58300D03FAE /* MLX in Frameworks */,
 				D573EB162EF9F87900D03FAE /* MLXEmbedders in Frameworks */,
 				D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */,
