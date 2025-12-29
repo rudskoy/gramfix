@@ -20,6 +20,13 @@ struct ClipboardRow: View {
             
             Spacer(minLength: 4)
             
+            // Useful tag indicator
+            if item.isUseful {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
+            }
+            
             // LLM processing indicator
             if item.isProcessing {
                 Image(systemName: "sparkles")

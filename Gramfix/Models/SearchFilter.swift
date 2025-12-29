@@ -8,12 +8,15 @@ struct SearchFilter {
     /// Types to exclude (hide these types)
     let excludedTypes: Set<ClipboardType>
     
+    /// Useful filter (nil = no filter, true = only useful, false = exclude useful)
+    let useful: Bool?
+    
     /// Remaining search text after filter extraction
     let searchText: String
     
     /// Whether any filters are active
     var hasFilters: Bool {
-        !includedTypes.isEmpty || !excludedTypes.isEmpty
+        !includedTypes.isEmpty || !excludedTypes.isEmpty || useful != nil
     }
     
     // MARK: - Suggestion Options
@@ -38,6 +41,7 @@ struct SearchFilter {
         Suggestion(id: "text", displayName: "text", aliases: "txt"),
         Suggestion(id: "links", displayName: "links", aliases: "url"),
         Suggestion(id: "files", displayName: "files", aliases: nil),
+        Suggestion(id: "useful", displayName: "useful", aliases: nil),
     ]
     
     /// Filter suggestions based on partial input
@@ -83,9 +87,12 @@ struct SearchFilter {
     /// - `+type` (include only)
     /// - `type:no` or `type: no` (exclude)
     /// - `type:yes` or `type: yes` (include only)
+    /// - `useful:yes` / `useful:no` (useful filter)
+    /// - `+useful` / `-useful` (useful filter)
     static func parse(_ query: String) -> SearchFilter {
         var includedTypes = Set<ClipboardType>()
         var excludedTypes = Set<ClipboardType>()
+        var usefulFilter: Bool? = nil
         var remainingParts: [String] = []
         
         // Split query into tokens, preserving spaces for key:value parsing
@@ -103,6 +110,12 @@ struct SearchFilter {
                     i += 1
                     continue
                 }
+                // Check for -useful
+                if typeKey == "useful" {
+                    usefulFilter = false
+                    i += 1
+                    continue
+                }
             }
             
             // Check for +type pattern (inclusion)
@@ -110,6 +123,12 @@ struct SearchFilter {
                 let typeKey = String(token.dropFirst()).lowercased()
                 if let type = typeAliases[typeKey] {
                     includedTypes.insert(type)
+                    i += 1
+                    continue
+                }
+                // Check for +useful
+                if typeKey == "useful" {
+                    usefulFilter = true
                     i += 1
                     continue
                 }
@@ -141,6 +160,19 @@ struct SearchFilter {
                         continue
                     }
                 }
+                
+                // Check for useful:yes or useful:no
+                if key == "useful" {
+                    if value == "yes" || value == "only" {
+                        usefulFilter = true
+                        i += 1
+                        continue
+                    } else if value == "no" {
+                        usefulFilter = false
+                        i += 1
+                        continue
+                    }
+                }
             }
             
             // Not a filter, keep as search text
@@ -153,6 +185,7 @@ struct SearchFilter {
         return SearchFilter(
             includedTypes: includedTypes,
             excludedTypes: excludedTypes,
+            useful: usefulFilter,
             searchText: searchText
         )
     }
@@ -166,7 +199,14 @@ struct SearchFilter {
     
     /// Check if a clipboard item matches this filter
     func matches(_ item: ClipboardItem) -> Bool {
-        // First, check type filters
+        // First, check useful filter
+        if let usefulFilter = useful {
+            if item.isUseful != usefulFilter {
+                return false
+            }
+        }
+        
+        // Then, check type filters
         if !matchesTypeFilter(item.type) {
             return false
         }

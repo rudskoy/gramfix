@@ -67,6 +67,11 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     /// Legacy: Whether translation is currently in progress (kept for compatibility)
     var translationProcessing: Bool
     
+    // MARK: - Useful Tag
+    
+    /// Whether this item is marked as useful by the user
+    var isUseful: Bool
+    
     // MARK: - Codable
     
     /// Coding keys - excludes transient processing states and computed formattedTime
@@ -75,6 +80,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         case promptResults, selectedPromptId
         case imageAnalysisResponse, shouldAnalyzeImage
         case detectedLanguage, selectedTargetLanguage, translatedResults
+        case isUseful
     }
     
     init(from decoder: Decoder) throws {
@@ -110,6 +116,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         translationProcessingLanguages = []
         translationProcessing = false
         
+        // Useful tag (default to false for backward compatibility)
+        isUseful = try container.decodeIfPresent(Bool.self, forKey: .isUseful) ?? false
+        
         // Recompute formatted time from timestamp
         formattedTime = Self.timeFormatter.localizedString(for: timestamp, relativeTo: Date())
     }
@@ -135,7 +144,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         translatedResults: [String: String] = [:],
         languageDetectionProcessing: Bool = false,
         translationProcessingLanguages: Set<String> = [],
-        translationProcessing: Bool = false
+        translationProcessing: Bool = false,
+        isUseful: Bool = false
     ) {
         self.id = id
         self.content = content
@@ -159,6 +169,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         self.languageDetectionProcessing = languageDetectionProcessing
         self.translationProcessingLanguages = translationProcessingLanguages
         self.translationProcessing = translationProcessing
+        self.isUseful = isUseful
     }
     
     // MARK: - Prompt Result Helpers
@@ -291,6 +302,15 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         var updated = self
         let languagesToTranslate = SupportedLanguage.allCases.filter { $0 != detectedLanguage }
         updated.translationProcessingLanguages = Set(languagesToTranslate.map(\.rawValue))
+        return updated
+    }
+    
+    // MARK: - Useful Tag Helpers
+    
+    /// Create a copy with useful flag
+    func withUsefulFlag(_ isUseful: Bool) -> ClipboardItem {
+        var updated = self
+        updated.isUseful = isUseful
         return updated
     }
     
@@ -431,7 +451,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         lhs.selectedTargetLanguage == rhs.selectedTargetLanguage &&
         lhs.translatedResults == rhs.translatedResults &&
         lhs.languageDetectionProcessing == rhs.languageDetectionProcessing &&
-        lhs.translationProcessingLanguages == rhs.translationProcessingLanguages
+        lhs.translationProcessingLanguages == rhs.translationProcessingLanguages &&
+        lhs.isUseful == rhs.isUseful
     }
     
     func hash(into hasher: inout Hasher) {
@@ -445,5 +466,6 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         hasher.combine(translatedResults)
         hasher.combine(languageDetectionProcessing)
         hasher.combine(translationProcessingLanguages)
+        hasher.combine(isUseful)
     }
 }

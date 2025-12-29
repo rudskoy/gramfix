@@ -10,6 +10,7 @@ class ClipboardManager: ObservableObject {
     @Published var items: [ClipboardItem] = []
     @Published var searchQuery: String = ""
     @Published var selectedTabType: ClipboardType? = nil
+    @Published var showOnlyUseful: Bool = false
     
     /// LLM service for processing clipboard content
     let llmService = LLMService()
@@ -32,21 +33,30 @@ class ClipboardManager: ObservableObject {
     var filteredItems: [ClipboardItem] {
         var filtered = items
         
+        // Parse search filter
+        let baseFilter = !searchQuery.isEmpty ? SearchFilter.parse(searchQuery) : SearchFilter(includedTypes: [], excludedTypes: [], useful: nil, searchText: "")
+        
+        // If UI toggle is active and search doesn't have useful filter, add it
+        let searchFilter: SearchFilter
+        if showOnlyUseful && baseFilter.useful == nil {
+            searchFilter = SearchFilter(
+                includedTypes: baseFilter.includedTypes,
+                excludedTypes: baseFilter.excludedTypes,
+                useful: true,
+                searchText: baseFilter.searchText
+            )
+        } else {
+            searchFilter = baseFilter
+        }
+        
         // Apply tab type filter if selected
         if let tabType = selectedTabType {
             filtered = filtered.filter { $0.type == tabType }
         }
         
-        // Apply search query filters
-        if !searchQuery.isEmpty {
-            let filter = SearchFilter.parse(searchQuery)
-            // If search filter has type filters, they take precedence over tab selection
-            if filter.hasFilters {
-                filtered = filtered.filter { filter.matches($0) }
-            } else if !filter.searchText.isEmpty {
-                // Only text search, apply to already filtered items
-                filtered = filtered.filter { filter.matches($0) }
-            }
+        // Apply search query filters (includes useful, type, and text)
+        if searchFilter.hasFilters || !searchFilter.searchText.isEmpty {
+            filtered = filtered.filter { searchFilter.matches($0) }
         }
         
         return filtered
@@ -530,6 +540,12 @@ class ClipboardManager: ObservableObject {
     func selectPrompt(_ promptType: TextPromptType, for item: ClipboardItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         items[index] = items[index].withSelectedPrompt(promptType.rawValue)
+    }
+    
+    /// Toggle the useful flag for an item
+    func toggleUsefulFlag(for item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index] = items[index].withUsefulFlag(!items[index].isUseful)
     }
     
     // MARK: - Language Detection and Translation

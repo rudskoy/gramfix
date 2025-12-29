@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var isLanguageFocused: Bool = false
     @State private var isLanguageDropdownOpen: Bool = false
     @State private var wasSearchFieldFocusedBeforeDropdown: Bool = false
+    @State private var selectedTab: ClipboardType? = nil
     
     private var selectedItem: ClipboardItem? {
         guard let id = selectedItemId else { return nil }
@@ -107,6 +108,21 @@ struct ContentView: View {
                     ImageAnalysisToggleButton()
                     
                     ToolbarActionButton(
+                        icon: selectedItem?.isUseful == true ? "star.fill" : "star",
+                        title: selectedItem?.isUseful == true ? "Unmark Useful" : "Mark Useful",
+                        description: selectedItem?.isUseful == true ? "Remove useful tag from this item" : "Mark this item as useful",
+                        shortcut: "⌘ Cmd + U",
+                        isDisabled: selectedItem == nil,
+                        tooltipAlignment: .trailing,
+                        iconForegroundStyle: selectedItem?.isUseful == true ? AnyShapeStyle(LinearGradient.accentGradient) : nil
+                    ) {
+                        if let item = selectedItem {
+                            clipboardManager.toggleUsefulFlag(for: item)
+                        }
+                    }
+                    .keyboardShortcut("u", modifiers: .command)
+                    
+                    ToolbarActionButton(
                         icon: "sparkles",
                         title: "Process with AI",
                         description: "Analyze content using AI",
@@ -130,6 +146,8 @@ struct ContentView: View {
             autoSelectFirstItem()
             setupKeyboardMonitor()
             isSearchFieldFocused = true
+            // Sync initial tab state
+            selectedTab = clipboardManager.selectedTabType
         }
         .onDisappear {
             removeKeyboardMonitor()
@@ -159,22 +177,53 @@ struct ContentView: View {
                 }
             }
         }
+        .onChange(of: selectedTab) { _, newTab in
+            clipboardManager.selectedTabType = newTab
+            // Auto-select first item when tab changes
+            if let firstItem = clipboardManager.filteredItems.first {
+                selectedItemId = firstItem.id
+            } else {
+                selectedItemId = nil
+            }
+        }
         .onChange(of: clipboardManager.searchQuery) { _, newQuery in
             if !newQuery.isEmpty {
                 selectedItemId = clipboardManager.filteredItems.first?.id
             }
+            // Sync tab selection with search query type filters
+            let filter = SearchFilter.parse(newQuery)
+            if filter.hasFilters {
+                // If search has type filters, update tab to match
+                if filter.includedTypes.count == 1, let type = filter.includedTypes.first {
+                    // Single type filter - sync tab to match
+                    selectedTab = type
+                } else if !filter.includedTypes.isEmpty {
+                    // Multiple types selected, clear tab (search filter takes precedence)
+                    selectedTab = nil
+                } else if !filter.excludedTypes.isEmpty {
+                    // Excluded types - don't change tab, let exclusion work alongside tab
+                    // Tab selection remains as is
+                }
+            } else if newQuery.isEmpty {
+                // Search cleared - keep current tab selection
+                // Tab selection remains as is
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            // Force immediate clipboard check before comparing counts
-            clipboardManager.checkClipboardNow()
-            
-            if clipboardManager.items.count != itemCountOnUnfocus {
-                selectFirstItem()
+            // Check if clipboard changed while app was unfocused
+            if clipboardManager.hasClipboardChangedSinceUnfocus() {
+                // Clipboard changed - process it and select first item
+                clipboardManager.checkClipboardNow()
+                // Use a small delay to ensure clipboard processing completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    selectFirstItem()
+                }
             }
             isSearchFieldFocused = true
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             itemCountOnUnfocus = clipboardManager.items.count
+            clipboardManager.saveChangeCountOnUnfocus()
         }
         .overlay(alignment: .center) {
             alertOverlay
@@ -227,11 +276,18 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                // Useful filter toggle button
+                UsefulFilterButton(isActive: clipboardManager.showOnlyUseful) {
+                    clipboardManager.showOnlyUseful.toggle()
+                }
+                
                 // Settings button
                 SettingsButton {
                     showSettings = true
                 }
             }
+            
+            TypeFilterTabs(selectedTab: $selectedTab)
             
             SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused, triggerAttention: $searchAttention, showingSuggestions: $searchShowingSuggestions)
                 .padding(.bottom, 4) // Extra space for shadow
@@ -261,6 +317,15 @@ struct ContentView: View {
                 }
             }
             .keyboardShortcut("f", modifiers: .command)
+            .hidden()
+            
+            // Hidden button to capture Cmd+U keyboard shortcut for toggling useful flag
+            Button("") {
+                if let item = selectedItem {
+                    clipboardManager.toggleUsefulFlag(for: item)
+                }
+            }
+            .keyboardShortcut("u", modifiers: .command)
             .hidden()
         }
     }

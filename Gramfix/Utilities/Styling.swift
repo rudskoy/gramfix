@@ -631,6 +631,37 @@ struct SettingsButton: View {
     }
 }
 
+// MARK: - Useful Filter Button
+
+struct UsefulFilterButton: View {
+    let isActive: Bool
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: isActive ? "star.fill" : "star")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(isActive ? AnyShapeStyle(LinearGradient.accentGradient) : AnyShapeStyle(.secondary))
+                .frame(width: 28, height: 28)
+                .background {
+                    if isHovered {
+                        Circle().glassEffect()
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help(isActive ? "Show all items" : "Show only useful items")
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 // MARK: - Theme Toggle Button
 
 struct ThemeToggleButton: View {
@@ -794,6 +825,7 @@ struct ToolbarActionButton: View {
     let shortcut: String?
     let isDisabled: Bool
     let tooltipAlignment: TooltipAlignment
+    let iconForegroundStyle: AnyShapeStyle?
     let action: () -> Void
     
     @ObservedObject private var tooltipState = TooltipState.shared
@@ -806,6 +838,7 @@ struct ToolbarActionButton: View {
         shortcut: String? = nil,
         isDisabled: Bool = false,
         tooltipAlignment: TooltipAlignment = .leading,
+        iconForegroundStyle: AnyShapeStyle? = nil,
         action: @escaping () -> Void
     ) {
         self.icon = icon
@@ -814,12 +847,20 @@ struct ToolbarActionButton: View {
         self.shortcut = shortcut
         self.isDisabled = isDisabled
         self.tooltipAlignment = tooltipAlignment
+        self.iconForegroundStyle = iconForegroundStyle
         self.action = action
     }
     
     var body: some View {
         Button(action: action) {
-            Image(systemName: icon)
+            Group {
+                if let foregroundStyle = iconForegroundStyle {
+                    Image(systemName: icon)
+                        .foregroundStyle(foregroundStyle)
+                } else {
+                    Image(systemName: icon)
+                }
+            }
         }
         .disabled(isDisabled)
         .onHover { hovering in
@@ -882,6 +923,82 @@ struct FixedTooltipView: View {
             }
         }
         .animation(.easeOut(duration: 0.15), value: tooltipState.activeTooltip)
+    }
+}
+
+// MARK: - Type Filter Tabs
+
+struct TypeFilterTabs: View {
+    @Binding var selectedTab: ClipboardType?
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            // All tab
+            TabButton(
+                title: "All",
+                icon: "square.grid.2x2",
+                isSelected: selectedTab == nil,
+                action: { selectedTab = nil }
+            )
+            
+            Spacer()
+        }
+    }
+}
+
+private struct TabButton: View {
+    let title: String
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .medium))
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(foregroundStyle)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background {
+                Capsule().fill(backgroundFill)
+            }
+            .overlay {
+                if isSelected {
+                    Capsule()
+                        .strokeBorder(Color.clipAccent.opacity(0.6), lineWidth: 1.5)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .opacity(isHovered ? 1.0 : (isSelected ? 1.0 : 0.85))
+        .scaleEffect(isHovered ? 1.05 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .animation(.easeOut(duration: 0.2), value: isSelected)
+        .onHover { isHovered = $0 }
+    }
+    
+    private var foregroundStyle: some ShapeStyle {
+        if isSelected {
+            return AnyShapeStyle(Color.white)
+        } else {
+            return AnyShapeStyle(Color.primary)
+        }
+    }
+    
+    private var backgroundFill: AnyShapeStyle {
+        if isSelected {
+            return AnyShapeStyle(LinearGradient.accentGradient)
+        } else if isHovered {
+            return AnyShapeStyle(Color.white.opacity(0.15))
+        } else {
+            return AnyShapeStyle(Color.white.opacity(0.08))
+        }
     }
 }
 
