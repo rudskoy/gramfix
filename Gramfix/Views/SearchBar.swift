@@ -6,6 +6,9 @@ struct SearchBar: View {
     @Binding var triggerAttention: Bool
     @Binding var showingSuggestions: Bool  // Exposed for keyboard handling coordination
     
+    @ObservedObject private var settings = LLMSettings.shared
+    @Environment(\.colorScheme) private var colorScheme  // Forces re-render on theme change
+    
     @State private var breatheScale: CGFloat = 1.0
     
     // Autocomplete state
@@ -114,6 +117,7 @@ struct SearchBar: View {
         }
         .shadow(color: isFocused.wrappedValue ? Color.clipAccent.opacity(0.15) : .clear, radius: 6)
         .animation(.easeOut(duration: 0.2), value: isFocused.wrappedValue)
+        .id(colorScheme)  // Force complete re-render when theme changes
         .onChange(of: triggerAttention) { _, _ in
             // Breathing animation: scale up then back to normal
             withAnimation(.easeOut(duration: 0.15)) {
