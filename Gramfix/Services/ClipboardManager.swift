@@ -422,7 +422,17 @@ class ClipboardManager: ObservableObject {
                     
                     // Update the item with this prompt's result
                     if let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                        let itemBeforeUpdate = items[currentIndex]
+                        let wasFirstResponse = itemBeforeUpdate.promptResults.isEmpty
+                        
                         items[currentIndex] = items[currentIndex].withPromptResult(type: promptType, response: response)
+                        
+                        // Log first response time
+                        if wasFirstResponse {
+                            let elapsedTime = Date().timeIntervalSince(items[currentIndex].timestamp)
+                            logger.info("First AI response received for item \(itemId) after \(String(format: "%.2f", elapsedTime)) seconds")
+                        }
+                        
                         logger.info("Completed prompt '\(promptType.displayName)' for item \(itemId)")
                         
                         // If language is already detected and we have AI-processed content, trigger translations
