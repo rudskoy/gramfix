@@ -18,22 +18,11 @@ final class AccessibilityService {
         return result
     }
     
-    /// Show a custom alert explaining why Accessibility permission is needed
-    /// and offer to open System Settings (single button, Clipy-style)
-    func showAccessibilityAuthenticationAlert() {
-        let alert = NSAlert()
-        alert.messageText = "Please allow Accessibility."
-        alert.informativeText = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Settings."
-        alert.addButton(withTitle: "Open System Settings")
-        alert.alertStyle = .warning
-        
-        NSApp.activate(ignoringOtherApps: true)
-        
-        if alert.runModal() == .alertFirstButtonReturn {
-            // Preserve previousApp when user returns from Settings
-            PasteService.shared.shouldPreservePreviousApp = true
-            openAccessibilitySettings()
-        }
+    /// Request to show the accessibility alert via SwiftUI coordinator
+    /// Replaces the blocking NSAlert with SwiftUI's async alert system
+    @MainActor
+    func requestAccessibilityAlert() {
+        AccessibilityAlertCoordinator.shared.requestAccessibilityAlert()
     }
     
     /// Open System Settings to the Accessibility pane

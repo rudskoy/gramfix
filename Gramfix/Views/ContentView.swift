@@ -176,12 +176,8 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             itemCountOnUnfocus = clipboardManager.items.count
         }
-        .alert(alertCoordinator.alertMessage, isPresented: $alertCoordinator.showAlert) {
-            Button("Open System Settings") {
-                alertCoordinator.handleOpenSettings()
-            }
-        } message: {
-            Text(alertCoordinator.alertInformativeText)
+        .overlay(alignment: .center) {
+            alertOverlay
         }
         .onChange(of: alertCoordinator.showAlert) { _, showAlert in
             // Activate app when alert is shown to ensure it's visible
@@ -587,6 +583,23 @@ struct ContentView: View {
             }
         }
         clipboardManager.deleteItem(item)
+    }
+    
+    // MARK: - Alert Overlay
+    
+    @ViewBuilder
+    private var alertOverlay: some View {
+        if alertCoordinator.showAlert {
+            CustomAlertView(
+                title: alertCoordinator.alertMessage,
+                message: alertCoordinator.alertInformativeText,
+                primaryButtonTitle: "Open System Settings",
+                primaryButtonAction: {
+                    alertCoordinator.handleOpenSettings()
+                },
+                isPresented: $alertCoordinator.showAlert
+            )
+        }
     }
 }
 

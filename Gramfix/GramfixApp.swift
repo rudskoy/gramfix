@@ -6,6 +6,7 @@ import Sparkle
 @main
 struct GramfixApp: App {
     @StateObject private var clipboardManager = ClipboardManager()
+    private let alertCoordinator = AccessibilityAlertCoordinator.shared
     @AppStorage("app_theme") private var appThemeRaw: String = AppTheme.system.rawValue
     @State private var systemIsDark: Bool = false  // Safe default, updated in onAppear
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -46,7 +47,7 @@ struct GramfixApp: App {
                     systemIsDark = detectSystemAppearance()
                 }
         }
-        .defaultSize(width: 975, height: 650)
+        .defaultSize(width: 820, height: 700)
         .commands {
             // Remove "New Window" command to prevent multiple windows
             CommandGroup(replacing: .newItem) { }
