@@ -39,7 +39,9 @@ class PasteService {
     func pasteAndReturn(content: String) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         
@@ -72,12 +74,20 @@ class PasteService {
         }
     }
     
-    /// Paste RTF content to the previous app. The content stays on the clipboard.
-    /// Preserves formatting when available.
-    func pasteAndReturn(rtfData: Data, content: String) {
+    /// Paste rich content to the previous app. The content stays on the clipboard.
+    /// Preserves formatting when available (HTML for modern apps, RTF for legacy apps).
+    func pasteAndReturn(rtfData: Data?, htmlData: Data?, content: String) {
+        pasteAndReturn(allPasteboardData: nil, rtfData: rtfData, htmlData: htmlData, content: content)
+    }
+    
+    /// Paste content with ALL original pasteboard types preserved.
+    /// This preserves app-specific formats like Telegram's internal formatting.
+    func pasteAndReturn(allPasteboardData: [String: Data]?, rtfData: Data?, htmlData: Data?, content: String) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         
@@ -86,12 +96,38 @@ class PasteService {
             return
         }
         
-        // 1. Copy to clipboard
+        // 1. Copy to clipboard with all available formats
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setData(rtfData, forType: .rtf)
-        // Always set plain text as fallback for compatibility
-        pasteboard.setString(content, forType: .string)
+        
+        // If we have all original pasteboard data, restore everything
+        if let allData = allPasteboardData, !allData.isEmpty {
+            // Build list of all types
+            let types = allData.keys.map { NSPasteboard.PasteboardType($0) }
+            pasteboard.declareTypes(types, owner: nil)
+            
+            // Set all data
+            for (typeString, data) in allData {
+                let type = NSPasteboard.PasteboardType(typeString)
+                pasteboard.setData(data, forType: type)
+            }
+        } else {
+            // Fall back to RTF/HTML/string
+            var types: [NSPasteboard.PasteboardType] = []
+            if htmlData != nil { types.append(.html) }
+            if rtfData != nil { types.append(.rtf) }
+            types.append(.string)
+            
+            pasteboard.declareTypes(types, owner: nil)
+            
+            if let htmlData = htmlData {
+                pasteboard.setData(htmlData, forType: .html)
+            }
+            if let rtfData = rtfData {
+                pasteboard.setData(rtfData, forType: .rtf)
+            }
+            pasteboard.setString(content, forType: .string)
+        }
         
         // Notify ClipboardManager to ignore this change
         NotificationCenter.default.post(
@@ -117,7 +153,9 @@ class PasteService {
     func pasteAndReturn(data: Data, type: NSPasteboard.PasteboardType) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         
@@ -156,7 +194,9 @@ class PasteService {
     func immediatePasteAndReturn(content: String) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         
@@ -197,12 +237,20 @@ class PasteService {
         }
     }
     
-    /// Paste RTF content to the previous app, then restore the original clipboard contents.
-    /// Preserves formatting when available.
-    func immediatePasteAndReturn(rtfData: Data, content: String) {
+    /// Paste rich content to the previous app, then restore the original clipboard contents.
+    /// Preserves formatting when available (HTML for modern apps, RTF for legacy apps).
+    func immediatePasteAndReturn(rtfData: Data?, htmlData: Data?, content: String) {
+        immediatePasteAndReturn(allPasteboardData: nil, rtfData: rtfData, htmlData: htmlData, content: content)
+    }
+    
+    /// Paste content with ALL original pasteboard types preserved, then restore the original clipboard contents.
+    /// This preserves app-specific formats like Telegram's internal formatting.
+    func immediatePasteAndReturn(allPasteboardData: [String: Data]?, rtfData: Data?, htmlData: Data?, content: String) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         
@@ -214,12 +262,38 @@ class PasteService {
         // 1. Save current clipboard contents
         let savedItems = saveClipboard()
         
-        // 2. Copy new content to clipboard
+        // 2. Copy new content to clipboard with all available formats
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setData(rtfData, forType: .rtf)
-        // Always set plain text as fallback for compatibility
-        pasteboard.setString(content, forType: .string)
+        
+        // If we have all original pasteboard data, restore everything
+        if let allData = allPasteboardData, !allData.isEmpty {
+            // Build list of all types
+            let types = allData.keys.map { NSPasteboard.PasteboardType($0) }
+            pasteboard.declareTypes(types, owner: nil)
+            
+            // Set all data
+            for (typeString, data) in allData {
+                let type = NSPasteboard.PasteboardType(typeString)
+                pasteboard.setData(data, forType: type)
+            }
+        } else {
+            // Fall back to RTF/HTML/string
+            var types: [NSPasteboard.PasteboardType] = []
+            if htmlData != nil { types.append(.html) }
+            if rtfData != nil { types.append(.rtf) }
+            types.append(.string)
+            
+            pasteboard.declareTypes(types, owner: nil)
+            
+            if let htmlData = htmlData {
+                pasteboard.setData(htmlData, forType: .html)
+            }
+            if let rtfData = rtfData {
+                pasteboard.setData(rtfData, forType: .rtf)
+            }
+            pasteboard.setString(content, forType: .string)
+        }
         
         // Notify ClipboardManager to ignore this change
         NotificationCenter.default.post(
@@ -250,7 +324,9 @@ class PasteService {
     func immediatePasteAndReturn(data: Data, type: NSPasteboard.PasteboardType) {
         // Check Accessibility permission
         guard AccessibilityService.shared.isAccessibilityEnabled(prompt: false) else {
-            AccessibilityService.shared.showAccessibilityAuthenticationAlert()
+            Task { @MainActor in
+                AccessibilityService.shared.requestAccessibilityAlert()
+            }
             return
         }
         

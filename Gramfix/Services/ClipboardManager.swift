@@ -234,12 +234,32 @@ class ClipboardManager: ObservableObject {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             let isLink = Self.isValidURL(trimmed)
             
-            // Try to capture RTF data if available (preserves formatting)
+            // Try to capture RTF and HTML data if available (preserves formatting)
             let rtfData = pasteboard.data(forType: .rtf)
+            let htmlData = pasteboard.data(forType: .html)
+            
+            // Capture ALL pasteboard types to preserve app-specific formats (e.g., Telegram's internal format)
+            var allData: [String: Data] = [:]
+            if let types = pasteboard.types {
+                for type in types {
+                    // Skip very large data and binary formats that we handle separately
+                    if type == .png || type == .tiff || type == .fileURL {
+                        continue
+                    }
+                    if let data = pasteboard.data(forType: type) {
+                        // Skip very large items (> 1MB) to avoid memory issues
+                        if data.count < 1_000_000 {
+                            allData[type.rawValue] = data
+                        }
+                    }
+                }
+            }
             
             let item = ClipboardItem(
                 content: string,
                 rtfData: rtfData,
+                htmlData: htmlData,
+                allPasteboardData: allData.isEmpty ? nil : allData,
                 type: isLink ? .link : .text,
                 appName: appName
             )
@@ -731,12 +751,32 @@ class ClipboardManager: ObservableObject {
         
         switch item.type {
         case .text, .link:
-            // Set RTF data if available (preserves formatting)
-            if let rtfData = item.rtfData {
-                pasteboard.setData(rtfData, forType: .rtf)
+            // If we have all original pasteboard data, restore everything (preserves app-specific formats)
+            if let allData = item.allPasteboardData, !allData.isEmpty {
+                let types = allData.keys.map { NSPasteboard.PasteboardType($0) }
+                pasteboard.declareTypes(types, owner: nil)
+                
+                for (typeString, data) in allData {
+                    let type = NSPasteboard.PasteboardType(typeString)
+                    pasteboard.setData(data, forType: type)
+                }
+            } else {
+                // Fall back to RTF/HTML/string
+                var types: [NSPasteboard.PasteboardType] = []
+                if item.htmlData != nil { types.append(.html) }
+                if item.rtfData != nil { types.append(.rtf) }
+                types.append(.string)
+                
+                pasteboard.declareTypes(types, owner: nil)
+                
+                if let htmlData = item.htmlData {
+                    pasteboard.setData(htmlData, forType: .html)
+                }
+                if let rtfData = item.rtfData {
+                    pasteboard.setData(rtfData, forType: .rtf)
+                }
+                pasteboard.setString(item.content, forType: .string)
             }
-            // Always set plain text as fallback for compatibility
-            pasteboard.setString(item.content, forType: .string)
         case .image:
             if let data = item.rawData {
                 pasteboard.setData(data, forType: .png)

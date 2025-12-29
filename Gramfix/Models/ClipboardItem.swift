@@ -14,6 +14,9 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     let content: String
     let rawData: Data?
     let rtfData: Data?
+    let htmlData: Data?  // HTML formatted data (preferred by Telegram, Slack, etc.)
+    /// All pasteboard data types captured from the original copy (preserves app-specific formats)
+    let allPasteboardData: [String: Data]?
     let type: ClipboardType
     let timestamp: Date
     let appName: String?
@@ -68,7 +71,7 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
     
     /// Coding keys - excludes transient processing states and computed formattedTime
     enum CodingKeys: String, CodingKey {
-        case id, content, rawData, rtfData, type, timestamp, appName
+        case id, content, rawData, rtfData, htmlData, allPasteboardData, type, timestamp, appName
         case promptResults, selectedPromptId
         case imageAnalysisResponse, shouldAnalyzeImage
         case detectedLanguage, selectedTargetLanguage, translatedResults
@@ -80,6 +83,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         content = try container.decode(String.self, forKey: .content)
         rawData = try container.decodeIfPresent(Data.self, forKey: .rawData)
         rtfData = try container.decodeIfPresent(Data.self, forKey: .rtfData)
+        htmlData = try container.decodeIfPresent(Data.self, forKey: .htmlData)
+        allPasteboardData = try container.decodeIfPresent([String: Data].self, forKey: .allPasteboardData)
         type = try container.decode(ClipboardType.self, forKey: .type)
         timestamp = try container.decode(Date.self, forKey: .timestamp)
         appName = try container.decodeIfPresent(String.self, forKey: .appName)
@@ -114,6 +119,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         content: String,
         rawData: Data? = nil,
         rtfData: Data? = nil,
+        htmlData: Data? = nil,
+        allPasteboardData: [String: Data]? = nil,
         type: ClipboardType = .text,
         timestamp: Date = Date(),
         appName: String? = nil,
@@ -134,6 +141,8 @@ struct ClipboardItem: Identifiable, Equatable, Hashable, Codable {
         self.content = content
         self.rawData = rawData
         self.rtfData = rtfData
+        self.htmlData = htmlData
+        self.allPasteboardData = allPasteboardData
         self.type = type
         self.timestamp = timestamp
         self.appName = appName

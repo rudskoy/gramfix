@@ -3,6 +3,7 @@ import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var clipboardManager: ClipboardManager
+    @ObservedObject var alertCoordinator = AccessibilityAlertCoordinator.shared
     @State private var selectedItemId: UUID?
     @State private var showSettings = false
     @State private var keyboardMonitor: Any?
@@ -174,6 +175,19 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             itemCountOnUnfocus = clipboardManager.items.count
+        }
+        .alert(alertCoordinator.alertMessage, isPresented: $alertCoordinator.showAlert) {
+            Button("Open System Settings") {
+                alertCoordinator.handleOpenSettings()
+            }
+        } message: {
+            Text(alertCoordinator.alertInformativeText)
+        }
+        .onChange(of: alertCoordinator.showAlert) { _, showAlert in
+            // Activate app when alert is shown to ensure it's visible
+            if showAlert {
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
     }
     
@@ -456,16 +470,31 @@ struct ContentView: View {
     private func pasteItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
-            // Use RTF if available and we're pasting original content (not AI-processed)
-            if let rtfData = item.rtfData, item.pasteContent == item.content {
-                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.pasteContent)
+            // Use ALL original pasteboard data if pasting original content (not AI-processed)
+            if item.pasteContent == item.content {
+                if item.allPasteboardData != nil || item.rtfData != nil || item.htmlData != nil {
+                    PasteService.shared.pasteAndReturn(
+                        allPasteboardData: item.allPasteboardData,
+                        rtfData: item.rtfData,
+                        htmlData: item.htmlData,
+                        content: item.pasteContent
+                    )
+                } else {
+                    PasteService.shared.pasteAndReturn(content: item.pasteContent)
+                }
             } else {
+                // AI-processed content - just paste plain text
                 PasteService.shared.pasteAndReturn(content: item.pasteContent)
             }
         case .link:
-            // Use RTF if available for links
-            if let rtfData = item.rtfData {
-                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
+            // Use ALL original pasteboard data for links
+            if item.allPasteboardData != nil || item.rtfData != nil || item.htmlData != nil {
+                PasteService.shared.pasteAndReturn(
+                    allPasteboardData: item.allPasteboardData,
+                    rtfData: item.rtfData,
+                    htmlData: item.htmlData,
+                    content: item.content
+                )
             } else {
                 PasteService.shared.pasteAndReturn(content: item.content)
             }
@@ -481,16 +510,31 @@ struct ContentView: View {
     private func immediatePasteItem(_ item: ClipboardItem) {
         switch item.type {
         case .text:
-            // Use RTF if available and we're pasting original content (not AI-processed)
-            if let rtfData = item.rtfData, item.pasteContent == item.content {
-                PasteService.shared.immediatePasteAndReturn(rtfData: rtfData, content: item.pasteContent)
+            // Use ALL original pasteboard data if pasting original content (not AI-processed)
+            if item.pasteContent == item.content {
+                if item.allPasteboardData != nil || item.rtfData != nil || item.htmlData != nil {
+                    PasteService.shared.immediatePasteAndReturn(
+                        allPasteboardData: item.allPasteboardData,
+                        rtfData: item.rtfData,
+                        htmlData: item.htmlData,
+                        content: item.pasteContent
+                    )
+                } else {
+                    PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
+                }
             } else {
+                // AI-processed content - just paste plain text
                 PasteService.shared.immediatePasteAndReturn(content: item.pasteContent)
             }
         case .link:
-            // Use RTF if available for links
-            if let rtfData = item.rtfData {
-                PasteService.shared.immediatePasteAndReturn(rtfData: rtfData, content: item.content)
+            // Use ALL original pasteboard data for links
+            if item.allPasteboardData != nil || item.rtfData != nil || item.htmlData != nil {
+                PasteService.shared.immediatePasteAndReturn(
+                    allPasteboardData: item.allPasteboardData,
+                    rtfData: item.rtfData,
+                    htmlData: item.htmlData,
+                    content: item.content
+                )
             } else {
                 PasteService.shared.immediatePasteAndReturn(content: item.content)
             }
@@ -505,17 +549,15 @@ struct ContentView: View {
     
     private func pasteOriginalItem(_ item: ClipboardItem) {
         switch item.type {
-        case .text:
-            // Always use RTF if available for original content
-            if let rtfData = item.rtfData {
-                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
-            } else {
-                PasteService.shared.pasteAndReturn(content: item.content)
-            }
-        case .link:
-            // Use RTF if available for links
-            if let rtfData = item.rtfData {
-                PasteService.shared.pasteAndReturn(rtfData: rtfData, content: item.content)
+        case .text, .link:
+            // Use ALL original pasteboard data if available (preserves app-specific formats like Telegram's)
+            if item.allPasteboardData != nil || item.rtfData != nil || item.htmlData != nil {
+                PasteService.shared.pasteAndReturn(
+                    allPasteboardData: item.allPasteboardData,
+                    rtfData: item.rtfData,
+                    htmlData: item.htmlData,
+                    content: item.content
+                )
             } else {
                 PasteService.shared.pasteAndReturn(content: item.content)
             }
