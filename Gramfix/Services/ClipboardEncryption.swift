@@ -31,7 +31,10 @@ actor ClipboardEncryption {
     // For testing: use in-memory key to avoid keychain prompts
     private var testKey: SymmetricKey?
     private var isTestMode: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        // Only use test mode if explicitly running in XCTest
+        // Check for XCTest environment variable (most reliable indicator)
+        // Don't check bundle ID or class existence as those can be false positives
+        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
     
     private init() {}

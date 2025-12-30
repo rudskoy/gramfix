@@ -84,7 +84,17 @@ actor ClipboardPersistence {
         }
         
         let encryptedData = try Data(contentsOf: self.encryptedHistoryFileURL)
-        let jsonData = try await ClipboardEncryption.shared.decrypt(encryptedData)
+        
+        let jsonData: Data
+        do {
+            jsonData = try await ClipboardEncryption.shared.decrypt(encryptedData)
+        } catch {
+            // If decryption fails (wrong key, corrupted data, etc.), log and return empty
+            logger.error("❌ Failed to decrypt clipboard history: \(error.localizedDescription). The file may be corrupted or encrypted with a different key. Starting with empty history.")
+            // Don't automatically delete - user might want to recover it
+            // The file will be overwritten on next save with the correct key
+            return ([], [:])
+        }
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
