@@ -41,16 +41,16 @@ final class ClipboardPersistenceTests: XCTestCase {
         ]
         
         do {
-            try await persistence.save(testItems)
-            let loadedItems = try await persistence.load()
+            try await persistence.save(testItems, pasteHistory: [:])
+            let result = try await persistence.load()
             
-            XCTAssertEqual(loadedItems.count, 1, "Should load saved items")
-            XCTAssertEqual(loadedItems.first?.content, "Test content", "Content should match")
+            XCTAssertEqual(result.items.count, 1, "Should load saved items")
+            XCTAssertEqual(result.items.first?.content, "Test content", "Content should match")
             
-            // Verify the file exists in the expected location
-            let historyFile = expectedPath.appendingPathComponent("clipboard_history.json")
-            XCTAssertTrue(FileManager.default.fileExists(atPath: historyFile.path), 
-                         "History file should exist at expected path")
+            // Verify the encrypted file exists in the expected location
+            let encryptedHistoryFile = expectedPath.appendingPathComponent("clipboard_history.encrypted")
+            XCTAssertTrue(FileManager.default.fileExists(atPath: encryptedHistoryFile.path), 
+                         "Encrypted history file should exist at expected path")
             
             // Clean up
             try? persistence.clearHistory()
@@ -63,10 +63,11 @@ final class ClipboardPersistenceTests: XCTestCase {
         // Clear any existing history first
         try? persistence.clearHistory()
         
-        // Loading from non-existent file should return empty array, not throw
+        // Loading from non-existent file should return empty arrays, not throw
         do {
-            let items = try await persistence.load()
-            XCTAssertEqual(items.count, 0, "Should return empty array when file doesn't exist")
+            let result = try await persistence.load()
+            XCTAssertEqual(result.items.count, 0, "Should return empty array when file doesn't exist")
+            XCTAssertEqual(result.pasteHistory.count, 0, "Should return empty paste history when file doesn't exist")
         } catch {
             XCTFail("Loading from non-existent file should not throw: \(error.localizedDescription)")
         }
@@ -82,8 +83,8 @@ final class ClipboardPersistenceTests: XCTestCase {
         
         // Load should work even if directory doesn't exist (it will just return empty)
         do {
-            let items = try await persistence.load()
-            XCTAssertEqual(items.count, 0, "Should return empty array when directory doesn't exist")
+            let result = try await persistence.load()
+            XCTAssertEqual(result.items.count, 0, "Should return empty array when directory doesn't exist")
         } catch {
             XCTFail("Loading when directory doesn't exist should not throw: \(error.localizedDescription)")
         }
@@ -100,10 +101,11 @@ final class ClipboardPersistenceTests: XCTestCase {
         
         do {
             // Save items
-            try await persistence.save(testItems)
+            try await persistence.save(testItems, pasteHistory: [:])
             
             // Load items
-            let loadedItems = try await persistence.load()
+            let result = try await persistence.load()
+            let loadedItems = result.items
             
             XCTAssertEqual(loadedItems.count, testItems.count, "Should load all saved items")
             XCTAssertEqual(loadedItems[0].content, "Item 1", "First item content should match")
@@ -128,7 +130,7 @@ final class ClipboardPersistenceTests: XCTestCase {
         // Save some items
         Task {
             let testItems = [ClipboardItem(content: "Test", type: .text, appName: "Test")]
-            try? await persistence.save(testItems)
+            try? await persistence.save(testItems, pasteHistory: [:])
             
             // Now should exist
             let afterSave = persistence.historyExists()
@@ -149,7 +151,7 @@ final class ClipboardPersistenceTests: XCTestCase {
     func testClearHistory() async {
         // Save some items first
         let testItems = [ClipboardItem(content: "Test", type: .text, appName: "Test")]
-        try? await persistence.save(testItems)
+        try? await persistence.save(testItems, pasteHistory: [:])
         
         // Verify it exists
         XCTAssertTrue(persistence.historyExists(), "History should exist before clear")
@@ -160,8 +162,8 @@ final class ClipboardPersistenceTests: XCTestCase {
             XCTAssertFalse(persistence.historyExists(), "History should not exist after clear")
             
             // Loading should return empty
-            let items = try await persistence.load()
-            XCTAssertEqual(items.count, 0, "Should return empty array after clear")
+            let result = try await persistence.load()
+            XCTAssertEqual(result.items.count, 0, "Should return empty array after clear")
         } catch {
             XCTFail("Clear history should not fail: \(error.localizedDescription)")
         }
@@ -176,17 +178,18 @@ final class ClipboardPersistenceTests: XCTestCase {
         ]
         
         do {
-            try await persistence.save(testItems)
+            try await persistence.save(testItems, pasteHistory: [:])
             
-            // Read the raw file to verify version
+            // Read the encrypted file and decrypt to verify version
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            let historyFile = appSupport.appendingPathComponent("Gramfix/clipboard_history.json")
+            let encryptedHistoryFile = appSupport.appendingPathComponent("Gramfix/clipboard_history.encrypted")
             
-            let data = try Data(contentsOf: historyFile)
-            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let encryptedData = try Data(contentsOf: encryptedHistoryFile)
+            let jsonData = try await ClipboardEncryption.shared.decrypt(encryptedData)
+            let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
             
-            XCTAssertNotNil(json, "Should be valid JSON")
-            XCTAssertEqual(json?["version"] as? Int, 1, "Version should be 1")
+            XCTAssertNotNil(json, "Should be valid JSON after decryption")
+            XCTAssertEqual(json?["version"] as? Int, 3, "Version should be 3")
             XCTAssertNotNil(json?["items"], "Should have items array")
             
             // Clean up
@@ -195,5 +198,33 @@ final class ClipboardPersistenceTests: XCTestCase {
             XCTFail("Version handling should not fail: \(error.localizedDescription)")
         }
     }
+    
+    // MARK: - Encryption Tests
+    
+    func testEncryptionRoundTrip() async {
+        // Test that encryption and decryption work correctly
+        let testItems = [
+            ClipboardItem(content: "Encrypted test", type: .text, appName: "TestApp")
+        ]
+        let testPasteHistory: [String: [Date]] = ["test-key": [Date()]]
+        
+        do {
+            // Save encrypted
+            try await persistence.save(testItems, pasteHistory: testPasteHistory)
+            
+            // Load and verify
+            let result = try await persistence.load()
+            XCTAssertEqual(result.items.count, 1, "Should load encrypted items")
+            XCTAssertEqual(result.items.first?.content, "Encrypted test", "Content should match after encryption/decryption")
+            XCTAssertEqual(result.pasteHistory.count, 1, "Should load encrypted paste history")
+            XCTAssertNotNil(result.pasteHistory["test-key"], "Paste history should be preserved")
+            
+            // Clean up
+            try? persistence.clearHistory()
+        } catch {
+            XCTFail("Encryption round-trip should not fail: \(error.localizedDescription)")
+        }
+    }
+    
 }
 

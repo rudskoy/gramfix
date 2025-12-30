@@ -9,12 +9,15 @@ struct PersistedClipboardHistory: Codable {
     let version: Int
     /// The clipboard items
     let items: [ClipboardItem]
+    /// Paste history: maps content key to array of paste timestamps
+    let pasteHistory: [String: [Date]]?
     
-    static let currentVersion = 1
+    static let currentVersion = 3
     
-    init(items: [ClipboardItem]) {
+    init(items: [ClipboardItem], pasteHistory: [String: [Date]]? = nil) {
         self.version = Self.currentVersion
         self.items = items
+        self.pasteHistory = pasteHistory
     }
 }
 
@@ -32,71 +35,77 @@ actor ClipboardPersistence {
         return appSupport.appendingPathComponent("Gramfix", isDirectory: true)
     }
     
-    /// Full path to the history file
-    private var historyFileURL: URL {
-        storageDirectory.appendingPathComponent("clipboard_history.json")
+    /// Full path to the encrypted history file
+    private var encryptedHistoryFileURL: URL {
+        storageDirectory.appendingPathComponent("clipboard_history.encrypted")
     }
     
     private init() {}
     
     // MARK: - Public API
     
-    /// Save clipboard items to disk atomically
-    func save(_ items: [ClipboardItem]) async throws {
+    /// Save clipboard items and paste history to disk atomically (encrypted)
+    func save(_ items: [ClipboardItem], pasteHistory: [String: [Date]]) async throws {
         // Ensure directory exists
         try ensureStorageDirectoryExists()
         
-        let history = PersistedClipboardHistory(items: items)
+        let history = PersistedClipboardHistory(items: items, pasteHistory: pasteHistory)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         
-        let data = try encoder.encode(history)
+        let jsonData = try encoder.encode(history)
         
-        // Atomic write for crash safety
-        try data.write(to: historyFileURL, options: .atomic)
+        // Encrypt the data
+        let encryptedData = try await ClipboardEncryption.shared.encrypt(jsonData)
         
-        logger.info("💾 Saved \(items.count) clipboard items to disk")
+        // Write encrypted data atomically
+        try encryptedData.write(to: encryptedHistoryFileURL, options: Data.WritingOptions.atomic)
+        
+        // Set restrictive file permissions (owner read/write only)
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: encryptedHistoryFileURL.path
+        )
+        
+        logger.info("💾 Saved \(items.count) clipboard items and \(pasteHistory.count) paste history entries to disk (encrypted)")
     }
     
-    /// Load clipboard items from disk
-    func load() async throws -> [ClipboardItem] {
-        let fileURL = self.historyFileURL
-        
-        // Check if file exists (this works even if directory doesn't exist)
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            logger.info("📂 No existing clipboard history found at \(fileURL.path)")
-            return []
+    /// Load clipboard items and paste history from disk
+    func load() async throws -> (items: [ClipboardItem], pasteHistory: [String: [Date]]) {
+        guard FileManager.default.fileExists(atPath: encryptedHistoryFileURL.path) else {
+            logger.info("📂 No existing clipboard history found")
+            return ([], [:])
         }
         
-        // Verify the file is actually readable
-        guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
-            logger.warning("⚠️ Clipboard history file exists but is not readable at \(fileURL.path)")
-            return []
+        guard FileManager.default.isReadableFile(atPath: self.encryptedHistoryFileURL.path) else {
+            logger.warning("⚠️ Encrypted history file exists but is not readable at \(self.encryptedHistoryFileURL.path)")
+            return ([], [:])
         }
         
-        let data = try Data(contentsOf: fileURL)
+        let encryptedData = try Data(contentsOf: self.encryptedHistoryFileURL)
+        let jsonData = try await ClipboardEncryption.shared.decrypt(encryptedData)
+        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         
-        let history = try decoder.decode(PersistedClipboardHistory.self, from: data)
-        
-        // Handle version migrations if needed
+        let history = try decoder.decode(PersistedClipboardHistory.self, from: jsonData)
         let items = migrateIfNeeded(history)
+        let pasteHistory = history.pasteHistory ?? [:]
         
-        logger.info("📂 Loaded \(items.count) clipboard items from disk (version \(history.version)) from \(fileURL.path)")
-        return items
+        logger.info("📂 Loaded \(items.count) clipboard items and \(pasteHistory.count) paste history entries from encrypted storage (version \(history.version))")
+        return (items, pasteHistory)
     }
     
     /// Check if history file exists
     func historyExists() -> Bool {
-        FileManager.default.fileExists(atPath: historyFileURL.path)
+        FileManager.default.fileExists(atPath: encryptedHistoryFileURL.path)
     }
     
     /// Delete all persisted history
     func clearHistory() throws {
-        guard FileManager.default.fileExists(atPath: historyFileURL.path) else { return }
-        try FileManager.default.removeItem(at: historyFileURL)
+        guard FileManager.default.fileExists(atPath: encryptedHistoryFileURL.path) else { return }
+        try FileManager.default.removeItem(at: encryptedHistoryFileURL)
         logger.info("🗑️ Cleared persisted clipboard history")
     }
     
@@ -112,9 +121,11 @@ actor ClipboardPersistence {
     
     /// Migrate data from older versions if needed
     private func migrateIfNeeded(_ history: PersistedClipboardHistory) -> [ClipboardItem] {
-        // Currently at version 1, no migrations needed
-        // Future migrations would go here:
-        // if history.version < 2 { ... migrate to v2 ... }
+        // Version 1 -> 2: Added paste history (no item migration needed)
+        // Version 2 -> 3: Added encryption (no item migration needed)
+        if history.version < PersistedClipboardHistory.currentVersion {
+            logger.info("📦 Migrating clipboard history from version \(history.version) to \(PersistedClipboardHistory.currentVersion)")
+        }
         return history.items
     }
 }
