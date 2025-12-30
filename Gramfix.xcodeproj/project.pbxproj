@@ -128,7 +128,6 @@
 		D56FD7F52F02165C00E99CB6 /* CustomAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAlertView.swift; sourceTree = "<group>"; };
 		D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
 		D56FD8012F02E24900E99CB6 /* GramfixHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GramfixHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D56FD8042F02E24900E99CB6 /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RealityKitContent; sourceTree = "<group>"; };
 		D56FD8122F02E24A00E99CB6 /* GramfixHelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GramfixHelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D573EB0A2EF9F5C300D03FAE /* MLXService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXService.swift; sourceTree = "<group>"; };
 		D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMModel.swift; sourceTree = "<group>"; };
@@ -223,14 +222,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D56FD8032F02E24900E99CB6 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				D56FD8042F02E24900E99CB6 /* RealityKitContent */,
-			);
-			path = Packages;
-			sourceTree = "<group>";
-		};
 		D573EB0F2EF9F78C00D03FAE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -256,7 +247,6 @@
 				D56FD8022F02E24900E99CB6 /* GramfixHelper */,
 				D56FD8152F02E24A00E99CB6 /* GramfixHelperTests */,
 				D573EB0F2EF9F78C00D03FAE /* Frameworks */,
-				D56FD8032F02E24900E99CB6 /* Packages */,
 				E03 /* Products */,
 			);
 			sourceTree = "<group>";
