@@ -9,11 +9,21 @@ DerivedData/
 # JetBrains IDEs
 .idea/
 
+# VS Code
+.vscode/
+
+# Other IDEs/Editors
+.claude/
+.codacy/
+
 # MCP configuration
 .mcp.json
 
 # Distribution
 dist/
+
+# Temporary/Experimental
+junk/
 
 # macOS
 .DS_Store
@@ -38,4 +48,9 @@ CODEBASE_ANALYSIS.md
 
 # Generated assets
 scripts/*.iconset/
+
+# Scripts and setup docs
+HELPER_APP_SETUP.md
+commit-and-push.sh
+push-with-history.sh
 
