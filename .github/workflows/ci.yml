@@ -9,8 +9,8 @@ on:
       - main
 
 env:
-  SCHEME: Clipsa
-  PROJECT: Clipsa.xcodeproj
+  SCHEME: Gramfix
+  PROJECT: Gramfix.xcodeproj
 
 jobs:
   build-and-test:

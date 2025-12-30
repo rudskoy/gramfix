@@ -6,8 +6,8 @@ on:
       - 'v*'  # Triggers on tags like v1.0, v1.1, v2.0
 
 env:
-  SCHEME: Clipsa
-  PROJECT: Clipsa.xcodeproj
+  SCHEME: Gramfix
+  PROJECT: Gramfix.xcodeproj
 
 permissions:
   contents: write  # Required for creating releases and uploading assets
@@ -76,7 +76,7 @@ jobs:
       
       - name: Verify app bundle
         run: |
-          APP_PATH="build/DerivedData/Build/Products/Release/Clipsa.app"
+          APP_PATH="build/DerivedData/Build/Products/Release/Gramfix.app"
           if [ ! -d "$APP_PATH" ]; then
             echo "Error: App bundle not found at $APP_PATH"
             echo "Contents of build directory:"
@@ -89,9 +89,9 @@ jobs:
       - name: Create DMG
         id: version
         run: |
-          APP_PATH="build/DerivedData/Build/Products/Release/Clipsa.app"
+          APP_PATH="build/DerivedData/Build/Products/Release/Gramfix.app"
           VERSION="${GITHUB_REF_NAME#v}"  # Remove 'v' prefix: v1.0 -> 1.0
-          DMG_NAME="Clipsa-${VERSION}.dmg"
+          DMG_NAME="Gramfix-${VERSION}.dmg"
           
           # Create staging directory
           mkdir -p dmg_staging
@@ -102,7 +102,7 @@ jobs:
           
           # Create DMG
           hdiutil create \
-            -volname "Clipsa $VERSION" \
+            -volname "Gramfix $VERSION" \
             -srcfolder dmg_staging \
             -ov \
             -format UDZO \
@@ -148,12 +148,12 @@ jobs:
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: clipsa-dmg
+          name: gramfix-dmg
           path: ${{ steps.version.outputs.DMG_NAME }}
           retention-days: 7
 
   # ==========================================================================
-  # Manual Approval Gate: Publish to clipsa-ai/releases
+  # Manual Approval Gate: Publish to rudskoy/gramfix
   # ==========================================================================
   # This job requires manual approval via the "production" environment.
   # Set up the environment in: Settings > Environments > New environment > "production"
@@ -161,7 +161,7 @@ jobs:
   # ==========================================================================
   
   publish-to-releases:
-    name: Publish to clipsa-ai/releases
+    name: Publish to rudskoy/gramfix
     needs: build
     runs-on: ubuntu-latest
     environment: production  # Requires manual approval
@@ -170,9 +170,9 @@ jobs:
       - name: Download DMG artifact
         uses: actions/download-artifact@v4
         with:
-          name: clipsa-dmg
+          name: gramfix-dmg
       
-      - name: Create Release on clipsa-ai/releases
+      - name: Create Release on rudskoy/gramfix
         env:
           GH_TOKEN: ${{ secrets.RELEASES_PAT }}
           VERSION: ${{ needs.build.outputs.version }}
@@ -181,17 +181,17 @@ jobs:
           SIZE: ${{ needs.build.outputs.size }}
         run: |
           gh release create "v${VERSION}" \
-            --repo clipsa-ai/releases \
-            --title "Clipsa v${VERSION}" \
-            --notes "## Clipsa v${VERSION}
+            --repo rudskoy/gramfix \
+            --title "Gramfix v${VERSION}" \
+            --notes "## Gramfix v${VERSION}
           
           ### Download
-          - **[Clipsa-${VERSION}.dmg](https://github.com/clipsa-ai/releases/releases/download/v${VERSION}/Clipsa-${VERSION}.dmg)**
+          - **[Gramfix-${VERSION}.dmg](https://github.com/rudskoy/gramfix/releases/download/v${VERSION}/Gramfix-${VERSION}.dmg)**
           
           ### Installation
           1. Download the DMG
-          2. Open it and drag Clipsa to Applications
-          3. Right-click Clipsa → Open (first time only, to bypass Gatekeeper)
+          2. Open it and drag Gramfix to Applications
+          3. Right-click Gramfix → Open (first time only, to bypass Gatekeeper)
           
           ---
           
@@ -203,7 +203,7 @@ jobs:
             <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <enclosure 
-              url=\"https://github.com/clipsa-ai/releases/releases/download/v${VERSION}/Clipsa-${VERSION}.dmg\"
+              url=\"https://github.com/rudskoy/gramfix/releases/download/v${VERSION}/Gramfix-${VERSION}.dmg\"
               sparkle:edSignature=\"${SIGNATURE}\"
               length=\"${SIZE}\"
               type=\"application/octet-stream\"/>
@@ -211,4 +211,4 @@ jobs:
           \`\`\`" \
             "${DMG_NAME}"
           
-          echo "Release created: https://github.com/clipsa-ai/releases/releases/tag/v${VERSION}"
+          echo "Release created: https://github.com/rudskoy/gramfix/releases/tag/v${VERSION}"
