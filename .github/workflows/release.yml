@@ -56,6 +56,18 @@ jobs:
             -project $PROJECT \
             -scheme $SCHEME
       
+      - name: Update version from git tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"  # Remove 'v' prefix: v1.2 -> 1.2
+          echo "Updating MARKETING_VERSION to $VERSION in project.pbxproj"
+          
+          # Update MARKETING_VERSION in all build configurations
+          sed -i '' "s/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = ${VERSION}/g" "$PROJECT/project.pbxproj"
+          
+          # Verify the change
+          echo "Updated versions:"
+          grep "MARKETING_VERSION = " "$PROJECT/project.pbxproj" | head -4
+      
       - name: Build Release
         run: |
           xcodebuild -project $PROJECT \
