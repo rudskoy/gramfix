@@ -18,7 +18,7 @@ Simple and secure clipboard history manager with a macOS 26+ liquid glass interf
 
 - macOS 26.0+ (Tahoe)
 - Apple Silicon (M-series) MacBook for M processor.
-- `
+- `xattr -d com.apple.quarantine /Applications/Gramfix.app` (until author has apple account).
 ## About
 
 Made for fun, 90% vibecoded via Cursor/Claude Code.

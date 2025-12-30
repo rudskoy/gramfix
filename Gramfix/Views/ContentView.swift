@@ -460,6 +460,12 @@ struct ContentView: View {
             let userModifiers: NSEvent.ModifierFlags = [.command, .shift, .control, .option]
             let hasUserModifiers = !event.modifierFlags.intersection(userModifiers).isEmpty
             
+            // Handle Esc key to hide window (works regardless of search suggestions or focus state)
+            if event.keyCode == 53 && !hasUserModifiers { // Esc key
+                PasteService.shared.returnToPreviousApp()
+                return nil // Consume the event
+            }
+            
             // Skip arrow handling when search suggestions are visible (let SearchBar handle them)
             if searchShowingSuggestions {
                 return event

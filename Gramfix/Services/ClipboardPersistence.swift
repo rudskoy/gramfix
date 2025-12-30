@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import os.log
 
 private let logger = Logger(subsystem: "com.gramfix.app", category: "ClipboardPersistence")
@@ -85,14 +86,37 @@ actor ClipboardPersistence {
         
         let encryptedData = try Data(contentsOf: self.encryptedHistoryFileURL)
         
+        // Validate encrypted data format before attempting decryption
+        // AES-GCM sealed box requires at least 12 bytes (nonce) + 16 bytes (tag) = 28 bytes minimum
+        guard encryptedData.count >= 28 else {
+            logger.error("❌ Encrypted history file is too small (\(encryptedData.count) bytes). File may be corrupted. Starting with empty history.")
+            // Backup corrupted file
+            try? backupCorruptedFile(encryptedData)
+            return ([], [:])
+        }
+        
         let jsonData: Data
         do {
             jsonData = try await ClipboardEncryption.shared.decrypt(encryptedData)
         } catch {
-            // If decryption fails (wrong key, corrupted data, etc.), log and return empty
-            logger.error("❌ Failed to decrypt clipboard history: \(error.localizedDescription). The file may be corrupted or encrypted with a different key. Starting with empty history.")
-            // Don't automatically delete - user might want to recover it
-            // The file will be overwritten on next save with the correct key
+            // Handle decryption errors (CryptoKitError or other errors)
+            // CryptoKitError error 3 = authenticationFailure (wrong key or corrupted data)
+            // This typically happens when:
+            // 1. The keychain key was deleted/reset (new key created)
+            // 2. The file is corrupted
+            // 3. The file was encrypted with a different key
+            
+            let errorMsg = error.localizedDescription
+            let detailedMsg: String
+            if errorMsg.contains("error 3") || errorMsg.contains("authentication") {
+                detailedMsg = "Authentication failed - the encryption key may have changed (keychain reset) or the file is corrupted"
+            } else {
+                detailedMsg = errorMsg
+            }
+            
+            logger.error("❌ Failed to decrypt clipboard history: \(detailedMsg). Starting with empty history.")
+            // Backup corrupted file for potential recovery
+            try? backupCorruptedFile(encryptedData)
             return ([], [:])
         }
         
@@ -137,6 +161,26 @@ actor ClipboardPersistence {
             logger.info("📦 Migrating clipboard history from version \(history.version) to \(PersistedClipboardHistory.currentVersion)")
         }
         return history.items
+    }
+    
+    /// Backup corrupted file with timestamp for potential recovery
+    private func backupCorruptedFile(_ data: Data) throws {
+        let backupURL = storageDirectory.appendingPathComponent("clipboard_history.encrypted.backup.\(Date().timeIntervalSince1970)")
+        try data.write(to: backupURL, options: .atomic)
+        logger.info("💾 Backed up corrupted file to \(backupURL.lastPathComponent)")
+        
+        // Keep only the 5 most recent backups to avoid disk space issues
+        let fm = FileManager.default
+        let backupFiles = try? fm.contentsOfDirectory(at: storageDirectory, includingPropertiesForKeys: [.creationDateKey])
+            .filter { $0.lastPathComponent.hasPrefix("clipboard_history.encrypted.backup.") }
+            .sorted { ($0.path < $1.path) }
+        
+        if let backups = backupFiles, backups.count > 5 {
+            for oldBackup in backups.dropLast(5) {
+                try? fm.removeItem(at: oldBackup)
+                logger.info("🗑️ Removed old backup: \(oldBackup.lastPathComponent)")
+            }
+        }
     }
 }
 

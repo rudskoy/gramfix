@@ -79,6 +79,10 @@ struct GramfixApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Set activation policy to accessory (background app) to prevent Alt+Tab appearance
+        // This works even if LSUIElement in Info.plist isn't being read
+        NSApplication.shared.setActivationPolicy(.accessory)
+        
         setupGlobalShortcut()
         
         // Save previous app when app is about to become active
@@ -95,7 +99,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if let window = NSApplication.shared.windows.first(where: { $0.title == "Gramfix" }) {
                 window.delegate = self
                 window.titlebarAppearsTransparent = true
-                window.collectionBehavior = [.moveToActiveSpace]
+                // Prevent window from appearing in Alt+Tab and AltTab
+                window.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
+                window.level = .normal
+                // Additional properties to help AltTab exclude this window
+                window.sharingType = .none
+                window.isExcludedFromWindowsMenu = true
             }
         }
     }
@@ -132,15 +141,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         if let window = mainWindow {
             window.titlebarAppearsTransparent = true
-            // Set collection behavior BEFORE activating to prevent space switch
-            window.collectionBehavior = [.moveToActiveSpace]
+            // Prevent window from appearing in Alt+Tab and AltTab
+            window.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
+            window.level = .normal
+            // Additional properties to help AltTab exclude this window
+            window.sharingType = .none
+            window.isExcludedFromWindowsMenu = true
+            // Activate app to ensure window receives focus
+            // .accessory activation policy should prevent AltTab from showing it
             NSApplication.shared.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
         } else {
             // Fallback: find any regular window that can become key
             if let fallbackWindow = NSApplication.shared.windows.first(where: { $0.canBecomeKey }) {
                 fallbackWindow.titlebarAppearsTransparent = true
-                fallbackWindow.collectionBehavior = [.moveToActiveSpace]
+                fallbackWindow.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
+                fallbackWindow.level = .normal
+                fallbackWindow.sharingType = .none
+                fallbackWindow.isExcludedFromWindowsMenu = true
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 fallbackWindow.makeKeyAndOrderFront(nil)
             } else {
