@@ -56,17 +56,26 @@ jobs:
             -project $PROJECT \
             -scheme $SCHEME
       
-      - name: Update version from git tag
+      - name: Update version and copyright from git tag
         run: |
           VERSION="${GITHUB_REF_NAME#v}"  # Remove 'v' prefix: v1.2 -> 1.2
+          YEAR=$(date +%Y)  # Get current year
+          
           echo "Updating MARKETING_VERSION to $VERSION in project.pbxproj"
+          echo "Updating copyright year to $YEAR in project.pbxproj"
           
           # Update MARKETING_VERSION in all build configurations
           sed -i '' "s/MARKETING_VERSION = [0-9.]*/MARKETING_VERSION = ${VERSION}/g" "$PROJECT/project.pbxproj"
           
-          # Verify the change
+          # Update copyright year in all build configurations
+          sed -i '' "s/Copyright © [0-9]*/Copyright © ${YEAR}/g" "$PROJECT/project.pbxproj"
+          
+          # Verify the changes
           echo "Updated versions:"
           grep "MARKETING_VERSION = " "$PROJECT/project.pbxproj" | head -4
+          echo ""
+          echo "Updated copyright:"
+          grep "INFOPLIST_KEY_NSHumanReadableCopyright" "$PROJECT/project.pbxproj" | head -2
       
       - name: Build Release
         run: |
