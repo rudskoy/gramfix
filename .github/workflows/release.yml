@@ -4,6 +4,29 @@ on:
   push:
     tags:
       - 'v*'  # Triggers on tags like v1.0, v1.1, v2.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.3)'
+        required: true
+        type: string
+      signature:
+        description: 'Sparkle ED signature'
+        required: true
+        type: string
+      size:
+        description: 'DMG file size in bytes'
+        required: true
+        type: string
+      description:
+        description: 'Release description (HTML, optional)'
+        required: false
+        type: string
+        default: |
+          <h2>Version {version}</h2>
+          <ul>
+            <li>Bug fixes and improvements</li>
+          </ul>
 
 env:
   SCHEME: Gramfix
@@ -233,3 +256,96 @@ jobs:
             "${DMG_NAME}"
           
           echo "Release created: https://github.com/rudskoy/gramfix/releases/tag/v${VERSION}"
+
+  # ==========================================================================
+  # Manual Appcast Update Job
+  # ==========================================================================
+  # This job can be manually triggered to update appcast.xml after a release
+  # is built and published. Use the "Run workflow" button in GitHub Actions.
+  # ==========================================================================
+  
+  update-appcast:
+    name: Update Appcast
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update appcast.xml
+        env:
+          VERSION: ${{ inputs.version }}
+          SIGNATURE: ${{ inputs.signature }}
+          SIZE: ${{ inputs.size }}
+          DESCRIPTION: ${{ inputs.description }}
+        run: |
+          cat > update_appcast.py << 'PYTHON_SCRIPT'
+          import sys
+          from datetime import datetime
+          import os
+          
+          version = os.environ['VERSION']
+          signature = os.environ['SIGNATURE']
+          size = os.environ['SIZE']
+          description = os.environ.get('DESCRIPTION', '')
+          
+          # Generate current date in RFC 822 format
+          pub_date = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
+          
+          # Use provided description or default
+          if not description or description.strip() == "":
+              description_content = "<h2>Version " + version + "</h2>\n          <ul>\n            <li>Bug fixes and improvements</li>\n          </ul>"
+          else:
+              # Replace {version} placeholder if present
+              description_content = description.replace("{version}", version)
+          
+          # Create the new item XML
+          new_item = "    <item>\n      <title>Version " + version + "</title>\n      <pubDate>" + pub_date + "</pubDate>\n      <sparkle:version>" + version + "</sparkle:version>\n      <sparkle:shortVersionString>" + version + "</sparkle:shortVersionString>\n      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>\n      <description>\n        <![CDATA[\n          " + description_content + "\n        ]]>\n      </description>\n      <enclosure \n        url=\"https://github.com/rudskoy/gramfix/releases/download/v" + version + "/Gramfix-" + version + ".dmg\"\n        sparkle:edSignature=\"" + signature + "\"\n        length=\"" + size + "\"\n        type=\"application/octet-stream\"/>\n    </item>\n    \n"
+          
+          # Read the current appcast.xml
+          with open('appcast.xml', 'r', encoding='utf-8') as f:
+              lines = f.readlines()
+          
+          # Find where to insert (after the comment ends, before first <item>)
+          insert_pos = None
+          in_comment = False
+          
+          for i, line in enumerate(lines):
+              if '<!--' in line:
+                  in_comment = True
+              if '-->' in line:
+                  in_comment = False
+                  # Look for the first <item> after the comment
+                  for j in range(i + 1, len(lines)):
+                      if '<item>' in lines[j]:
+                          insert_pos = j
+                          break
+                  break
+          
+          if insert_pos is None:
+              print("Error: Could not find insertion point in appcast.xml")
+              sys.exit(1)
+          
+          # Insert the new item
+          lines.insert(insert_pos, new_item)
+          
+          # Write back to file
+          with open('appcast.xml', 'w', encoding='utf-8') as f:
+              f.writelines(lines)
+          
+          print("Successfully added version " + version + " to appcast.xml")
+          PYTHON_SCRIPT
+          python3 update_appcast.py
+      
+      - name: Commit and push changes
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add appcast.xml
+          git diff --staged --quiet || git commit -m "Update appcast.xml for version ${VERSION}"
+          git push
