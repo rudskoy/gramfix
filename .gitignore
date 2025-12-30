@@ -5,6 +5,7 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 **/xcuserdata/
 **/*.xcworkspace/xcuserdata/
+buildServer.json
 
 # JetBrains IDEs
 .idea/
