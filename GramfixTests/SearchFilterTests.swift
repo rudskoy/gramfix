@@ -214,7 +214,7 @@ final class SearchFilterTests: XCTestCase {
     func testFilterSuggestionsEmpty() {
         let suggestions = SearchFilter.filterSuggestions(matching: "")
         
-        XCTAssertEqual(suggestions.count, 4)
+        XCTAssertEqual(suggestions.count, 5)
     }
     
     func testFilterSuggestionsMatchingPrefix() {

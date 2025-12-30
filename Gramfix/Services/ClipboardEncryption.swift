@@ -28,11 +28,41 @@ actor ClipboardEncryption {
     private let keychainService = "com.gramfix.app.clipboard-encryption"
     private let keychainAccount = "encryption-key"
     
+    // For testing: use in-memory key to avoid keychain prompts
+    private var testKey: SymmetricKey?
+    private var isTestMode: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+    
     private init() {}
     
     // MARK: - Key Management
     
+    /// Set a test key to use instead of keychain (for testing only)
+    func setTestKey(_ key: SymmetricKey) {
+        testKey = key
+    }
+    
+    /// Clear the test key (for testing only)
+    func clearTestKey() {
+        testKey = nil
+    }
+    
     private func getOrCreateEncryptionKey() throws -> SymmetricKey {
+        // Use test key if available (for testing)
+        if let testKey = testKey {
+            return testKey
+        }
+        
+        // In test mode, use a deterministic in-memory key to avoid keychain prompts
+        if isTestMode {
+            // Use a deterministic key for tests based on a fixed seed
+            // This ensures tests are reproducible and don't require keychain access
+            let testKeyData = Data("test-encryption-key-for-gramfix-tests-32bytes!!".utf8.prefix(32))
+            return SymmetricKey(data: testKeyData)
+        }
+        
+        // Normal operation: use keychain
         if let existingKey = try loadKeyFromKeychain() {
             return existingKey
         }
@@ -43,6 +73,11 @@ actor ClipboardEncryption {
     }
     
     private func loadKeyFromKeychain() throws -> SymmetricKey? {
+        // Skip keychain access in test mode
+        if isTestMode || testKey != nil {
+            return nil
+        }
+        
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
@@ -66,6 +101,11 @@ actor ClipboardEncryption {
     }
     
     private func saveKeyToKeychain(_ key: SymmetricKey) throws {
+        // Skip keychain access in test mode
+        if isTestMode || testKey != nil {
+            return
+        }
+        
         let keyData = key.withUnsafeBytes { Data($0) }
         
         let query: [String: Any] = [

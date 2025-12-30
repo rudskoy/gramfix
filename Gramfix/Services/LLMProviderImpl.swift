@@ -314,6 +314,8 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
             .replacingOccurrences(of: "**", with: "")
             .replacingOccurrences(of: "*", with: "")
             .replacingOccurrences(of: "_", with: "")
+            // Remove code block delimiters (```)
+            .replacingOccurrences(of: "```", with: "")
             // Remove HTML tags
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)

@@ -53,7 +53,7 @@ final class ClipboardPersistenceTests: XCTestCase {
                          "Encrypted history file should exist at expected path")
             
             // Clean up
-            try? persistence.clearHistory()
+            try? await persistence.clearHistory()
         } catch {
             XCTFail("Save/load should not fail: \(error.localizedDescription)")
         }
@@ -61,7 +61,7 @@ final class ClipboardPersistenceTests: XCTestCase {
     
     func testLoadFromNonExistentFile() async {
         // Clear any existing history first
-        try? persistence.clearHistory()
+        try? await persistence.clearHistory()
         
         // Loading from non-existent file should return empty arrays, not throw
         do {
@@ -79,7 +79,7 @@ final class ClipboardPersistenceTests: XCTestCase {
         // (though this is unlikely on macOS)
         
         // Clear history first
-        try? persistence.clearHistory()
+        try? await persistence.clearHistory()
         
         // Load should work even if directory doesn't exist (it will just return empty)
         do {
@@ -117,35 +117,26 @@ final class ClipboardPersistenceTests: XCTestCase {
             XCTAssertEqual(loadedItems[1].type, .link, "Second item type should match")
             
             // Clean up
-            try? persistence.clearHistory()
+            try? await persistence.clearHistory()
         } catch {
             XCTFail("Save/load should not fail: \(error.localizedDescription)")
         }
     }
     
-    func testHistoryExists() {
+    func testHistoryExists() async {
         // Initially should not exist
-        let initiallyExists = persistence.historyExists()
+        let initiallyExists = await persistence.historyExists()
         
         // Save some items
-        Task {
-            let testItems = [ClipboardItem(content: "Test", type: .text, appName: "Test")]
-            try? await persistence.save(testItems, pasteHistory: [:])
-            
-            // Now should exist
-            let afterSave = persistence.historyExists()
-            XCTAssertTrue(afterSave, "History should exist after save")
-            
-            // Clean up
-            try? persistence.clearHistory()
-        }
+        let testItems = [ClipboardItem(content: "Test", type: .text, appName: "Test")]
+        try? await persistence.save(testItems, pasteHistory: [:])
         
-        // Give it a moment for async save
-        let expectation = XCTestExpectation(description: "Save completes")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1.0)
+        // Now should exist
+        let afterSave = await persistence.historyExists()
+        XCTAssertTrue(afterSave, "History should exist after save")
+        
+        // Clean up
+        try? await persistence.clearHistory()
     }
     
     func testClearHistory() async {
@@ -154,12 +145,14 @@ final class ClipboardPersistenceTests: XCTestCase {
         try? await persistence.save(testItems, pasteHistory: [:])
         
         // Verify it exists
-        XCTAssertTrue(persistence.historyExists(), "History should exist before clear")
+        let existsBefore = await persistence.historyExists()
+        XCTAssertTrue(existsBefore, "History should exist before clear")
         
         // Clear history
         do {
-            try persistence.clearHistory()
-            XCTAssertFalse(persistence.historyExists(), "History should not exist after clear")
+            try await persistence.clearHistory()
+            let existsAfter = await persistence.historyExists()
+            XCTAssertFalse(existsAfter, "History should not exist after clear")
             
             // Loading should return empty
             let result = try await persistence.load()
@@ -193,7 +186,7 @@ final class ClipboardPersistenceTests: XCTestCase {
             XCTAssertNotNil(json?["items"], "Should have items array")
             
             // Clean up
-            try? persistence.clearHistory()
+            try? await persistence.clearHistory()
         } catch {
             XCTFail("Version handling should not fail: \(error.localizedDescription)")
         }
@@ -220,7 +213,7 @@ final class ClipboardPersistenceTests: XCTestCase {
             XCTAssertNotNil(result.pasteHistory["test-key"], "Paste history should be preserved")
             
             // Clean up
-            try? persistence.clearHistory()
+            try? await persistence.clearHistory()
         } catch {
             XCTFail("Encryption round-trip should not fail: \(error.localizedDescription)")
         }
