@@ -44,6 +44,12 @@ struct SettingsView: View {
                         .fill(Color.clipBorder)
                         .frame(height: 1)
                     
+                    startupSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
                     aiToggleSection
                     
                     Rectangle()
@@ -229,6 +235,48 @@ struct SettingsView: View {
                 Spacer()
                 
                 KeyboardShortcuts.Recorder(for: .toggleGramfix)
+            }
+            .padding(12)
+        }
+    }
+    
+    // MARK: - Startup Section
+    
+    private var startupSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "power")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LinearGradient.accentGradient)
+                
+                Text("Startup")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            // Launch at login toggle
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Launch at login")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Automatically start Gramfix when you log in")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: Binding(
+                    get: { LoginItemManager.shared.isEnabled },
+                    set: { newValue in
+                        _ = LoginItemManager.shared.setEnabled(newValue)
+                    }
+                ))
+                .toggleStyle(.switch)
+                .labelsHidden()
             }
             .padding(12)
         }

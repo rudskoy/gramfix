@@ -26,6 +26,9 @@
 		D56FD7F42F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */; };
 		D56FD7F62F02165C00E99CB6 /* CustomAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7F52F02165C00E99CB6 /* CustomAlertView.swift */; };
 		D56FD7F72F02165C00E99CB6 /* CustomAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7F52F02165C00E99CB6 /* CustomAlertView.swift */; };
+		D56FD7FB2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */; };
+		D56FD7FC2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */; };
+		D56FD8242F02E44000E99CB6 /* GramfixHelper.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = D56FD8012F02E24900E99CB6 /* GramfixHelper.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D573EAF92EF9F56600D03FAE /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAF82EF9F56600D03FAE /* Hub */; };
 		D573EAFB2EF9F56600D03FAE /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFA2EF9F56600D03FAE /* Tokenizers */; };
 		D573EAFD2EF9F56600D03FAE /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = D573EAFC2EF9F56600D03FAE /* Transformers */; };
@@ -60,6 +63,8 @@
 		D5C9EBAB2EFC63870066FE10 /* SearchFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */; };
 		D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */; };
 		D5C9EBAE2EFC968F0066FE10 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = D5C9EBAD2EFC968F0066FE10 /* MLXVLM */; };
+		D5CF14002F0406B300B26A0A /* ClipboardEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */; };
+		D5CF14012F0406B300B26A0A /* ClipboardEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
@@ -67,6 +72,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D56FD8132F02E24A00E99CB6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = P01 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D56FD8002F02E24900E99CB6;
+			remoteInfo = GramfixHelper;
+		};
+		D56FD8232F02E44000E99CB6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = P01 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D56FD8002F02E24900E99CB6;
+			remoteInfo = GramfixHelper;
+		};
 		TCI01 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = P01 /* Project object */;
@@ -75,6 +94,17 @@
 			remoteInfo = Gramfix;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D56FD81F2F02E40B00E99CB6 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = Contents/Library/LoginItems;
+			dstSubfolder = Wrapper;
+			files = (
+				D56FD8242F02E44000E99CB6 /* GramfixHelper.app in CopyFiles */,
+			);
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B01 /* GramfixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GramfixApp.swift; sourceTree = "<group>"; };
@@ -96,6 +126,10 @@
 		D51F95652EF8F1230019A164 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAlertCoordinator.swift; sourceTree = "<group>"; };
 		D56FD7F52F02165C00E99CB6 /* CustomAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAlertView.swift; sourceTree = "<group>"; };
+		D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
+		D56FD8012F02E24900E99CB6 /* GramfixHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GramfixHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D56FD8042F02E24900E99CB6 /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RealityKitContent; sourceTree = "<group>"; };
+		D56FD8122F02E24A00E99CB6 /* GramfixHelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GramfixHelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D573EB0A2EF9F5C300D03FAE /* MLXService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXService.swift; sourceTree = "<group>"; };
 		D573EB1D2EF9FCDE00D03FAE /* LMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMModel.swift; sourceTree = "<group>"; };
 		D573EB2B2EFA008D00D03FAE /* HubApi+default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HubApi+default.swift"; sourceTree = "<group>"; };
@@ -112,11 +146,38 @@
 		D5C9EBA82EFC45040066FE10 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		D5C9EBAA2EFC63870066FE10 /* SearchFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilter.swift; sourceTree = "<group>"; };
 		D5C9EBAD2EFC64010066FE10 /* SearchFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterTests.swift; sourceTree = "<group>"; };
+		D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardEncryption.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
 		TC01 /* GramfixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GramfixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D56FD8182F02E24A00E99CB6 /* Exceptions for "GramfixHelper" folder in "GramfixHelper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D56FD8002F02E24900E99CB6 /* GramfixHelper */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D56FD8022F02E24900E99CB6 /* GramfixHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D56FD8182F02E24A00E99CB6 /* Exceptions for "GramfixHelper" folder in "GramfixHelper" target */,
+			);
+			path = GramfixHelper;
+			sourceTree = "<group>";
+		};
+		D56FD8152F02E24A00E99CB6 /* GramfixHelperTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GramfixHelperTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D01 /* Frameworks */ = {
@@ -144,6 +205,16 @@
 				D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */,
 			);
 		};
+		D56FD7FE2F02E24900E99CB6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		D56FD80F2F02E24A00E99CB6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 		TD01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -152,6 +223,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D56FD8032F02E24900E99CB6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				D56FD8042F02E24900E99CB6 /* RealityKitContent */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
 		D573EB0F2EF9F78C00D03FAE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -174,7 +253,10 @@
 				D5C9EBA82EFC45040066FE10 /* AppIcon.icon */,
 				E02 /* Gramfix */,
 				TE01 /* GramfixTests */,
+				D56FD8022F02E24900E99CB6 /* GramfixHelper */,
+				D56FD8152F02E24A00E99CB6 /* GramfixHelperTests */,
 				D573EB0F2EF9F78C00D03FAE /* Frameworks */,
+				D56FD8032F02E24900E99CB6 /* Packages */,
 				E03 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -200,6 +282,8 @@
 			children = (
 				C01 /* Gramfix.app */,
 				TC01 /* GramfixTests.xctest */,
+				D56FD8012F02E24900E99CB6 /* GramfixHelper.app */,
+				D56FD8122F02E24A00E99CB6 /* GramfixHelperTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -218,6 +302,8 @@
 		E05 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */,
+				D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */,
 				D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */,
 				D5C9EBA22EFB84BF0066FE10 /* ClipboardPersistence.swift */,
 				D5C9EB9C2EFB6A100066FE10 /* UpdateService.swift */,
@@ -272,6 +358,45 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D56FD8002F02E24900E99CB6 /* GramfixHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D56FD8192F02E24A00E99CB6 /* Build configuration list for PBXNativeTarget "GramfixHelper" */;
+			buildPhases = (
+				D56FD7FD2F02E24900E99CB6 /* Sources */,
+				D56FD7FE2F02E24900E99CB6 /* Frameworks */,
+				D56FD7FF2F02E24900E99CB6 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				D56FD8022F02E24900E99CB6 /* GramfixHelper */,
+			);
+			name = GramfixHelper;
+			productName = GramfixHelper;
+			productReference = D56FD8012F02E24900E99CB6 /* GramfixHelper.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D56FD8112F02E24A00E99CB6 /* GramfixHelperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D56FD81C2F02E24A00E99CB6 /* Build configuration list for PBXNativeTarget "GramfixHelperTests" */;
+			buildPhases = (
+				D56FD80E2F02E24A00E99CB6 /* Sources */,
+				D56FD80F2F02E24A00E99CB6 /* Frameworks */,
+				D56FD8102F02E24A00E99CB6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D56FD8142F02E24A00E99CB6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D56FD8152F02E24A00E99CB6 /* GramfixHelperTests */,
+			);
+			name = GramfixHelperTests;
+			productName = GramfixHelperTests;
+			productReference = D56FD8122F02E24A00E99CB6 /* GramfixHelperTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		F01 /* Gramfix */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = G01 /* Build configuration list for PBXNativeTarget "Gramfix" */;
@@ -279,8 +404,12 @@
 				F02 /* Sources */,
 				D01 /* Frameworks */,
 				F03 /* Resources */,
+				D56FD81F2F02E40B00E99CB6 /* CopyFiles */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				D56FD8222F02E44000E99CB6 /* PBXTargetDependency */,
 			);
 			name = Gramfix;
 			packageProductDependencies = (
@@ -333,9 +462,16 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					D56FD8002F02E24900E99CB6 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					D56FD8112F02E24A00E99CB6 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D56FD8002F02E24900E99CB6;
+					};
 					F01 = {
 						CreatedOnToolsVersion = 15.0;
 					};
@@ -369,11 +505,23 @@
 			targets = (
 				F01 /* Gramfix */,
 				TF01 /* GramfixTests */,
+				D56FD8002F02E24900E99CB6 /* GramfixHelper */,
+				D56FD8112F02E24A00E99CB6 /* GramfixHelperTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D56FD7FF2F02E24900E99CB6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		D56FD8102F02E24A00E99CB6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		F03 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -384,6 +532,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D56FD7FD2F02E24900E99CB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		D56FD80E2F02E24A00E99CB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		F02 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -399,7 +557,9 @@
 				D5C9EB9E2EFB6A100066FE10 /* UpdateService.swift in Sources */,
 				A05 /* ClipboardManager.swift in Sources */,
 				D5C9EBA72EFC38F20066FE10 /* MenuBarView.swift in Sources */,
+				D56FD7FB2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */,
 				D5C9EB872EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */,
+				D5CF14012F0406B300B26A0A /* ClipboardEncryption.swift in Sources */,
 				D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */,
 				A06 /* ClipboardRow.swift in Sources */,
 				D573EB0B2EF9F5C300D03FAE /* MLXService.swift in Sources */,
@@ -422,16 +582,28 @@
 				D56FD7F32F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */,
 				T01 /* OllamaProviderTests.swift in Sources */,
 				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
+				D5CF14002F0406B300B26A0A /* ClipboardEncryption.swift in Sources */,
 				D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */,
 				T02 /* LLMServiceTests.swift in Sources */,
 				T03 /* LLMSettingsTests.swift in Sources */,
 				D56FD7F72F02165C00E99CB6 /* CustomAlertView.swift in Sources */,
+				D56FD7FC2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */,
 				D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D56FD8142F02E24A00E99CB6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D56FD8002F02E24900E99CB6 /* GramfixHelper */;
+			targetProxy = D56FD8132F02E24A00E99CB6 /* PBXContainerItemProxy */;
+		};
+		D56FD8222F02E44000E99CB6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D56FD8002F02E24900E99CB6 /* GramfixHelper */;
+			targetProxy = D56FD8232F02E44000E99CB6 /* PBXContainerItemProxy */;
+		};
 		TDEP01 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F01 /* Gramfix */;
@@ -440,6 +612,123 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D56FD81A2F02E24A00E99CB6 /* Debug configuration for PBXNativeTarget "GramfixHelper" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ6A237DRZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = GramfixHelper;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gramfix.app.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D56FD81B2F02E24A00E99CB6 /* Release configuration for PBXNativeTarget "GramfixHelper" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ6A237DRZ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = GramfixHelper;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gramfix.app.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D56FD81D2F02E24A00E99CB6 /* Debug configuration for PBXNativeTarget "GramfixHelperTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ6A237DRZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gramfix.app.helper.GramfixHelperTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GramfixHelper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GramfixHelper";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		D56FD81E2F02E24A00E99CB6 /* Release configuration for PBXNativeTarget "GramfixHelperTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZ6A237DRZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gramfix.app.helper.GramfixHelperTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GramfixHelper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GramfixHelper";
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 		H01 /* Debug configuration for PBXProject "Gramfix" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -673,6 +962,22 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D56FD8192F02E24A00E99CB6 /* Build configuration list for PBXNativeTarget "GramfixHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D56FD81A2F02E24A00E99CB6 /* Debug configuration for PBXNativeTarget "GramfixHelper" */,
+				D56FD81B2F02E24A00E99CB6 /* Release configuration for PBXNativeTarget "GramfixHelper" */,
+			);
+			defaultConfigurationName = Debug;
+		};
+		D56FD81C2F02E24A00E99CB6 /* Build configuration list for PBXNativeTarget "GramfixHelperTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D56FD81D2F02E24A00E99CB6 /* Debug configuration for PBXNativeTarget "GramfixHelperTests" */,
+				D56FD81E2F02E24A00E99CB6 /* Release configuration for PBXNativeTarget "GramfixHelperTests" */,
+			);
+			defaultConfigurationName = Debug;
+		};
 		G01 /* Build configuration list for PBXNativeTarget "Gramfix" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

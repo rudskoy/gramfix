@@ -47,7 +47,7 @@ struct GramfixApp: App {
                     systemIsDark = detectSystemAppearance()
                 }
         }
-        .defaultSize(width: 820, height: 700)
+        .defaultSize(width: 902, height: 770)
         .commands {
             // Remove "New Window" command to prevent multiple windows
             CommandGroup(replacing: .newItem) { }
