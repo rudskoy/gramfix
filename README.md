@@ -1,4 +1,7 @@
-Gramfix Grammar Fix - simple and secure clipboard history manager with a macOS 26+ liquid glass interface parts.
+## Gramfix
+Simple and secure clipboard history manager with a macOS 26+ liquid glass interface parts (originated from 'Grammar fix')
+
+![Gramfix Screenshot](https://i.imgur.com/VfpBnNd.png)
 
    Works on local llm-s on M CPU family of macbooks; depends on MLX/ollama inference.
 
