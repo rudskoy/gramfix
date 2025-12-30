@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var isLanguageDropdownOpen: Bool = false
     @State private var wasSearchFieldFocusedBeforeDropdown: Bool = false
     @State private var selectedTab: ClipboardType? = nil
+    @State private var showUsefulTab: Bool = false
     
     private var selectedItem: ClipboardItem? {
         guard let id = selectedItemId else { return nil }
@@ -148,6 +149,7 @@ struct ContentView: View {
             isSearchFieldFocused = true
             // Sync initial tab state
             selectedTab = clipboardManager.selectedTabType
+            showUsefulTab = clipboardManager.showOnlyUseful
         }
         .onDisappear {
             removeKeyboardMonitor()
@@ -177,8 +179,25 @@ struct ContentView: View {
                 }
             }
         }
+        .onChange(of: showUsefulTab) { _, newValue in
+            clipboardManager.showOnlyUseful = newValue
+            // Clear type tab when useful tab is selected
+            if newValue {
+                selectedTab = nil
+            }
+            // Auto-select first item when tab changes
+            if let firstItem = clipboardManager.filteredItems.first {
+                selectedItemId = firstItem.id
+            } else {
+                selectedItemId = nil
+            }
+        }
         .onChange(of: selectedTab) { _, newTab in
             clipboardManager.selectedTabType = newTab
+            // Clear useful tab when type tab is selected
+            if newTab != nil {
+                showUsefulTab = false
+            }
             // Auto-select first item when tab changes
             if let firstItem = clipboardManager.filteredItems.first {
                 selectedItemId = firstItem.id
@@ -276,18 +295,13 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                // Useful filter toggle button
-                UsefulFilterButton(isActive: clipboardManager.showOnlyUseful) {
-                    clipboardManager.showOnlyUseful.toggle()
-                }
-                
                 // Settings button
                 SettingsButton {
                     showSettings = true
                 }
             }
             
-            TypeFilterTabs(selectedTab: $selectedTab)
+            TypeFilterTabs(selectedTab: $selectedTab, showUsefulTab: $showUsefulTab)
             
             SearchBar(text: $clipboardManager.searchQuery, isFocused: $isSearchFieldFocused, triggerAttention: $searchAttention, showingSuggestions: $searchShowingSuggestions)
                 .padding(.bottom, 4) // Extra space for shadow
@@ -326,6 +340,22 @@ struct ContentView: View {
                 }
             }
             .keyboardShortcut("u", modifiers: .command)
+            .hidden()
+            
+            // Hidden button to capture Cmd+1 keyboard shortcut for All tab
+            Button("") {
+                selectedTab = nil
+                showUsefulTab = false
+            }
+            .keyboardShortcut("1", modifiers: .command)
+            .hidden()
+            
+            // Hidden button to capture Cmd+2 keyboard shortcut for Useful tab
+            Button("") {
+                selectedTab = nil
+                showUsefulTab = true
+            }
+            .keyboardShortcut("2", modifiers: .command)
             .hidden()
         }
     }
@@ -566,6 +596,7 @@ struct ContentView: View {
         case .file, .other:
             PasteService.shared.pasteAndReturn(content: item.content)
         }
+        clipboardManager.recordPaste(for: item)
     }
     
     private func immediatePasteItem(_ item: ClipboardItem) {
@@ -606,6 +637,7 @@ struct ContentView: View {
         case .file, .other:
             PasteService.shared.immediatePasteAndReturn(content: item.content)
         }
+        clipboardManager.recordPaste(for: item)
     }
     
     private func pasteOriginalItem(_ item: ClipboardItem) {
@@ -629,6 +661,7 @@ struct ContentView: View {
         case .file, .other:
             PasteService.shared.pasteAndReturn(content: item.content)
         }
+        clipboardManager.recordPaste(for: item)
     }
     
     private func copyItem(_ item: ClipboardItem) {

@@ -930,6 +930,7 @@ struct FixedTooltipView: View {
 
 struct TypeFilterTabs: View {
     @Binding var selectedTab: ClipboardType?
+    @Binding var showUsefulTab: Bool
     
     var body: some View {
         HStack(spacing: 4) {
@@ -937,8 +938,22 @@ struct TypeFilterTabs: View {
             TabButton(
                 title: "All",
                 icon: "square.grid.2x2",
-                isSelected: selectedTab == nil,
-                action: { selectedTab = nil }
+                isSelected: selectedTab == nil && !showUsefulTab,
+                action: {
+                    selectedTab = nil
+                    showUsefulTab = false
+                }
+            )
+            
+            // Useful tab
+            TabButton(
+                title: "Useful",
+                icon: "star.fill",
+                isSelected: showUsefulTab,
+                action: {
+                    selectedTab = nil
+                    showUsefulTab = true
+                }
             )
             
             Spacer()

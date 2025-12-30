@@ -30,6 +30,9 @@ class ClipboardManager: ObservableObject {
     /// Whether initial history load has completed
     private var historyLoaded = false
     
+    /// Paste history: maps content key to array of paste timestamps
+    private var pasteHistory: [String: [Date]] = [:]
+    
     var filteredItems: [ClipboardItem] {
         var filtered = items
         
@@ -198,10 +201,14 @@ class ClipboardManager: ObservableObject {
     /// Load persisted clipboard history from disk
     private func loadPersistedHistory() async {
         do {
-            let loadedItems = try await ClipboardPersistence.shared.load()
-            if !loadedItems.isEmpty {
-                items = loadedItems
-                logger.info("📂 Restored \(loadedItems.count) items from persistent storage")
+            let result = try await ClipboardPersistence.shared.load()
+            if !result.items.isEmpty {
+                items = result.items
+                logger.info("📂 Restored \(result.items.count) items from persistent storage")
+            }
+            if !result.pasteHistory.isEmpty {
+                pasteHistory = result.pasteHistory
+                logger.info("📂 Restored \(result.pasteHistory.count) paste history entries")
             }
         } catch {
             logger.error("❌ Failed to load clipboard history: \(error.localizedDescription)")
@@ -212,7 +219,7 @@ class ClipboardManager: ObservableObject {
     /// Save clipboard history to disk
     private func saveHistory(_ itemsToSave: [ClipboardItem]) async {
         do {
-            try await ClipboardPersistence.shared.save(itemsToSave)
+            try await ClipboardPersistence.shared.save(itemsToSave, pasteHistory: pasteHistory)
         } catch {
             logger.error("❌ Failed to save clipboard history: \(error.localizedDescription)")
         }
@@ -851,6 +858,7 @@ class ClipboardManager: ObservableObject {
     
     func clearHistory() {
         items.removeAll()
+        pasteHistory.removeAll()
         
         // Also clear persisted history
         Task {
@@ -945,6 +953,86 @@ class ClipboardManager: ObservableObject {
             return false
         }
         return url.host != nil || scheme == "mailto"
+    }
+    
+    // MARK: - Paste Tracking
+    
+    /// Generate a normalized content key for paste tracking
+    /// Items with identical content share paste history
+    private func contentKey(for item: ClipboardItem) -> String {
+        let normalizedContent = item.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // For very long content, use hash to save memory
+        if normalizedContent.count > 1000 {
+            return "\(item.type.rawValue):\(normalizedContent.hashValue)"
+        }
+        
+        // Include type to differentiate text vs link vs image
+        return "\(item.type.rawValue):\(normalizedContent)"
+    }
+    
+    /// Record a paste event for an item
+    func recordPaste(for item: ClipboardItem) {
+        let key = contentKey(for: item)
+        let now = Date()
+        
+        if pasteHistory[key] == nil {
+            pasteHistory[key] = []
+        }
+        pasteHistory[key]?.append(now)
+        
+        logger.debug("📝 Recorded paste for content key: \(key.prefix(50))... (total: \(self.pasteHistory[key]?.count ?? 0))")
+        
+        // Check if item should be marked as useful
+        checkAndMarkAsUseful(for: item)
+    }
+    
+    /// Check if item meets criteria and mark as useful if needed
+    private func checkAndMarkAsUseful(for item: ClipboardItem) {
+        let key = contentKey(for: item)
+        guard let pasteDates = pasteHistory[key], !pasteDates.isEmpty else {
+            return
+        }
+        
+        // Check criteria: 3+ unique days OR 10+ pastes in same day
+        let uniqueDays = uniqueDaysCount(from: pasteDates)
+        let maxSameDayPastes = pastesInSameDay(pasteDates)
+        
+        let shouldMarkUseful = uniqueDays > 3 || maxSameDayPastes >= 10
+        
+        if shouldMarkUseful {
+            // Find all items with matching content and mark them as useful
+            let matchingItems = items.filter { contentKey(for: $0) == key && !$0.isUseful }
+            
+            if !matchingItems.isEmpty {
+                for matchingItem in matchingItems {
+                    if let index = items.firstIndex(where: { $0.id == matchingItem.id }) {
+                        items[index] = items[index].withUsefulFlag(true)
+                        logger.info("✅ Auto-marked item as useful (uniqueDays: \(uniqueDays), maxSameDay: \(maxSameDayPastes))")
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Count unique calendar days from an array of dates
+    private func uniqueDaysCount(from dates: [Date]) -> Int {
+        let calendar = Calendar.current
+        let uniqueDays = Set(dates.map { calendar.startOfDay(for: $0) })
+        return uniqueDays.count
+    }
+    
+    /// Find the maximum number of pastes that occurred on the same calendar day
+    private func pastesInSameDay(_ dates: [Date]) -> Int {
+        let calendar = Calendar.current
+        var dayCounts: [Date: Int] = [:]
+        
+        for date in dates {
+            let dayStart = calendar.startOfDay(for: date)
+            dayCounts[dayStart, default: 0] += 1
+        }
+        
+        return dayCounts.values.max() ?? 0
     }
 }
 
