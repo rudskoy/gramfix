@@ -2,8 +2,6 @@
 //  GramfixHelperTests.swift
 //  GramfixHelperTests
 //
-//  Created by Vladislav.Rudskoy on 29/12/2025.
-//
 
 import Testing
 @testable import GramfixHelper
