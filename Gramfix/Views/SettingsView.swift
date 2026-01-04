@@ -25,6 +25,9 @@ struct SettingsView: View {
     @State private var showClearTodayAlert: Bool = false
     @State private var showClearAllAlert: Bool = false
     
+    // Reset settings confirmation alert
+    @State private var showResetSettingsAlert: Bool = false
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -74,6 +77,12 @@ struct SettingsView: View {
                         .fill(Color.clipBorder)
                         .frame(height: 1)
                     
+                    resetSection
+                    
+                    Rectangle()
+                        .fill(Color.clipBorder)
+                        .frame(height: 1)
+                    
                     historySection
                 }
                 .padding(20)
@@ -95,6 +104,22 @@ struct SettingsView: View {
             }
         } message: {
             Text("This will permanently delete all \(clipboardManager.items.count) clipboard items and the history file. This action cannot be undone.")
+        }
+        .alert("Reset Settings to Default", isPresented: $showResetSettingsAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                resetSettings()
+            }
+        } message: {
+            Text("This will reset all settings to their default values, including AI provider, models, theme, keyboard shortcuts, and launch at login. This action cannot be undone.")
+        }
+        .background {
+            // Hidden button to capture CMD Shift R keyboard shortcut for reset settings
+            Button("") {
+                showResetSettingsAlert = true
+            }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
+            .hidden()
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
@@ -898,6 +923,71 @@ struct SettingsView: View {
         case .formal: return "Make text more professional"
         case .casual: return "Remove jargon, simplify"
         case .polished: return "Polished business style"
+        }
+    }
+    
+    // MARK: - Reset Section
+    
+    private var resetSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.orange.opacity(0.8))
+                
+                Text("Reset Settings")
+                    .font(.clipTitle)
+                    .foregroundStyle(.primary)
+            }
+            
+            Text("Restore all settings to their default values")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            
+            // Reset button
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Reset to Defaults")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Text("Reset all preferences, shortcuts, and settings")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+                
+                Button {
+                    showResetSettingsAlert = true
+                } label: {
+                    Text("Reset")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Color.orange, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(12)
+        }
+    }
+    
+    // MARK: - Reset Functionality
+    
+    private func resetSettings() {
+        // Reset LLM settings
+        settings.resetToDefaults()
+        
+        // Reset keyboard shortcut for toggleGramfix to default (CMD Shift \)
+        // Remove the UserDefaults key to restore default
+        UserDefaults.standard.removeObject(forKey: "KeyboardShortcuts.toggleGramfix")
+        
+        // Reset launch at login to disabled
+        if LoginItemManager.shared.isEnabled {
+            _ = LoginItemManager.shared.setEnabled(false)
         }
     }
     
