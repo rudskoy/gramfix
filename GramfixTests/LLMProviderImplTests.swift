@@ -424,7 +424,7 @@ final class LLMProviderImplTests: XCTestCase {
         _ = try await provider.process("test", requestType: .summarize)
         
         XCTAssertNotNil(mockClient.lastSystemPrompt)
-        XCTAssertTrue(mockClient.lastSystemPrompt?.contains("helpful assistant") ?? false)
+        XCTAssertTrue(mockClient.lastSystemPrompt?.contains("grammar correction assistant") ?? false)
     }
     
     // MARK: - ProcessWithPromptType Tests (Multi-Prompt Feature)
@@ -440,7 +440,7 @@ final class LLMProviderImplTests: XCTestCase {
         // Then
         XCTAssertEqual(result, "The quick brown fox jumps over the lazy dog.")
         XCTAssertEqual(mockClient.generateCallCount, 1)
-        XCTAssertTrue(mockClient.lastPrompt?.contains("Fix grammar") ?? false)
+        XCTAssertTrue(mockClient.lastPrompt?.contains("English language teacher") ?? false)
         XCTAssertTrue(mockClient.lastPrompt?.contains(testText) ?? false)
     }
     

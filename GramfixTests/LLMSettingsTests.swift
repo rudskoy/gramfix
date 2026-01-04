@@ -79,7 +79,7 @@ final class LLMSettingsTests: XCTestCase {
         
         let grammarPrompt = TextPromptType.grammar.buildPrompt(for: testText)
         XCTAssertTrue(grammarPrompt.contains(testText))
-        XCTAssertTrue(grammarPrompt.contains("Fix grammar"))
+        XCTAssertTrue(grammarPrompt.contains("English language teacher") || grammarPrompt.contains("grammatical errors"))
         
         let formalPrompt = TextPromptType.formal.buildPrompt(for: testText)
         XCTAssertTrue(formalPrompt.contains(testText))

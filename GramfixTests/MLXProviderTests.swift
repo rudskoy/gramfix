@@ -251,7 +251,7 @@ final class MLXProviderTests: XCTestCase {
         _ = try await provider.process("test", requestType: .summarize)
         
         XCTAssertNotNil(mockService.lastSystemPrompt)
-        XCTAssertTrue(mockService.lastSystemPrompt?.contains("helpful assistant") ?? false)
+        XCTAssertTrue(mockService.lastSystemPrompt?.contains("grammar correction assistant") ?? false)
     }
     
     @MainActor

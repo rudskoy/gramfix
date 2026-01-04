@@ -14,7 +14,8 @@ final class LLMServiceTests: XCTestCase {
         try await super.setUp()
         service = LLMService()
         client = OllamaClient()
-        provider = LLMProviderImpl(client: client)
+        // Explicitly cast actor to protocol type to ensure conformance is visible
+        provider = LLMProviderImpl(client: client as TextGenerationClient)
     }
     
     override func tearDown() async throws {
