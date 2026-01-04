@@ -7,21 +7,26 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (e.g., 1.3) or tag (e.g., v1.3). Leave empty to use latest release.'
-        required: false
+        description: 'Version number (e.g., 1.3)'
+        required: true
         type: string
       signature:
-        description: 'Sparkle ED signature (auto-filled from release if version provided)'
-        required: false
+        description: 'Sparkle ED signature'
+        required: true
         type: string
       size:
-        description: 'DMG file size in bytes (auto-filled from release if version provided)'
-        required: false
+        description: 'DMG file size in bytes'
+        required: true
         type: string
       description:
-        description: 'Release description (HTML, optional). Auto-filled from release notes if not provided.'
+        description: 'Release description (HTML, optional)'
         required: false
         type: string
+        default: |
+          <h2>Version {version}</h2>
+          <ul>
+            <li>Bug fixes and improvements</li>
+          </ul>
 
 env:
   SCHEME: Gramfix
@@ -270,86 +275,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Fetch release information
-        id: release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_VERSION: ${{ inputs.version }}
-          INPUT_SIGNATURE: ${{ inputs.signature }}
-          INPUT_SIZE: ${{ inputs.size }}
-          INPUT_DESCRIPTION: ${{ inputs.description }}
-        run: |
-          # If version is provided, use it; otherwise fetch latest
-          if [ -z "$INPUT_VERSION" ] || [ "$INPUT_VERSION" = "" ]; then
-            echo "No version provided, fetching latest release..."
-            LATEST_TAG=$(gh release list --repo rudskoy/gramfix --limit 1 --json tagName --jq '.[0].tagName')
-            TAG="$LATEST_TAG"
-            VERSION=${LATEST_TAG#v}  # Remove 'v' prefix
-            echo "Latest tag: $LATEST_TAG"
-            echo "Latest version: $VERSION"
-          else
-            # Handle both tag format (v1.3) and version format (1.3)
-            if [[ "$INPUT_VERSION" =~ ^v ]]; then
-              TAG="$INPUT_VERSION"
-              VERSION=${INPUT_VERSION#v}  # Remove 'v' prefix
-              echo "Provided tag: $TAG"
-              echo "Extracted version: $VERSION"
-            else
-              TAG="v${INPUT_VERSION}"  # Add 'v' prefix for tag
-              VERSION="$INPUT_VERSION"
-              echo "Provided version: $VERSION"
-              echo "Using tag: $TAG"
-            fi
-          fi
-          
-          # Fetch release details using the tag
-          RELEASE_INFO=$(gh release view "$TAG" --repo rudskoy/gramfix --json body,assets)
-          
-          # Extract signature and size from release body (from appcast XML snippet)
-          SIGNATURE=$(echo "$RELEASE_INFO" | grep -o 'sparkle:edSignature="[^"]*"' | sed 's/sparkle:edSignature="\([^"]*\)"/\1/' || echo "")
-          SIZE=$(echo "$RELEASE_INFO" | grep -o 'length="[^"]*"' | sed 's/length="\([^"]*\)"/\1/' || echo "")
-          
-          # If signature/size not in body, try to get from assets
-          if [ -z "$SIZE" ]; then
-            SIZE=$(echo "$RELEASE_INFO" | jq -r '.assets[0].size // empty')
-          fi
-          
-          # Extract description from release body (remove the appcast XML snippet)
-          DESCRIPTION=$(echo "$RELEASE_INFO" | jq -r '.body' | sed '/### For appcast.xml/,/```/d' | sed 's/```xml.*```//' | sed '/^$/d' || echo "")
-          
-          # Use provided inputs if available, otherwise use fetched values
-          FINAL_VERSION="$VERSION"
-          FINAL_SIGNATURE="${INPUT_SIGNATURE:-$SIGNATURE}"
-          FINAL_SIZE="${INPUT_SIZE:-$SIZE}"
-          FINAL_DESCRIPTION="${INPUT_DESCRIPTION:-$DESCRIPTION}"
-          
-          # Fallback to default description if still empty
-          if [ -z "$FINAL_DESCRIPTION" ] || [ "$FINAL_DESCRIPTION" = "null" ] || [ "$FINAL_DESCRIPTION" = "" ]; then
-            FINAL_DESCRIPTION="<h2>Version ${FINAL_VERSION}</h2>
-          <ul>
-            <li>Bug fixes and improvements</li>
-          </ul>"
-          fi
-          
-          echo "VERSION=$FINAL_VERSION" >> $GITHUB_OUTPUT
-          echo "SIGNATURE=$FINAL_SIGNATURE" >> $GITHUB_OUTPUT
-          echo "SIZE=$FINAL_SIZE" >> $GITHUB_OUTPUT
-          echo "DESCRIPTION<<EOF" >> $GITHUB_OUTPUT
-          echo "$FINAL_DESCRIPTION" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          echo "Resolved values:"
-          echo "  Version: $FINAL_VERSION"
-          echo "  Signature: $FINAL_SIGNATURE"
-          echo "  Size: $FINAL_SIZE"
-          echo "  Description: (provided)"
-      
       - name: Update appcast.xml
         env:
-          VERSION: ${{ steps.release.outputs.VERSION }}
-          SIGNATURE: ${{ steps.release.outputs.SIGNATURE }}
-          SIZE: ${{ steps.release.outputs.SIZE }}
-          DESCRIPTION: ${{ steps.release.outputs.DESCRIPTION }}
+          VERSION: ${{ inputs.version }}
+          SIGNATURE: ${{ inputs.signature }}
+          SIZE: ${{ inputs.size }}
+          DESCRIPTION: ${{ inputs.description }}
         run: |
           cat > update_appcast.py << 'PYTHON_SCRIPT'
           import sys
@@ -411,7 +342,7 @@ jobs:
       
       - name: Commit and push changes
         env:
-          VERSION: ${{ steps.release.outputs.VERSION }}
+          VERSION: ${{ inputs.version }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
