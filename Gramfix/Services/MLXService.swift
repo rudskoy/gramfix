@@ -236,7 +236,7 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
         // Note: Progress callbacks may fire even for cached files during verification
         // Only show download UI if the model was not already downloaded
         let container = try await factory.loadContainer(
-            hub: .default, configuration: model.configuration
+            hub: HubApi.default, configuration: model.configuration
         ) { [alreadyDownloaded] progress in
             Task { @MainActor in
                 // Skip download UI updates if model was already on disk
@@ -460,7 +460,7 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
         
         // Use the same modelDirectory() method that the Hub API uses internally
         // This ensures we check the exact same path where models are downloaded
-        let modelDir = model.configuration.modelDirectory(hub: .default)
+        let modelDir = model.configuration.modelDirectory(hub: HubApi.default)
         
         // Check for config.json which is always present in downloaded models
         let configFile = modelDir.appendingPathComponent("config.json")
