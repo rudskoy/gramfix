@@ -128,6 +128,19 @@ struct SettingsView: View {
         }
     }
     
+    // MARK: - Computed Properties
+    
+    private var modelSectionTitle: String {
+        switch settings.selectedProvider {
+        case .ollama:
+            return "Ollama Model"
+        case .mlx:
+            return "MLX Model"
+        case .foundationModels:
+            return "Foundation Model"
+        }
+    }
+    
     // MARK: - Model Fetching
     
     private func fetchModels() {
@@ -359,7 +372,7 @@ struct SettingsView: View {
                     .foregroundStyle(.primary)
             }
             
-            Text("Choose between local Ollama server or on-device MLX inference")
+            Text("Choose your AI provider: Ollama (local server), MLX (on-device), or FoundationModels (Apple's built-in model)")
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.tertiary)
             
@@ -427,14 +440,23 @@ struct SettingsView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(LinearGradient.accentGradient)
                 
-                Text(settings.selectedProvider == .ollama ? "Ollama Model" : "MLX Model")
+                Text(modelSectionTitle)
                     .font(.clipTitle)
                     .foregroundStyle(.primary)
                 
                 Spacer()
                 
                 // Status indicator
-                if settings.selectedProvider == .ollama {
+                if settings.selectedProvider == .foundationModels {
+                    // FoundationModels status
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 8, height: 8)
+                    
+                    Text("Built-in model ready")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                } else if settings.selectedProvider == .ollama {
                     if isLoadingModels {
                         ProgressView()
                             .scaleEffect(0.6)
@@ -467,7 +489,20 @@ struct SettingsView: View {
                 }
             }
             
-            if settings.selectedProvider == .mlx {
+            if settings.selectedProvider == .foundationModels {
+                // FoundationModels uses built-in model, no selection needed
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("Using Apple's built-in Foundation Model (3B parameters, optimized for Apple Silicon)")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(10)
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            } else if settings.selectedProvider == .mlx {
                 mlxModelSection
             } else if !isServerReachable {
                 // Offline message

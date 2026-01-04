@@ -138,6 +138,13 @@ class ClipboardManager: ObservableObject {
         let mlxProvider = LLMProviderImpl(client: mlxClient)
         llmService.registerProvider(mlxProvider, type: .mlx)
         
+        // Register FoundationModels provider (Apple's built-in on-device model, macOS 26+)
+        if #available(macOS 26.0, *) {
+            let foundationModelsClient = createFoundationModelsClientInstance()
+            let foundationModelsProvider = LLMProviderImpl(client: foundationModelsClient)
+            llmService.registerProvider(foundationModelsProvider, type: .foundationModels)
+        }
+        
         // Sync with current settings
         llmService.syncWithSettings()
     }

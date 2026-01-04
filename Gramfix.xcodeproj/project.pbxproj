@@ -71,10 +71,15 @@
 		D5CF14252F04522C00B26A0A /* ClipboardPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF14222F04522C00B26A0A /* ClipboardPersistenceTests.swift */; };
 		D5F278F62F0564DC009C0508 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F52F0564DC009C0508 /* AboutView.swift */; };
 		D5F278F72F0564DC009C0508 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F52F0564DC009C0508 /* AboutView.swift */; };
+		D5F278FA2F0AE182009C0508 /* FoundationModelsClientWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F92F0AE182009C0508 /* FoundationModelsClientWrapper.swift */; };
+		D5F278FB2F0AE182009C0508 /* FoundationModelsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F82F0AE182009C0508 /* FoundationModelsClient.swift */; };
+		D5F278FC2F0AE182009C0508 /* FoundationModelsClientWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F92F0AE182009C0508 /* FoundationModelsClientWrapper.swift */; };
+		D5F278FD2F0AE182009C0508 /* FoundationModelsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F82F0AE182009C0508 /* FoundationModelsClient.swift */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
 		T03 /* LLMSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB03 /* LLMSettingsTests.swift */; };
+		D58CEB7B68B8A7403BBCB34535 /* FoundationModelsProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58CEB7B68B8A7403BBCB34536 /* FoundationModelsProviderTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,9 +160,12 @@
 		D5CF14222F04522C00B26A0A /* ClipboardPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPersistenceTests.swift; sourceTree = "<group>"; };
 		D5CF14232F04522C00B26A0A /* MLXServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXServiceTests.swift; sourceTree = "<group>"; };
 		D5F278F52F0564DC009C0508 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		D5F278F82F0AE182009C0508 /* FoundationModelsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsClient.swift; sourceTree = "<group>"; };
+		D5F278F92F0AE182009C0508 /* FoundationModelsClientWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsClientWrapper.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
+		D58CEB7B68B8A7403BBCB34536 /* FoundationModelsProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsProviderTests.swift; sourceTree = "<group>"; };
 		TC01 /* GramfixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GramfixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -301,6 +309,8 @@
 		E05 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D5F278F82F0AE182009C0508 /* FoundationModelsClient.swift */,
+				D5F278F92F0AE182009C0508 /* FoundationModelsClientWrapper.swift */,
 				D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */,
 				D56FD7FA2F02DF4A00E99CB6 /* LoginItemManager.swift */,
 				D56FD7F22F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift */,
@@ -353,6 +363,7 @@
 				TB01 /* OllamaProviderTests.swift */,
 				TB02 /* LLMServiceTests.swift */,
 				TB03 /* LLMSettingsTests.swift */,
+				D58CEB7B68B8A7403BBCB34536 /* FoundationModelsProviderTests.swift */,
 			);
 			path = GramfixTests;
 			sourceTree = "<group>";
@@ -561,6 +572,8 @@
 				A05 /* ClipboardManager.swift in Sources */,
 				D5C9EBA72EFC38F20066FE10 /* MenuBarView.swift in Sources */,
 				D56FD7FB2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */,
+				D5F278FC2F0AE182009C0508 /* FoundationModelsClientWrapper.swift in Sources */,
+				D5F278FD2F0AE182009C0508 /* FoundationModelsClient.swift in Sources */,
 				D5C9EB872EFAC7FD0066FE10 /* KeyboardShortcuts+Names.swift in Sources */,
 				D5CF14012F0406B300B26A0A /* ClipboardEncryption.swift in Sources */,
 				D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */,
@@ -584,15 +597,24 @@
 			files = (
 				D56FD7F32F0213CE00E99CB6 /* AccessibilityAlertCoordinator.swift in Sources */,
 				T01 /* OllamaProviderTests.swift in Sources */,
+				D5F278FA2F0AE182009C0508 /* FoundationModelsClientWrapper.swift in Sources */,
+				D5F278FB2F0AE182009C0508 /* FoundationModelsClient.swift in Sources */,
 				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
 				D5CF14002F0406B300B26A0A /* ClipboardEncryption.swift in Sources */,
-				D5F278F72F0564DC009C0508 /* AboutView.swift in Sources */,
 				D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */,
 				D5CF14242F04522C00B26A0A /* MLXServiceTests.swift in Sources */,
 				D5CF14252F04522C00B26A0A /* ClipboardPersistenceTests.swift in Sources */,
 				T02 /* LLMServiceTests.swift in Sources */,
 				T03 /* LLMSettingsTests.swift in Sources */,
-				D56FD7F72F02165C00E99CB6 /* CustomAlertView.swift in Sources */,
+				D58CEB7B68B8A7403BBCB34535 /* FoundationModelsProviderTests.swift in Sources */,
+				A10 /* LLMService.swift in Sources */,
+				A14 /* LLMSettings.swift in Sources */,
+				D5C9EB8D2EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */,
+				D5C9EB8F2EFAEEA30066FE10 /* OllamaClient.swift in Sources */,
+				D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */,
+				D573EB0B2EF9F5C300D03FAE /* MLXService.swift in Sources */,
+				D573EB1F2EF9FCDE00D03FAE /* LMModel.swift in Sources */,
+				D573EB2E2EFA008D00D03FAE /* HubApi+default.swift in Sources */,
 				D56FD7FC2F02DF4A00E99CB6 /* LoginItemManager.swift in Sources */,
 				D5C9EB942EFAEECC0066FE10 /* LLMProviderImplTests.swift in Sources */,
 				D51F95682EF8F1230019A164 /* PasteService.swift in Sources */,
@@ -625,6 +647,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SZ6A237DRZ;
@@ -659,9 +682,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SZ6A237DRZ;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
@@ -866,6 +891,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gramfix/Gramfix.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -900,14 +926,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gramfix/Gramfix.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = SZ6A237DRZ;
+				DEVELOPMENT_TEAM = SZ6A237DRZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

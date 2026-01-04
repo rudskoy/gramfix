@@ -45,6 +45,7 @@ enum AppTheme: String, CaseIterable {
 enum LLMProviderType: String, CaseIterable, Identifiable {
     case ollama = "Ollama"
     case mlx = "MLX"
+    case foundationModels = "FoundationModels"
     
     var id: String { rawValue }
     
@@ -54,6 +55,7 @@ enum LLMProviderType: String, CaseIterable, Identifiable {
         switch self {
         case .ollama: return "server.rack"
         case .mlx: return "cpu"
+        case .foundationModels: return "sparkles"
         }
     }
     
@@ -61,6 +63,7 @@ enum LLMProviderType: String, CaseIterable, Identifiable {
         switch self {
         case .ollama: return "Local Ollama server"
         case .mlx: return "On-device Apple Silicon"
+        case .foundationModels: return "Apple Foundation Models (macOS 26+)"
         }
     }
 }
@@ -200,11 +203,15 @@ class LLMSettings: ObservableObject {
     /// Default MLX VLM model name for image analysis
     static let defaultMLXVLMModel = "qwen3-vl:4b"
     
-    /// Default provider - auto-detect Apple Silicon and prefer MLX
+    /// Default provider - auto-detect Apple Silicon and prefer FoundationModels, fallback to MLX
     static var defaultProvider: LLMProviderType {
         #if arch(arm64)
-        // Apple Silicon (M1/M2/M3/M4) - use MLX for on-device inference
-        return .mlx
+        // Apple Silicon (M1/M2/M3/M4) - prefer FoundationModels if available (macOS 26+), otherwise MLX
+        if #available(macOS 26.0, *) {
+            return .foundationModels
+        } else {
+            return .mlx
+        }
         #else
         // Intel Mac - use Ollama
         return .ollama
