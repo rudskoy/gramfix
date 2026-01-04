@@ -69,6 +69,8 @@
 		D5CF14012F0406B300B26A0A /* ClipboardEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */; };
 		D5CF14242F04522C00B26A0A /* MLXServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF14232F04522C00B26A0A /* MLXServiceTests.swift */; };
 		D5CF14252F04522C00B26A0A /* ClipboardPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CF14222F04522C00B26A0A /* ClipboardPersistenceTests.swift */; };
+		D5F278F62F0564DC009C0508 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F52F0564DC009C0508 /* AboutView.swift */; };
+		D5F278F72F0564DC009C0508 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F278F52F0564DC009C0508 /* AboutView.swift */; };
 		D5FB7EC02EF63E3C00F1871A /* Ollama in Frameworks */ = {isa = PBXBuildFile; productRef = D5FB7EBF2EF63E3C00F1871A /* Ollama */; };
 		T01 /* OllamaProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB01 /* OllamaProviderTests.swift */; };
 		T02 /* LLMServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TB02 /* LLMServiceTests.swift */; };
@@ -152,6 +154,7 @@
 		D5CF13FF2F0406B300B26A0A /* ClipboardEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardEncryption.swift; sourceTree = "<group>"; };
 		D5CF14222F04522C00B26A0A /* ClipboardPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPersistenceTests.swift; sourceTree = "<group>"; };
 		D5CF14232F04522C00B26A0A /* MLXServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXServiceTests.swift; sourceTree = "<group>"; };
+		D5F278F52F0564DC009C0508 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		TB01 /* OllamaProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProviderTests.swift; sourceTree = "<group>"; };
 		TB02 /* LLMServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceTests.swift; sourceTree = "<group>"; };
 		TB03 /* LLMSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsTests.swift; sourceTree = "<group>"; };
@@ -322,6 +325,7 @@
 				D5C9EBA52EFC38F20066FE10 /* MenuBarView.swift */,
 				D5C9EB9F2EFB6A1D0066FE10 /* CheckForUpdatesView.swift */,
 				B02 /* ContentView.swift */,
+				D5F278F52F0564DC009C0508 /* AboutView.swift */,
 				B06 /* ClipboardRow.swift */,
 				B07 /* SearchBar.swift */,
 				B11 /* PreviewPane.swift */,
@@ -547,6 +551,7 @@
 				A02 /* ContentView.swift in Sources */,
 				A01 /* GramfixApp.swift in Sources */,
 				D56FD7F62F02165C00E99CB6 /* CustomAlertView.swift in Sources */,
+				D5F278F62F0564DC009C0508 /* AboutView.swift in Sources */,
 				D5C9EB8D2EFAEEA30066FE10 /* LLMProviderImpl.swift in Sources */,
 				D5C9EB8E2EFAEEA30066FE10 /* MLXClient.swift in Sources */,
 				D5C9EBAB2EFC63870066FE10 /* SearchFilter.swift in Sources */,
@@ -581,6 +586,7 @@
 				T01 /* OllamaProviderTests.swift in Sources */,
 				D5C9EB892EFAD08A0066FE10 /* MLXProviderTests.swift in Sources */,
 				D5CF14002F0406B300B26A0A /* ClipboardEncryption.swift in Sources */,
+				D5F278F72F0564DC009C0508 /* AboutView.swift in Sources */,
 				D5C9EBAE2EFC64010066FE10 /* SearchFilterTests.swift in Sources */,
 				D5CF14242F04522C00B26A0A /* MLXServiceTests.swift in Sources */,
 				D5CF14252F04522C00B26A0A /* ClipboardPersistenceTests.swift in Sources */,
