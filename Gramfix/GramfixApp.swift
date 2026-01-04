@@ -78,6 +78,15 @@ struct GramfixApp: App {
 // MARK: - App Delegate for Global Shortcut
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+    /// Check if running in debug configuration
+    private var isDebugBuild: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Set activation policy to accessory (background app) to prevent Alt+Tab appearance
         // This works even if LSUIElement in Info.plist isn't being read
@@ -103,7 +112,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 window.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
                 window.level = .normal
                 // Additional properties to help AltTab exclude this window
-                window.sharingType = .none
+                // In debug builds, allow window capture for screenshots
+                if !self.isDebugBuild {
+                    window.sharingType = .none
+                }
                 window.isExcludedFromWindowsMenu = true
             }
         }
@@ -133,6 +145,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     static func showMainWindow() {
+        // Check if running in debug configuration
+        let isDebugBuild: Bool = {
+            #if DEBUG
+            return true
+            #else
+            return false
+            #endif
+        }()
+        
         // Find the main Gramfix window, excluding status bar windows and panels
         let mainWindow = NSApplication.shared.windows.first { window in
             // Exclude NSStatusBarWindow and other non-standard windows that can't become key
@@ -145,7 +166,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
             window.level = .normal
             // Additional properties to help AltTab exclude this window
-            window.sharingType = .none
+            // In debug builds, allow window capture for screenshots
+            if !isDebugBuild {
+                window.sharingType = .none
+            }
             window.isExcludedFromWindowsMenu = true
             // Activate app to ensure window receives focus
             // .accessory activation policy should prevent AltTab from showing it
@@ -157,7 +181,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 fallbackWindow.titlebarAppearsTransparent = true
                 fallbackWindow.collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
                 fallbackWindow.level = .normal
-                fallbackWindow.sharingType = .none
+                // In debug builds, allow window capture for screenshots
+                if !isDebugBuild {
+                    fallbackWindow.sharingType = .none
+                }
                 fallbackWindow.isExcludedFromWindowsMenu = true
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 fallbackWindow.makeKeyAndOrderFront(nil)
