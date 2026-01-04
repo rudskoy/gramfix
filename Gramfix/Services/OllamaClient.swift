@@ -102,15 +102,32 @@ actor OllamaClient: TextGenerationClient {
     }
     
     /// Generate text from a prompt using Ollama
-    func generate(prompt: String, systemPrompt: String?) async throws -> String {
+    func generate(prompt: String, systemPrompt: String?, parameters: GenerationParameters?) async throws -> String {
         logger.debug("📤 Sending request to Ollama with model: \(self.modelName)")
         let startTime = Date()
         
         do {
             let ollamaClient = await client
+            
+            // Build options dictionary if parameters are provided
+            var options: [String: Ollama.Value]? = nil
+            if let params = parameters {
+                var opts: [String: Ollama.Value] = [:]
+                opts["temperature"] = .double(params.temperature)
+                if let topP = params.topP {
+                    opts["top_p"] = .double(topP)
+                }
+                if let topK = params.topK {
+                    opts["top_k"] = .int(topK)
+                }
+                options = opts
+                logger.debug("📊 Using parameters: temp=\(params.temperature), top_p=\(params.topP ?? 0), top_k=\(params.topK ?? 0)")
+            }
+            
             let response = try await ollamaClient.generate(
                 model: Model.ID(stringLiteral: modelName),
                 prompt: prompt,
+                options: options,
                 think: false  // Disable reasoning/thinking mode for faster responses
             )
             
@@ -126,10 +143,10 @@ actor OllamaClient: TextGenerationClient {
     }
     
     /// Generate text from a prompt with images using Ollama vision model
-    func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String {
+    func generate(prompt: String, systemPrompt: String?, images: [Data], parameters: GenerationParameters?) async throws -> String {
         // If no images, fall back to text-only generation
         guard !images.isEmpty else {
-            return try await generate(prompt: prompt, systemPrompt: systemPrompt)
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
         }
         
         logger.debug("📤 Sending vision request to Ollama with model: \(self.modelName), images: \(images.count)")
@@ -147,10 +164,26 @@ actor OllamaClient: TextGenerationClient {
             
             messages.append(.user(prompt, images: images))
             
+            // Build options dictionary if parameters are provided
+            var options: [String: Ollama.Value]? = nil
+            if let params = parameters {
+                var opts: [String: Ollama.Value] = [:]
+                opts["temperature"] = .double(params.temperature)
+                if let topP = params.topP {
+                    opts["top_p"] = .double(topP)
+                }
+                if let topK = params.topK {
+                    opts["top_k"] = .int(topK)
+                }
+                options = opts
+                logger.debug("📊 Using parameters: temp=\(params.temperature), top_p=\(params.topP ?? 0), top_k=\(params.topK ?? 0)")
+            }
+            
             // Use chat API for vision requests
             let response = try await ollamaClient.chat(
                 model: Model.ID(stringLiteral: modelName),
                 messages: messages,
+                options: options,
                 think: false
             )
             

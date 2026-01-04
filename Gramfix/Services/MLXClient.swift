@@ -55,7 +55,7 @@ final class MLXClient: TextGenerationClient, @unchecked Sendable {
     
     /// Generate text from a prompt using MLX
     /// Runs on background thread to avoid blocking UI.
-    nonisolated func generate(prompt: String, systemPrompt: String?) async throws -> String {
+    nonisolated func generate(prompt: String, systemPrompt: String?, parameters: GenerationParameters?) async throws -> String {
         // Read text model name on MainActor
         let currentModelName = await MainActor.run { self.textModelName }
         
@@ -70,7 +70,8 @@ final class MLXClient: TextGenerationClient, @unchecked Sendable {
             let response = try await mlxService.generate(
                 prompt: prompt,
                 systemPrompt: systemPrompt,
-                model: model
+                model: model,
+                parameters: parameters
             )
             
             logger.info("📥 MLX response received")
@@ -83,11 +84,11 @@ final class MLXClient: TextGenerationClient, @unchecked Sendable {
     
     /// Generate text from a prompt with images using MLX vision model
     /// Runs on background thread to avoid blocking UI.
-    nonisolated func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String {
+    nonisolated func generate(prompt: String, systemPrompt: String?, images: [Data], parameters: GenerationParameters?) async throws -> String {
         // If no images, fall back to text generation
         guard !images.isEmpty else {
             logger.debug("📤 No images provided, using text generation")
-            return try await generate(prompt: prompt, systemPrompt: systemPrompt)
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
         }
         
         // Read VLM model name on MainActor for image processing
@@ -101,7 +102,7 @@ final class MLXClient: TextGenerationClient, @unchecked Sendable {
         // Verify it's actually a vision model
         guard model.isVisionModel else {
             logger.warning("⚠️ Selected VLM \(currentModelName) is not a vision model, falling back to text generation")
-            return try await generate(prompt: prompt, systemPrompt: systemPrompt)
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
         }
         
         logger.debug("📤 Sending vision request to MLX with model: \(currentModelName), images: \(images.count)")
@@ -111,7 +112,8 @@ final class MLXClient: TextGenerationClient, @unchecked Sendable {
                 prompt: prompt,
                 systemPrompt: systemPrompt,
                 images: images,
-                model: model
+                model: model,
+                parameters: parameters
             )
             
             logger.info("📥 MLX vision response received")

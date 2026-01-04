@@ -26,9 +26,10 @@ protocol MLXServiceProtocol: AnyObject, Sendable {
     ///   - prompt: The user prompt to generate a response for
     ///   - systemPrompt: Optional system prompt to set context
     ///   - model: The language model to use for generation
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
-    func generate(prompt: String, systemPrompt: String?, model: LMModel) async throws -> String
+    func generate(prompt: String, systemPrompt: String?, model: LMModel, parameters: GenerationParameters?) async throws -> String
     
     /// Generates text based on the provided prompt and images using a vision model.
     /// Runs on a background thread to avoid blocking the UI.
@@ -37,9 +38,10 @@ protocol MLXServiceProtocol: AnyObject, Sendable {
     ///   - systemPrompt: Optional system prompt to set context
     ///   - images: Array of image data (PNG/JPEG) for vision understanding
     ///   - model: The vision-language model to use for generation
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
-    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel) async throws -> String
+    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel, parameters: GenerationParameters?) async throws -> String
 }
 
 /// A service class that manages machine learning models for text generation using MLX.
@@ -294,9 +296,10 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
     ///   - prompt: The user prompt to generate a response for
     ///   - systemPrompt: Optional system prompt to set context
     ///   - model: The language model to use for generation
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
-    nonisolated func generate(prompt: String, systemPrompt: String? = nil, model: LMModel) async throws -> String {
+    nonisolated func generate(prompt: String, systemPrompt: String? = nil, model: LMModel, parameters: GenerationParameters?) async throws -> String {
         logger.info("🚀 Generating response with model: \(model.name)")
         let startTime = Date()
         
@@ -320,11 +323,17 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
         
         let stream = try await modelContainer.perform { (context: ModelContext) in
             let lmInput = try await context.processor.prepare(input: userInput)
-            // Set temperature for response randomness (0.7 provides good balance)
-            let parameters = GenerateParameters(temperature: 0.7)
+            // Use provided parameters or default to grammar correction parameters
+            let genParams: GenerationParameters = parameters ?? .grammarCorrection
+            // MLX GenerateParameters supports temperature and top_p (but not top_k)
+            var mlxParams = GenerateParameters(
+                temperature: Float(genParams.temperature),
+                topP: Float(genParams.topP ?? 0.95)
+            )
+            logger.debug("📊 Using MLX parameters: temp=\(genParams.temperature), top_p=\(genParams.topP ?? 0.95)")
             
             return try MLXLMCommon.generate(
-                input: lmInput, parameters: parameters, context: context)
+                input: lmInput, parameters: mlxParams, context: context)
         }
         
         // Collect generated tokens
@@ -352,13 +361,14 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
     ///   - systemPrompt: Optional system prompt to set context
     ///   - images: Array of image data (PNG/JPEG) for vision understanding
     ///   - model: The vision-language model to use for generation
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: The generated text response
     /// - Throws: Errors that might occur during generation
-    nonisolated func generate(prompt: String, systemPrompt: String? = nil, images: [Data], model: LMModel) async throws -> String {
+    nonisolated func generate(prompt: String, systemPrompt: String? = nil, images: [Data], model: LMModel, parameters: GenerationParameters?) async throws -> String {
         guard model.isVisionModel else {
             // Fall back to text-only generation if not a vision model
             logger.warning("⚠️ Model \(model.name) is not a vision model, ignoring images")
-            return try await generate(prompt: prompt, systemPrompt: systemPrompt, model: model)
+            return try await generate(prompt: prompt, systemPrompt: systemPrompt, model: model, parameters: parameters)
         }
         
         logger.info("🚀 Generating vision response with model: \(model.name), images: \(images.count)")
@@ -398,11 +408,17 @@ final class MLXService: MLXServiceProtocol, @unchecked Sendable {
         
         let stream = try await modelContainer.perform { (context: ModelContext) in
             let lmInput = try await context.processor.prepare(input: userInput)
-            // Lower temperature for more focused image descriptions
-            let parameters = GenerateParameters(temperature: 0.5)
+            // Use provided parameters or default to lower temperature for vision tasks
+            let genParams: GenerationParameters = parameters ?? GenerationParameters(temperature: 0.5, topP: 0.9, topK: nil)
+            // MLX GenerateParameters supports temperature and top_p (but not top_k)
+            var mlxParams = GenerateParameters(
+                temperature: Float(genParams.temperature),
+                topP: Float(genParams.topP ?? 0.9)
+            )
+            logger.debug("📊 Using MLX vision parameters: temp=\(genParams.temperature), top_p=\(genParams.topP ?? 0.9)")
             
             return try MLXLMCommon.generate(
-                input: lmInput, parameters: parameters, context: context)
+                input: lmInput, parameters: mlxParams, context: context)
         }
         
         // Collect generated tokens

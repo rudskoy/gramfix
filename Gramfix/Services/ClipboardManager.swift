@@ -518,7 +518,8 @@ class ClipboardManager: ObservableObject {
                 prompt: prompt,
                 systemPrompt: "You are a helpful assistant that describes images concisely.",
                 images: [imageData],
-                model: vlmModel
+                model: vlmModel,
+                parameters: nil  // Use default parameters for vision tasks
             )
             
             // Update the item with analysis result

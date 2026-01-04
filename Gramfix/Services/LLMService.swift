@@ -29,6 +29,27 @@ enum LLMRequestType: String, Sendable {
     case custom = "custom"  // Uses LLMSettings.customPrompt
 }
 
+/// Generation parameters for controlling LLM output
+struct GenerationParameters: Sendable {
+    let temperature: Double
+    let topP: Double?
+    let topK: Int?
+    
+    /// Optimal parameters for grammar correction
+    static let grammarCorrection = GenerationParameters(
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40
+    )
+    
+    /// Default parameters for other text transformations
+    static let defaultTransform = GenerationParameters(
+        temperature: 0.8,
+        topP: 0.9,
+        topK: 40
+    )
+}
+
 /// Low-level text generation client protocol for DI and mocking.
 /// Implementations handle the actual LLM communication (Ollama HTTP, MLX inference).
 protocol TextGenerationClient: Sendable {
@@ -42,24 +63,36 @@ protocol TextGenerationClient: Sendable {
     /// - Parameters:
     ///   - prompt: The prompt to send to the LLM
     ///   - systemPrompt: Optional system prompt to set context
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: Generated text response
-    func generate(prompt: String, systemPrompt: String?) async throws -> String
+    func generate(prompt: String, systemPrompt: String?, parameters: GenerationParameters?) async throws -> String
     
     /// Generate text from a prompt with optional images (for vision models)
     /// - Parameters:
     ///   - prompt: The prompt to send to the LLM
     ///   - systemPrompt: Optional system prompt to set context
     ///   - images: Array of image data (PNG/JPEG) for vision models
+    ///   - parameters: Optional generation parameters (temperature, top_p, top_k)
     /// - Returns: Generated text response
-    func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String
+    func generate(prompt: String, systemPrompt: String?, images: [Data], parameters: GenerationParameters?) async throws -> String
 }
 
 // MARK: - Default Implementation for Text-Only Clients
 
 extension TextGenerationClient {
     /// Default implementation ignores images for text-only models
+    func generate(prompt: String, systemPrompt: String?, images: [Data], parameters: GenerationParameters?) async throws -> String {
+        try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
+    }
+    
+    /// Backward compatibility: generate without parameters
+    func generate(prompt: String, systemPrompt: String?) async throws -> String {
+        try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: nil)
+    }
+    
+    /// Backward compatibility: generate with images without parameters
     func generate(prompt: String, systemPrompt: String?, images: [Data]) async throws -> String {
-        try await generate(prompt: prompt, systemPrompt: systemPrompt)
+        try await generate(prompt: prompt, systemPrompt: systemPrompt, images: images, parameters: nil)
     }
 }
 
