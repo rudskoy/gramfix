@@ -631,6 +631,36 @@ struct SettingsButton: View {
     }
 }
 
+// MARK: - About Button
+
+struct AboutButton: View {
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 28, height: 28)
+                .background {
+                    if isHovered {
+                        Circle().glassEffect()
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help("About Gramfix")
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 // MARK: - Useful Filter Button
 
 struct UsefulFilterButton: View {

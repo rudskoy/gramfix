@@ -6,6 +6,7 @@ struct ContentView: View {
     @ObservedObject var alertCoordinator = AccessibilityAlertCoordinator.shared
     @State private var selectedItemId: UUID?
     @State private var showSettings = false
+    @State private var showAbout = false
     @State private var keyboardMonitor: Any?
     @FocusState private var isSearchFieldFocused: Bool
     @State private var itemCountOnUnfocus: Int = 0
@@ -295,6 +296,11 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                // About button
+                AboutButton {
+                    showAbout = true
+                }
+                
                 // Settings button
                 SettingsButton {
                     showSettings = true
@@ -312,6 +318,9 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
                 .environmentObject(clipboardManager)
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutView()
         }
         .background {
             // Hidden button to capture Cmd+, keyboard shortcut for settings
