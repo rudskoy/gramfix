@@ -32,7 +32,7 @@ final class MockMLXService: MLXServiceProtocol {
     /// Last model passed to generate()
     var lastModel: LMModel?
     
-    func generate(prompt: String, systemPrompt: String?, model: LMModel) async throws -> String {
+    func generate(prompt: String, systemPrompt: String?, model: LMModel, parameters: GenerationParameters?) async throws -> String {
         generateCallCount += 1
         lastPrompt = prompt
         lastSystemPrompt = systemPrompt
@@ -47,7 +47,7 @@ final class MockMLXService: MLXServiceProtocol {
     /// Last images passed to generate()
     var lastImages: [Data]?
     
-    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel) async throws -> String {
+    func generate(prompt: String, systemPrompt: String?, images: [Data], model: LMModel, parameters: GenerationParameters?) async throws -> String {
         generateCallCount += 1
         lastPrompt = prompt
         lastSystemPrompt = systemPrompt

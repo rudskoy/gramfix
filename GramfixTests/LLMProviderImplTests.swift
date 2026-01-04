@@ -37,7 +37,7 @@ final class MockTextGenerationClient: TextGenerationClient, @unchecked Sendable 
         return isAvailableResult
     }
     
-    func generate(prompt: String, systemPrompt: String?) async throws -> String {
+    func generate(prompt: String, systemPrompt: String?, parameters: GenerationParameters?) async throws -> String {
         generateCallCount += 1
         lastPrompt = prompt
         lastSystemPrompt = systemPrompt
@@ -46,6 +46,10 @@ final class MockTextGenerationClient: TextGenerationClient, @unchecked Sendable 
             throw error
         }
         return generateResult
+    }
+    
+    func generate(prompt: String, systemPrompt: String?, images: [Data], parameters: GenerationParameters?) async throws -> String {
+        return try await generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
     }
     
     /// Reset all recorded state
