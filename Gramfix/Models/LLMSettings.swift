@@ -89,13 +89,13 @@ enum TextPromptType: String, CaseIterable, Codable, Identifiable {
     var prompt: String {
         switch self {
         case .grammar:
-            return "Fix grammar errors in this text. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the corrected text, nothing else:\n\n{text}"
+            return "You are an English language teacher correcting a student's text. Correct only grammatical errors, spelling mistakes, and punctuation issues. Preserve the original wording, tone, and meaning. Only change words if they are grammatically incorrect or misused. Do NOT add new content, sentences, or words that were not in the original text. Do NOT generate new text - only apply corrections to what already exists. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the corrected text, nothing else:\n\n{text}"
         case .formal:
-            return "Make this text slightly more corporate and professional. Keep the meaning intact. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the revised text:\n\n{text}"
+            return "Make this text slightly more corporate and professional. Keep the meaning intact and make only minimal changes. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the revised text:\n\n{text}"
         case .polished:
-            return "Remove corporate/formal bullshit. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the rephrased text:\n\n{text}"
+            return "Remove corporate jargon, buzzwords, and overly formal language. Keep the meaning intact and make the text more direct and natural. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the rephrased text:\n\n{text}"
         case .casual:
-            return "Make it Reddit-style casual. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the simplified text:\n\n{text}"
+            return "Rewrite this text in a sarcastic, Reddit-comment style. Use casual language, internet slang, and a slightly sarcastic or witty tone typical of Reddit discussions. Keep the meaning intact but make it sound like a comment from r/all. Preserve all formatting (bold, italic, colors, etc.) from the original text. Output ONLY the rephrased text:\n\n{text}"
         }
     }
     
@@ -312,5 +312,27 @@ class LLMSettings: ObservableObject {
         
         // Load image analysis setting (default: false)
         self.imageAnalysisEnabled = defaults.bool(forKey: Keys.imageAnalysisEnabled)
+    }
+    
+    /// Reset all settings to their default values
+    func resetToDefaults() {
+        // Remove all UserDefaults keys to ensure clean reset
+        defaults.removeObject(forKey: Keys.autoProcess)
+        defaults.removeObject(forKey: Keys.selectedModel)
+        defaults.removeObject(forKey: Keys.selectedProvider)
+        defaults.removeObject(forKey: Keys.mlxSelectedModel)
+        defaults.removeObject(forKey: Keys.mlxSelectedTextModel)
+        defaults.removeObject(forKey: Keys.mlxSelectedVLMModel)
+        defaults.removeObject(forKey: Keys.appTheme)
+        defaults.removeObject(forKey: Keys.imageAnalysisEnabled)
+        
+        // Reset to default values
+        self.autoProcess = true
+        self.selectedModel = Self.defaultModel
+        self.selectedProvider = Self.defaultProvider
+        self.mlxSelectedTextModel = Self.defaultMLXTextModel
+        self.mlxSelectedVLMModel = Self.defaultMLXVLMModel
+        self.appTheme = .system
+        self.imageAnalysisEnabled = false
     }
 }

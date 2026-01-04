@@ -20,7 +20,7 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
     var name: String { client.name }
     
     /// System prompt used for all requests
-    private let systemPrompt = "You are a helpful assistant. Respond concisely and accurately."
+    private let systemPrompt = "You are a precise grammar correction assistant. Your role is to fix only grammatical errors, spelling mistakes, and punctuation issues while preserving the original wording, tone, and meaning. Make minimal changes - only correct what is actually wrong. Do NOT add new content, sentences, or words. Only apply corrections to existing text."
     
     init(client: any TextGenerationClient) {
         self.client = client
@@ -41,7 +41,9 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
         logger.debug("📝 Built prompt (\(prompt.count) chars)")
         
         do {
-            let response = try await client.generate(prompt: prompt, systemPrompt: systemPrompt)
+            // Use grammar correction parameters for custom requests (which use grammar prompt)
+            let parameters: GenerationParameters? = requestType == .custom ? .grammarCorrection : nil
+            let response = try await client.generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
             let result = parseResponse(response, requestType: requestType)
             logger.info("✅ Processing complete - summary: \(result.summary ?? "nil"), tags: \(result.tags), type: \(result.contentType ?? "nil")")
             return result
@@ -62,7 +64,8 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
             \(prompt)
             """
         }
-        return try await client.generate(prompt: fullPrompt, systemPrompt: systemPrompt)
+        // Use grammar correction parameters for custom generation
+        return try await client.generate(prompt: fullPrompt, systemPrompt: systemPrompt, parameters: .grammarCorrection)
     }
     
     // MARK: - Multi-Prompt Processing
@@ -77,15 +80,28 @@ final class LLMProviderImpl: LLMProvider, @unchecked Sendable {
         logger.info("Processing text (\(text.count) chars) with prompt: \(promptType.displayName)")
         
         let prompt = promptType.buildPrompt(for: text)
+        let parameters = getOptimalParameters(for: promptType)
         
         do {
-            let response = try await client.generate(prompt: prompt, systemPrompt: systemPrompt)
+            let response = try await client.generate(prompt: prompt, systemPrompt: systemPrompt, parameters: parameters)
             let cleaned = cleanResponse(response)
             logger.info("Completed \(promptType.displayName): \(cleaned.prefix(50))...")
             return cleaned
         } catch {
             logger.error("Failed \(promptType.displayName): \(error.localizedDescription)")
             throw error
+        }
+    }
+    
+    /// Get optimal generation parameters based on prompt type
+    private func getOptimalParameters(for promptType: TextPromptType) -> GenerationParameters? {
+        switch promptType {
+        case .grammar:
+            // Grammar correction benefits from lower temperature and higher top_p for precision
+            return .grammarCorrection
+        case .formal, .casual, .polished:
+            // Other transformations can use slightly higher temperature for more variation
+            return .defaultTransform
         }
     }
     
