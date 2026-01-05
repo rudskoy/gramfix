@@ -7,7 +7,7 @@ Simple and secure clipboard history manager with a macOS 26+ liquid glass interf
 ## Features
 
 - **Encrypted by default** - Clipboard history stored securely
-- **Local AI processing** - MLX/Ollama inference, no cloud required
+- **Local AI processing** - MLX/Ollama/Apple Intelligence inference, no cloud required
 - **Smart clipboard** - Preserves formatting, detects useful items
 - **Keyboard shortcuts** - Quick paste, paste without spoiling clipboard, favorites
 - **Image descriptions** - AI-powered image analysis (just for fun)
@@ -19,6 +19,8 @@ Simple and secure clipboard history manager with a macOS 26+ liquid glass interf
 - macOS 26.0+ (Tahoe)
 - Apple Silicon (M-series) MacBook for M processor.
 - `xattr -d com.apple.quarantine /Applications/Gramfix.app` (until author has apple developer account).
+- App is unsigned, now requires additional step to remove it from quarantine.
+
 ## About
 
 Made for fun, 90% vibecoded via Cursor/Claude Code.
